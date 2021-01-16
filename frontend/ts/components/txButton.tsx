@@ -36,7 +36,7 @@ const TxButton = ({
         // @ts-ignore
         <span
             onClick={handleClick}
-            disabled={isDisabled}
+            // disabled={isDisabled} compilation error TODO
             className={className}>
 
             {label}
@@ -71,7 +71,7 @@ const Erc20ApproveButton = ({
         // @ts-ignore
         <span
             onClick={handleClick}
-            disabled={isDisabled}
+            // disabled={isDisabled} Compilation error TODO
             className={className}>
 
             {label}
