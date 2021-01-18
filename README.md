@@ -77,7 +77,7 @@ It has the following features:
 
 ## Local development and testing
 
-These instructions have been tested with Ubuntu 18.0.4 and Node 11.14.0.
+These instructions have been tested with Ubuntu 18.0.4 and Node 11.14.0. (! It may not work with node > 11)
 
 ### Requirements
 
@@ -89,19 +89,60 @@ These instructions have been tested with Ubuntu 18.0.4 and Node 11.14.0.
     - The relayer server requires an `etcd` server to lock the account nonce of
       its hot wallet.
 
-### Local development
+### (Optional) Install Node 11.14.0 for local user
 
-Install `npx` and `http-server` if you haven't already:
+Add at the end of ~/.profile or run it in your terminal to setup the path
 
 ```bash
-npm install -g npx http-server
+export PATH=~/.npm-global/bin:$PATH
+export N_PREFIX=$HOME/.npm-global
 ```
+
+Activate change in profile:
+```bash
+. ~/.profile
+```
+
+Install npm (nedd any node version)
+```bash
+wget https://nodejs.org/dist/v14.15.4/node-v14.15.4-linux-x64.tar.xz
+tar -xf node-v14.15.4-linux-x64.tar.xz
+export PATH=$PATH:.
+cd node-v14.15.4-linux-x64/bin
+npm i -g npm
+```
+
+Install n (Package manager for node) and node 11.4.0
+```bash
+npm i -g n
+n 11.4.0
+```
+
+Clean not needed version
+```bash
+cd ~/
+rm -rf node-v14.15.4-linux-x64.tar.xz  node-v14.15.4-linux-x64
+```
+
+Verify
+```bash
+npm -v
+#6.4.1
+```
+
+
+```bash
+node -v
+#v11.4.0
+```
+
+### Local development
 
 Clone this repository and its `semaphore` submodule:
 
 ```bash
-git clone git@github.com:weijiekoh/mixer.git && \
-cd mixer && \
+git clone https://github.com/jrastit/mixer.git
+cd mixer
 git submodule update --init
 ```
 
@@ -113,18 +154,6 @@ discarded.
 ```bash
 ./scripts/downloadSnarks.sh
 ```
-
-<!--Next, download the `solc` [v0.4.25-->
-<!--binary](https://github.com/ethereum/solidity/releases/tag/v0.4.25) make it-->
-<!--executable, and rename it.-->
-
-<!--```bash-->
-<!--chmod a+x solc-static-linux && # whatever its name is-->
-<!--mv solc-static-linux solc-0.4.25-->
-<!--```-->
-
-<!--Take note of the filepath of `solc-0.4.25` as you will need to modify the next-->
-<!--command to use it.-->
 
 Create a file named `hotWalletPrivKey.json` in a location outside this
 repository with a private key which will serve as the operator's hot wallet.
@@ -157,11 +186,6 @@ npx truffle compile
 ```
 
 Install dependencies and build the source code:
-
-<!--```bash-->
-<!--npx lerna bootstrap && \-->
-<!--SOLC=/path/to/solc-0.4.25 npx lerna run build-->
-<!--```-->
 
 ```bash
 cd ../../
@@ -207,11 +231,17 @@ npm run server
 
 In another terminal, launch the frontend:
 
+<!--
 ```bash
 # Assuming you are in mixer/
-
+-->
+<!--
 cd frontend && \
 npm run watch
+```
+-->
+```bash
+node server.js
 ```
 
 Finally, launch a HTTP server to serve the zk-SNARK content:
@@ -220,10 +250,12 @@ Finally, launch a HTTP server to serve the zk-SNARK content:
 # Assuming you are in mixer/
 
 cd semaphore/semaphorejs/ && \
-http-server -p 8000 --cors
+npx http-server -p 8000 --cors
 ```
 
 You can now run the frontend at http://localhost:1234.
+
+
 
 To automatically compile the TypeScript source code whenever you change it,
 first make sure that you have `npm run watch` running in a terminal. For
