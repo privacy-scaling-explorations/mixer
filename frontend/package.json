@@ -6,6 +6,7 @@
     "scripts": {
         "watch": "tsc --watch",
         "build": "tsc",
+	"server": "tsc && node server.js",
         "webpack-watch": "webpack-dev-server",
         "webpack-build": "echo 'Building frontend' && NODE_ENV=production webpack && cp -r favicons dist/",
         "lint": "tslint --project . 'js/**/*.ts[x]'",
