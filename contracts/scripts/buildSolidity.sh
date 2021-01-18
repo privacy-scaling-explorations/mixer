@@ -14,7 +14,7 @@ cp ../semaphore/semaphorejs/build/verifier.sol solidity/
 
 # Compile the contracts
 
-npx etherlime compile --solcVersion=native --buildDirectory=compiled --workingDirectory=solidity --exportAbi 
+npx etherlime compile --solcVersion=0.5.17 --buildDirectory=compiled --workingDirectory=solidity --exportAbi
 
 # Build the MiMC contract from bytecode
 node build/buildMiMC.js
