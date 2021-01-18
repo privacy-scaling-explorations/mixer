@@ -3,6 +3,13 @@ env: 'local-dev'
 mixAmtEth: "0.1"
 feeAmtEth: "0.001"
 
+
+#TODO jrastit fix
+tokenDecimals: 18
+mixAmtTokens: 20
+feeAmtTokens: 0.02 
+tokenSym: 'DAI'
+
 testing:
   mixAmtTokens: 100
   feeAmtTokens: 1
@@ -21,12 +28,16 @@ chain:
     Semaphore: '0x345cA3e014Aaf5dcA488057592ee47305D9B3e10'
     Mixer: '0xf25186B5081Ff5cE73482AD761DB0eB0d25abfBF'
     RelayRegistry: '0x2C2B9C9a4a25e24B174f26114e8926a9f2128FE4'
+    #TODO jrastit fix
+    TokenMixer: '0x12E12EFD0046613F35Ac82406a0b429E16F258dd'
 
 backend:
   port: 3000
   host: "http://localhost"
   hotWalletPrivKeyPath: "/home/di/MIXER_SECRETS/hotWalletPrivKey.json"
-  broadcasterAddress: "0x627306090abaB3A6e1400e9345bC60c78a8BEf57"
+  #TODO jrastit fix
+  #broadcasterAddress: "0x627306090abaB3A6e1400e9345bC60c78a8BEf57"
+  relayerAddress: "0x627306090abaB3A6e1400e9345bC60c78a8BEf57"
   etcd:
     host: "localhost"
     port: 2379
