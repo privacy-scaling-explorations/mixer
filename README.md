@@ -109,7 +109,7 @@ wget https://nodejs.org/dist/v14.15.4/node-v14.15.4-linux-x64.tar.xz
 tar -xf node-v14.15.4-linux-x64.tar.xz
 export PATH=$PATH:.
 cd node-v14.15.4-linux-x64/bin
-npm i -g npm
+npm config set prefix '~/.npm-global'
 ```
 
 Install n (Package manager for node) and node 11.4.0
