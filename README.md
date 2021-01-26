@@ -115,7 +115,7 @@ npm config set prefix '~/.npm-global'
 Install n (Package manager for node) and node 11.4.0
 ```bash
 npm i -g n
-n 11.4.0
+n 11.15.0
 ```
 
 Clean not needed version
