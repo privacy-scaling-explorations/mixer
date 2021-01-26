@@ -133,7 +133,7 @@ npm -v
 
 ```bash
 node -v
-#v11.4.0
+#v11.15.0
 ```
 
 ### Local development
