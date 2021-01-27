@@ -38,7 +38,9 @@ import {
 } from '../utils/mixAmts'
 
 const config = require('../../exported_config')
-const deployedAddresses = config.chain.deployedAddresses
+//const deployedAddresses = config.chain.deployedAddresses
+//TODO jrastit fix deployedAddresses
+const deployedAddresses = require('../deployedAddresses')
 const relayerAddress = config.backend.relayerAddress
 const tokenDecimals = config.tokenDecimals
 const blockExplorerTxPrefix = config.frontend.blockExplorerTxPrefix

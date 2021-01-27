@@ -30,6 +30,7 @@ chain:
     RelayRegistry: '0x2C2B9C9a4a25e24B174f26114e8926a9f2128FE4'
     #TODO jrastit fix
     TokenMixer: '0x12E12EFD0046613F35Ac82406a0b429E16F258dd'
+    Token: '0xc4375b7de8af5a38a93548eb8453a498222c4ff2'
 
 backend:
   port: 3000

@@ -1,7 +1,9 @@
 import * as ethers from 'ethers'
 import { getRelayerRegistryContract, getMixerContract, getTokenMixerContract } from './mixer'
 const config = require('../../exported_config')
-const deployedAddresses = config.chain.deployedAddresses
+//const deployedAddresses = config.chain.deployedAddresses
+//TODO jrastit fix deployedAddresses
+const deployedAddresses = require('../deployedAddresses')
 
 const genDepositProof = (
     signal,

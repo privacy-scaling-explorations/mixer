@@ -1,5 +1,7 @@
 import * as ethers from 'ethers'
 const config = require('../../exported_config')
+//TODO jrastit fix deployedAddresses
+const deployedAddresses = require('../deployedAddresses')
 import {
     getMixerContract,
     getTokenMixerContract,
@@ -66,7 +68,7 @@ const getTokenAllowance = async (
         const signer = provider.getSigner()
 
         const tokenContract = await getTokenContract(context)
-        const tokenMixerAddress = config.chain.deployedAddresses.TokenMixer
+        const tokenMixerAddress = deployedAddresses.TokenMixer
 
         const tx = await tokenContract.allowance(context.account, tokenMixerAddress)
         return tx
@@ -92,7 +94,7 @@ const approveTokens = async (
         const signer = provider.getSigner()
 
         const tokenContract = await getTokenContract(context)
-        const tokenMixerAddress = config.chain.deployedAddresses.TokenMixer
+        const tokenMixerAddress = deployedAddresses.TokenMixer
 
         const tx = await tokenContract.approve(tokenMixerAddress, numTokens.toString())
 

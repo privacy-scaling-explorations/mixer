@@ -10,7 +10,9 @@ import { TxHashMessage } from '../components/txHashMessage'
 import { quickWithdrawEth, quickWithdrawTokens } from '../web3/quickWithdraw'
 import { getMixerContract, getTokenMixerContract } from '../web3/mixer'
 import { fetchWithoutCache } from '../utils/fetcher'
-const deployedAddresses = config.chain.deployedAddresses
+//const deployedAddresses = config.chain.deployedAddresses
+//TODO jrastit fix deployedAddresses
+const deployedAddresses = require('../deployedAddresses')
 const tokenDecimals = config.tokenDecimals
 
 import { 

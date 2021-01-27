@@ -5,7 +5,9 @@ import * as ethers from 'ethers'
 import { Buffer } from 'buffer'
 import { useWeb3Context } from 'web3-react'
 const config = require('../../exported_config')
-const deployedAddresses = config.chain.deployedAddresses
+//const deployedAddresses = config.chain.deployedAddresses
+//TODO jrastit fix deployedAddresses
+const deployedAddresses = require('../deployedAddresses')
 import { Erc20ApproveButton, TxButton, TxStatuses } from '../components/txButton'
 import { TxHashMessage } from '../components/txHashMessage'
 import { sleep } from 'mixer-utils'
