@@ -1,50 +1,5 @@
 [
   {
-    "constant": true,
-    "inputs": [],
-    "name": "mixAmt",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "constant": true,
-    "inputs": [],
-    "name": "semaphore",
-    "outputs": [
-      {
-        "internalType": "contract Semaphore",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "constant": true,
-    "inputs": [],
-    "name": "token",
-    "outputs": [
-      {
-        "internalType": "contract IERC20",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "address",
@@ -169,6 +124,51 @@
   {
     "constant": true,
     "inputs": [],
+    "name": "mixAmt",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "semaphore",
+    "outputs": [
+      {
+        "internalType": "contract Semaphore",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "token",
+    "outputs": [
+      {
+        "internalType": "contract IERC20",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
     "name": "supportsEthOnly",
     "outputs": [
       {
@@ -239,50 +239,43 @@
     "constant": false,
     "inputs": [
       {
-        "components": [
-          {
-            "internalType": "bytes32",
-            "name": "signal",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "uint256[2]",
-            "name": "a",
-            "type": "uint256[2]"
-          },
-          {
-            "internalType": "uint256[2][2]",
-            "name": "b",
-            "type": "uint256[2][2]"
-          },
-          {
-            "internalType": "uint256[2]",
-            "name": "c",
-            "type": "uint256[2]"
-          },
-          {
-            "internalType": "uint256[4]",
-            "name": "input",
-            "type": "uint256[4]"
-          },
-          {
-            "internalType": "address payable",
-            "name": "recipientAddress",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "fee",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct Mixer.DepositProof",
-        "name": "_proof",
-        "type": "tuple"
+        "internalType": "bytes32",
+        "name": "_signal",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256[2]",
+        "name": "_a",
+        "type": "uint256[2]"
+      },
+      {
+        "internalType": "uint256[2][2]",
+        "name": "_b",
+        "type": "uint256[2][2]"
+      },
+      {
+        "internalType": "uint256[2]",
+        "name": "_c",
+        "type": "uint256[2]"
+      },
+      {
+        "internalType": "uint256[4]",
+        "name": "_input",
+        "type": "uint256[4]"
       },
       {
         "internalType": "address payable",
-        "name": "_relayerAddress",
+        "name": "_recipientAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_fee",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address payable",
+        "name": "_forwarderAddress",
         "type": "address"
       }
     ],
@@ -296,50 +289,43 @@
     "constant": false,
     "inputs": [
       {
-        "components": [
-          {
-            "internalType": "bytes32",
-            "name": "signal",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "uint256[2]",
-            "name": "a",
-            "type": "uint256[2]"
-          },
-          {
-            "internalType": "uint256[2][2]",
-            "name": "b",
-            "type": "uint256[2][2]"
-          },
-          {
-            "internalType": "uint256[2]",
-            "name": "c",
-            "type": "uint256[2]"
-          },
-          {
-            "internalType": "uint256[4]",
-            "name": "input",
-            "type": "uint256[4]"
-          },
-          {
-            "internalType": "address payable",
-            "name": "recipientAddress",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "fee",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct Mixer.DepositProof",
-        "name": "_proof",
-        "type": "tuple"
+        "internalType": "bytes32",
+        "name": "_signal",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256[2]",
+        "name": "_a",
+        "type": "uint256[2]"
+      },
+      {
+        "internalType": "uint256[2][2]",
+        "name": "_b",
+        "type": "uint256[2][2]"
+      },
+      {
+        "internalType": "uint256[2]",
+        "name": "_c",
+        "type": "uint256[2]"
+      },
+      {
+        "internalType": "uint256[4]",
+        "name": "_input",
+        "type": "uint256[4]"
       },
       {
         "internalType": "address payable",
-        "name": "_relayerAddress",
+        "name": "_recipientAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_fee",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address payable",
+        "name": "_forwarderAddress",
         "type": "address"
       }
     ],
