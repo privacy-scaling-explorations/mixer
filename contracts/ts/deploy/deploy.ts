@@ -74,13 +74,14 @@ const deployAllContracts = async (
     mixAmtTokens,
     adminAddress,
 ) => {
-    // Deploy token if it's not specified in config. This should be the case for local-dev.yaml
-    // In Kovan, the DAI address is 0xc4375b7de8af5a38a93548eb8453a498222c4ff2
-    let tokenAddress = config.chain.deployedAddresses.Token
+    let tokenAddress
     let tokenContract
     let tokenDecimals = config.get('tokenDecimals')
 
     if (config.env !== 'local-dev') {
+    	// Deploy token if it's not specified in config. This should be the case for local-dev.yaml
+    	// In Kovan, the DAI address is 0xc4375b7de8af5a38a93548eb8453a498222c4ff2
+    	tokenAddress = config.chain.deployedAddresses.Token
         console.log('Using existing token contract at', tokenAddress)
         tokenContract = new ethers.Contract(
             tokenAddress,
