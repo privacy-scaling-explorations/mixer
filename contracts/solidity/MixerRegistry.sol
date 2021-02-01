@@ -1,13 +1,12 @@
-pragma experimental ABIEncoderV2;
 pragma solidity ^0.5.0;
 import { Mixer } from "./Mixer.sol";
 import { IERC20 } from "./token/IERC20.sol";
 
 /*
- * A mixer registery to deploy mixer for either ETH or ERC20 tokens.
+ * A mixer registry to deploy mixer for either ETH or ERC20 tokens.
  * See https://hackmd.io/qlKORn5MSOes1WtsEznu_g for the full specification.
  */
-contract MixerRegistery {
+contract MixerRegistry {
     
     struct MixerS {
         Mixer mixer;

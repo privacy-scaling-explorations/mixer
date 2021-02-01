@@ -59,7 +59,15 @@ const quickWithdrawEth = async (
         )
 
         const iface = new ethers.utils.Interface(mixerContract.interface.abi)
-        const callData = iface.functions.mix.encode([depositProof, broadcasterAddress])
+        const callData = iface.functions.mix.encode([
+            depositProof.signal,
+            depositProof.a,
+            depositProof.b,
+            depositProof.c,
+            depositProof.input,
+            depositProof.recipientAddress,
+            depositProof.fee,
+            broadcasterAddress])
 
         return relayerRegistryContract.relayCall(
             deployedAddresses.Mixer,
@@ -102,7 +110,15 @@ const quickWithdrawTokens = async (
         )
 
         const iface = new ethers.utils.Interface(mixerContract.interface.abi)
-        const callData = iface.functions.mixERC20.encode([depositProof, broadcasterAddress])
+        const callData = iface.functions.mixERC20.encode([
+            depositProof.signal,
+            depositProof.a,
+            depositProof.b,
+            depositProof.c,
+            depositProof.input,
+            depositProof.recipientAddress,
+            depositProof.fee,
+            broadcasterAddress])
 
         return relayerRegistryContract.relayCall(
             deployedAddresses.TokenMixer,

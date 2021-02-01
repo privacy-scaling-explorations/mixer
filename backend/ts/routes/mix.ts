@@ -251,9 +251,25 @@ const _mixRoute = (forTokens: boolean) => async (
     let mixCallData
 
     if (forTokens) {
-        mixCallData = mixerIface.functions.mixERC20.encode([depositProof, relayerAddress])
+        mixCallData = mixerIface.functions.mixERC20.encode([
+            depositProof.signal,
+            depositProof.a,
+            depositProof.b,
+            depositProof.c,
+            depositProof.input,
+            depositProof.recipientAddress,
+            depositProof.fee,
+            relayerAddress])
     } else {
-        mixCallData = mixerIface.functions.mix.encode([depositProof, relayerAddress])
+        mixCallData = mixerIface.functions.mix.encode([
+            depositProof.signal,
+            depositProof.a,
+            depositProof.b,
+            depositProof.c,
+            depositProof.input,
+            depositProof.recipientAddress,
+            depositProof.fee,
+            relayerAddress])
     }
 
     const relayerRegistryIface = new ethers.utils.Interface(relayerRegistryContract.interface.abi)

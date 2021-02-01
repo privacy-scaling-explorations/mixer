@@ -26,7 +26,15 @@ const mix = async (
         feeAmt,
     )
     const iface = new ethers.utils.Interface(mixerContract.interface.abi)
-    const callData = iface.functions.mix.encode([depositProof, relayerAddress])
+    const callData = iface.functions.mix.encode([
+	depositProof.signal,
+	depositProof.a,
+	depositProof.b,
+	depositProof.c,
+	depositProof.input,
+	depositProof.recipientAddress,
+	depositProof.fee,
+	relayerAddress])
 
     return relayerRegistryContract.relayCall(
         mixerContract.contractAddress,
@@ -59,7 +67,15 @@ const mixERC20 = async (
         feeAmt,
     )
     const iface = new ethers.utils.Interface(mixerContract.interface.abi)
-    const callData = iface.functions.mixERC20.encode([depositProof, relayerAddress])
+    const callData = iface.functions.mixERC20.encode([
+	depositProof.signal,
+	depositProof.a,
+	depositProof.b, 
+	depositProof.c,
+	depositProof.input,
+	depositProof.recipientAddress,
+	depositProof.fee,
+	relayerAddress])
 
     return relayerRegistryContract.relayCall(
         mixerContract.contractAddress,

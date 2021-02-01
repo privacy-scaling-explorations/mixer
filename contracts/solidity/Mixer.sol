@@ -1,4 +1,3 @@
-pragma experimental ABIEncoderV2;
 pragma solidity ^0.5.0;
 import { Semaphore } from "./Semaphore.sol";
 import { SafeMath } from "./SafeMath.sol";
@@ -161,26 +160,26 @@ contract Mixer {
      * Broadcasts the computed signal (the hash of the recipient's address, the
      * relayer's address, and the fee via Semaphore.
      */
-    function broadcastToSemaphore(DepositProof memory _proof, address payable _forwarderAddress) private {
+    function broadcastToSemaphore(bytes32 _signal, uint[2] memory _a, uint[2][2] memory _b, uint[2] memory _c, uint[4] memory _input, address payable _recipientAddress, uint256 _fee, address payable _forwarderAddress) private {
         // Hash the recipient's address, the mixer contract's address, and fee
         bytes32 computedSignal = keccak256(
             abi.encodePacked(
-                _proof.recipientAddress,
+                _recipientAddress,
                 _forwarderAddress,
-                _proof.fee
+                _fee
             )
         );
 
         // Check whether the signal hash provided matches the one computed above
-        require(computedSignal == _proof.signal, "Mixer: invalid computed signal");
+        require(computedSignal == _signal, "Mixer: invalid computed signal");
 
         // Broadcast the signal
         semaphore.broadcastSignal(
-            abi.encode(_proof.signal),
-            _proof.a,
-            _proof.b,
-            _proof.c,
-            _proof.input
+            abi.encode(_signal),
+            _a,
+            _b,
+            _c,
+            _input
         );
     }
 
@@ -190,19 +189,19 @@ contract Mixer {
      *               minus fees, to the recipient if the proof is valid.
      * @param _forwarderAddress The address to send the fee to.
      */
-    function mixERC20(DepositProof memory _proof, address payable _forwarderAddress) public onlyERC20 validFee(_proof.fee) {
-        broadcastToSemaphore(_proof, _forwarderAddress);
+    function mixERC20(bytes32 _signal, uint[2] memory _a, uint[2][2] memory _b, uint[2] memory _c, uint[4] memory _input, address payable _recipientAddress, uint256 _fee, address payable _forwarderAddress) public onlyERC20 validFee(_fee) {
+        broadcastToSemaphore(_signal, _a, _b, _c, _input, _recipientAddress, _fee, _forwarderAddress);
 
         // Transfer the fee to the relayer
-        bool relayerTransferSucceeded = token.transfer(_forwarderAddress, _proof.fee);
+        bool relayerTransferSucceeded = token.transfer(_forwarderAddress, _fee);
         require(relayerTransferSucceeded, "Mixer: failed to transfer the fee in tokens to the relayer");
 
         // Transfer the tokens owed to the recipient, minus the fee 
-        uint256 recipientMixAmt = mixAmt.sub(_proof.fee);
-        bool recipientTransferSucceeded = token.transfer(_proof.recipientAddress, recipientMixAmt);
+        uint256 recipientMixAmt = mixAmt.sub(_fee);
+        bool recipientTransferSucceeded = token.transfer(_recipientAddress, recipientMixAmt);
         require(recipientTransferSucceeded, "Mixer: failed to transfer mixAmt tokens to the recipient");
 
-        emit MixedERC20(_proof.recipientAddress, recipientMixAmt, _proof.fee);
+        emit MixedERC20(_recipientAddress, recipientMixAmt, _fee);
     }
 
     /*
@@ -211,16 +210,16 @@ contract Mixer {
      *               minus the fee, to the recipient if the proof is valid.
      * @param _forwarderAddress The address to send the fee to.
      */
-    function mix(DepositProof memory _proof, address payable _forwarderAddress) public onlyEth validFee(_proof.fee) {
-        broadcastToSemaphore(_proof, _forwarderAddress);
+    function mix(bytes32 _signal, uint[2] memory _a, uint[2][2] memory _b, uint[2] memory _c, uint[4] memory _input, address payable _recipientAddress, uint256 _fee, address payable _forwarderAddress) public onlyEth validFee(_fee) {
+        broadcastToSemaphore(_signal, _a, _b, _c, _input, _recipientAddress, _fee, _forwarderAddress);
 
         // Transfer the fee to the relayer
-        _forwarderAddress.transfer(_proof.fee);
+        _forwarderAddress.transfer(_fee);
 
         // Transfer the ETH owed to the recipient, minus the fee 
-        uint256 recipientMixAmt = mixAmt.sub(_proof.fee);
-        _proof.recipientAddress.transfer(recipientMixAmt);
+        uint256 recipientMixAmt = mixAmt.sub(_fee);
+        _recipientAddress.transfer(recipientMixAmt);
 
-        emit Mixed(_proof.recipientAddress, recipientMixAmt, _proof.fee);
+        emit Mixed(_recipientAddress, recipientMixAmt, _fee);
     }
 }
