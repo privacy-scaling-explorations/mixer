@@ -1,6 +1,7 @@
 import * as ethers from 'ethers'
 
-const config = require('../../exported_config')
+const configMixer = require('../../exported_config')
+import { deployedAddresses } from 'mixer-contracts'
 
 const localStorage = window.localStorage
 
@@ -45,19 +46,23 @@ let network = ''
 let networkSaved = getNetworkStorage()
 
 if (!networkSaved){
-    network = Object.keys(config.network)[0]
+    network = Object.keys(configMixer.network)[0]
 }else{
     network = networkSaved
 }
 
-let token = getTokenStorage(network)
+let token = ''
 
-if (!token){
-    token = Object.keys(config.network[network].token)[0]
+let tokenSaved = getTokenStorage(network)
+
+if (!tokenSaved){
+    token = Object.keys(configMixer.network[network].token)[0]
+}else{
+    token = tokenSaved
 }
 
 //Config linked to the network
-const configNetwork = config.network[network]
+const configNetwork = configMixer.network[network]
 const chainId = configNetwork.chainId
 const supportedNetwork = configNetwork.supportedNetwork
 const supportedNetworkName = configNetwork.supportedNetworkName
@@ -85,14 +90,14 @@ if (tokenDecimals){
 
 
 //Config for frontend
-const endsAtMidnight = config.frontend.countdown.endsAtMidnight
-const endsAfterSecs = config.frontend.countdown.endsAfterSecs
-const snarksPathsCircuit = config.frontend.snarks.paths.circuit
-const snarksPathsProvingKey = config.frontend.snarks.paths.provingKey
-const snarksPathsVerificationKey = config.frontend.snarks.paths.verificationKey
-const configEnv = config.env
+const endsAtMidnight = configMixer.frontend.countdown.endsAtMidnight
+const endsAfterSecs = configMixer.frontend.countdown.endsAfterSecs
+const snarksPathsCircuit = configMixer.frontend.snarks.paths.circuit
+const snarksPathsProvingKey = configMixer.frontend.snarks.paths.provingKey
+const snarksPathsVerificationKey = configMixer.frontend.snarks.paths.verificationKey
+const configEnv = configMixer.env
 
-const deployedAddresses = require('../deployedAddresses')
+
 //config of deployed address contract network
 const deployedAddressesNetwork = deployedAddresses[network]
 

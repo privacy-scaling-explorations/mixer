@@ -1,5 +1,13 @@
 import * as ethers from 'ethers'
 
+let deployedAddresses
+try{
+    deployedAddresses = require('../deployedAddresses')
+}catch (ex){
+    deployedAddresses = {}
+}
+
+
 const getContract = (
     name: string,
     signer: ethers.Signer,
@@ -21,4 +29,4 @@ const getContract = (
     return contract
 }
 
-export { getContract }
+export { getContract, deployedAddresses }

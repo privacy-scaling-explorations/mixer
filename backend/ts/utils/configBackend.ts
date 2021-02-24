@@ -1,12 +1,14 @@
 import * as ethers from 'ethers'
 
-const config = require('../../exported_config')
+import { deployedAddresses } from 'mixer-contracts'
+const configMixer =  require('../../exported_config')
+
 const network = 'kovan'
 const token = 'dai'
-const configNetwork = config.network[network]
+const configNetwork = configMixer.network[network]
 const configToken = configNetwork.token[token]
 
-const gasLimitMix = config.chain.gasLimit.mix
+const gasLimitMix = configMixer.chain.gasLimit.mix
 
 const mixAmtEth = configNetwork.mixAmtEth
 const feeAmtEth = configNetwork.feeAmtEth
@@ -21,16 +23,15 @@ const mixAmtToken = configToken.mixAmtToken
 const feeAmtToken = configToken.feeAmtToken
 const tokenDecimals = configToken.tokenDecimals
 
-const configEnv = config.env
+const configEnv = configMixer.env
 
-const backendHost = config.backend.host
-const backendPort = config.backend.port
+const backendHost = configMixer.backend.host
+const backendPort = configMixer.backend.port
 
-const etcdHost = config.backend.etcd.host
-const etcdPort = config.backend.etcd.port
-const etcdLockTime = config.backend.etcd.lockTime
+const etcdHost = configMixer.backend.etcd.host
+const etcdPort = configMixer.backend.etcd.port
+const etcdLockTime = configMixer.backend.etcd.lockTime
 
-const deployedAddresses = require('../../deployedAddresses')
 const deployedAddressesNetwork = deployedAddresses[network]
 const deployedAddressesToken = deployedAddressesNetwork.token[token]
 

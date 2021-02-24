@@ -1,17 +1,17 @@
 import React from 'react'
 import Select from 'react-select'
 
-const config = require('../../exported_config')
+const configMixer = require('../../exported_config')
 import {
     setNetwork,
     network,
 } from '../utils/configFrontend'
 
 function mapOption(value) {
-  return {value: value, label: config.network[value].supportedNetworkName};
+  return {value: value, label: configMixer.network[value].supportedNetworkName};
 }
 
-const options = Object.keys(config.network).map(mapOption)
+const options = Object.keys(configMixer.network).map(mapOption)
 
 const customStyles = {
   control: () => ({

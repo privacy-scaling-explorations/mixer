@@ -120,6 +120,7 @@ export default () => {
             const circuit = genCircuit(cirDef)
 
             progress('Generating witness...')
+            console.log(recipientAddress,relayerAddress,feeAmt)
             let result
             try {
                 result = await genMixerWitness(

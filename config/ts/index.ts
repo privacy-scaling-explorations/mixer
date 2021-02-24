@@ -1,6 +1,6 @@
 import * as path from 'path'
 
-// set NODE_CONFIG_DIR 
+// set NODE_CONFIG_DIR
 
 if (!process.env.hasOwnProperty('NODE_CONFIG_DIR')) {
     process.env.NODE_CONFIG_DIR = path.join(__dirname, '../')
@@ -10,6 +10,6 @@ if (!process.env.hasOwnProperty('NODE_ENV')) {
     process.env.NODE_ENV = 'local-dev'
 }
 
-const config = require('config')
+const configMixer = require('config')
 
-export { config }
+export { configMixer }

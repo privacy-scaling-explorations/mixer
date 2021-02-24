@@ -1,6 +1,5 @@
 import { Connectors } from 'web3-react'
 const { InjectedConnector } = Connectors
-const config = require('../../exported_config')
 
 import{
     supportedNetwork,

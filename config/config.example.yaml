@@ -1,52 +1,155 @@
 ---
 env: 'local-dev'
-mixAmtEth: "0.1"
-feeAmtEth: "0.001"
 
+network:
+    ganache:
+        url: "http://localhost:8545"
+        chainId: 1234
+        supportedNetwork: 1234
+        privateKeysPath: "../ganachePrivateKeys.json"
+        supportedNetworkName: "Ganache"
+        gasPrice: 20000000000
+        token:
+            eth:
+                mixAmt: 0.1
+                feeAmt: 0.001
+                sym: 'ETH'
+            tkn:
+                decimals: 18
+                mixAmt: 20
+                feeAmt: 0.02
+                sym: 'TKN'
+        testing:
+          privKeys:
+            - "0xc87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3"
+            - "0xae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f"
+    kovan:
+        url: "https://kovan.infura.io/v3/5d37c494621a43558d77c90e368d4022"
+        chainId: 42
+        supportedNetwork: 42
+        privateKeysPath: "../kovanPrivateKeys.json"
+        supportedNetworkName: "Kovan"
+        blockExplorerTxPrefix: "https://kovan.etherscan.io/tx/"
+        gasPrice: 20000000000
+        hotWalletPrivKeyPath: "/home/mixer/key/hotWalletPrivKey.json"
+        relayerAddress: "0xf17f52151EbEF6C7334FAD080c5704D77216b732"
+        token:
+            eth:
+                mixAmt: 0.1
+                feeAmt: 0.001
+                sym: 'ETH'
+            dai:
+                deployedAddresse: '0x4F96Fe3b7A6Cf9725f59d353F723c1bDb64CA6Aa'
+                decimals: 18
+                mixAmt: 20
+                feeAmt: 0.02
+                sym: 'DAI'
+        testing:
+          privKeys:
+            - "0xc87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3"
+            - "0xae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f"
+    arbitrum:
+        disable: true
+        url: "https://kovan3.arbitrum.io/rpc"
+        chainId: 79377087078960
+        supportedNetwork: 79377087078960
+        privateKeysPath: "../kovanPrivateKeys.json"
+        blockExplorerTxPrefix: https://explorer.arbitrum.io/#/
+        supportedNetworkName: "Arbitrum"
+        gasPrice: 20000000000
+        hotWalletPrivKeyPath: "/home/mixer/key/hotWalletPrivKey.json"
+        relayerAddress: "0xf17f52151EbEF6C7334FAD080c5704D77216b732"
+        token:
+            eth:
+                mixAmt: 0.1
+                feeAmt: 0.001
+                sym: 'ETH'
+            tkn:
+                decimals: 18
+                mixAmt: 20
+                feeAmt: 0.02
+                sym: 'TKN'
 
-#TODO jrastit fix
-tokenDecimals: 18
-mixAmtTokens: 20
-feeAmtTokens: 0.02 
-tokenSym: 'DAI'
-
-testing:
-  mixAmtTokens: 100
-  feeAmtTokens: 1
+network-test:
+    ganache:
+        disable: true
+        url: "http://localhost:8545"
+        chainId: 1234
+        supportedNetwork: 1234
+        privateKeysPath: "../ganachePrivateKeys.json"
+        supportedNetworkName: "Ganache"
+        gasPrice: 20000000000
+        token:
+            eth:
+                mixAmt: 0.1
+                feeAmt: 0.001
+                sym: 'ETH'
+            tkn:
+                decimals: 18
+                mixAmt: 20
+                feeAmt: 0.02
+                sym: 'TKN'
+        testing:
+          privKeys:
+            - "0xc87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3"
+            - "0xae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f"
+    kovan:
+        disable: true
+        url: "https://kovan.infura.io/v3/5d37c494621a43558d77c90e368d4022"
+        chainId: 42
+        supportedNetwork: 42
+        privateKeysPath: "../kovanPrivateKeys.json"
+        supportedNetworkName: "Kovan"
+        blockExplorerTxPrefix: "https://kovan.etherscan.io/tx/"
+        gasPrice: 20000000000
+        hotWalletPrivKeyPath: "/home/mixer/key/hotWalletPrivKey.json"
+        relayerAddress: "0xf17f52151EbEF6C7334FAD080c5704D77216b732"
+        token:
+            eth:
+                mixAmt: 0.1
+                feeAmt: 0.001
+                sym: 'ETH'
+            tkn:
+                decimals: 18
+                mixAmt: 20
+                feeAmt: 0.02
+                sym: 'TKN'
+        testing:
+          privKeys:
+            - "0xc87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3"
+            - "0xae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f"
+    arbitrum:
+        url: "https://kovan3.arbitrum.io/rpc"
+        chainId: 79377087078960
+        supportedNetwork: 79377087078960
+        privateKeysPath: "../kovanPrivateKeys.json"
+        blockExplorerTxPrefix: "https://explorer.arbitrum.io/#/"
+        supportedNetworkName: "Arbitrum"
+        gasPrice: 20000000000
+        hotWalletPrivKeyPath: "/home/mixer/key/hotWalletPrivKey.json"
+        relayerAddress: "0xf17f52151EbEF6C7334FAD080c5704D77216b732"
+        token:
+            eth:
+                mixAmt: 0.1
+                feeAmt: 0.001
+                sym: 'ETH'
+            tkn:
+                decimals: 18
+                mixAmt: 20
+                feeAmt: 0.02
+                sym: 'TKN'
 
 chain:
-  url: "http://localhost:8545"
-  chainId: 1234
-  #url: "https://kovan.infura.io/v3/5d37c494621a43558d77c90e368d4022"
-  #chainId: 42
-  mix:
-    gasLimit: 8000000
-  privateKeysPath: "../ganachePrivateKeys.json"
-  deployedAddresses:
-    MiMC: '0x8CdaF0CD259887258Bc13a92C0a6dA92698644C0'
-    MultipleMerkleTree: '0xF12b5dd4EAD5F743C6BaA640B0216200e89B60Da'
-    Semaphore: '0x345cA3e014Aaf5dcA488057592ee47305D9B3e10'
-    Mixer: '0xf25186B5081Ff5cE73482AD761DB0eB0d25abfBF'
-    RelayRegistry: '0x2C2B9C9a4a25e24B174f26114e8926a9f2128FE4'
-    #TODO jrastit fix
-    TokenMixer: '0x12E12EFD0046613F35Ac82406a0b429E16F258dd'
-    Token: '0xc4375b7de8af5a38a93548eb8453a498222c4ff2'
+    gasLimit:
+        mix: 8000000
 
 backend:
   port: 3000
   host: "http://localhost"
-  hotWalletPrivKeyPath: "/home/di/MIXER_SECRETS/hotWalletPrivKey.json"
-  #TODO jrastit fix
-  #broadcasterAddress: "0x627306090abaB3A6e1400e9345bC60c78a8BEf57"
-  relayerAddress: "0x627306090abaB3A6e1400e9345bC60c78a8BEf57"
   etcd:
     host: "localhost"
     port: 2379
     lockTime: 7000
-  testing:
-    privKeys:
-      - "0xc87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3"
-      - "0xae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f"
 
 frontend:
   snarks:
@@ -57,6 +160,3 @@ frontend:
   countdown:
     endsAtUtcMidnight: false
     endsAfterSecs: 5
-  blockExplorerTxPrefix: "https://kovan.etherscan.io/tx/"
-  supportedNetworkName: "local"
-  supportedNetwork: 1234

@@ -1,7 +1,7 @@
 import React from 'react'
 import Select from 'react-select'
 
-const config = require('../../exported_config')
+const configMixer = require('../../exported_config')
 import {
     setToken,
     token,
@@ -9,10 +9,10 @@ import {
 } from '../utils/configFrontend'
 
 function mapOptionToken(value : string) {
-    return {value: value, label: config.network[network].token[value].sym}
+    return {value: value, label: configMixer.network[network].token[value].sym}
 }
 
-const options = Object.keys(config.network[network].token).map(mapOptionToken)
+const options = Object.keys(configMixer.network[network].token).map(mapOptionToken)
 
 const customStyles = {
   control: () => ({

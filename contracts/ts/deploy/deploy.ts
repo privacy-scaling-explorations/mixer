@@ -4,7 +4,7 @@ import * as argparse from 'argparse'
 import * as fs from 'fs'
 import * as path from 'path'
 import * as etherlime from 'etherlime-lib'
-import { config } from 'mixer-config'
+import { configMixer } from 'mixer-config'
 import { genAccounts } from '../accounts'
 
 
@@ -136,7 +136,7 @@ const deployAllContracts = async (
             deployedAddressesToken.hasOwnProperty('Semaphore') &&
             deployedAddressesToken.hasOwnProperty('Mixer')){
 
-                console.log('Token Semaphore and Mixer already deployed')
+                console.log('Semaphore and Mixer already deployed')
                 semaphoreContract = new ethers.Contract(
                     deployedAddressesToken.Semaphore,
                     Semaphore.abi,
@@ -148,7 +148,7 @@ const deployAllContracts = async (
                     deployer.signer,
                 )
         } else {
-            console.log('Deploying Semaphore for the Token Mixer')
+            console.log('Deploying Semaphore for the Mixer')
             semaphoreContract = await deploySemaphore(
                 deployer,
                 Semaphore,
@@ -180,11 +180,11 @@ const deployAllContracts = async (
                 tokenAddress,
             )
 
-            console.log('Transferring ownership of Token Semaphore to the Token Mixer')
+            console.log('Transferring ownership of Semaphore to the Mixer')
             let tx = await semaphoreContract.transferOwnership(mixerContract.contractAddress)
             await tx.wait()
 
-            console.log('Setting the external nullifier of the Token Semaphore contract')
+            console.log('Setting the external nullifier of the Semaphore contract')
             tx = await mixerContract.setSemaphoreExternalNulllifier({ gasLimit: 100000 })
             await tx.wait()
         }
@@ -216,7 +216,7 @@ const main = async () => {
         ['-n', '--network'],
         {
             help: 'The network to deploy the contracts to',
-            required: true
+            required: false
         }
     )
 
@@ -231,23 +231,6 @@ const main = async () => {
     const args = parser.parseArgs()
     const outputAddressFile = args.output
 
-    const configNetwork = config.get('network.' + args.network)
-    console.log('Using network', configNetwork.get('supportedNetworkName'))
-
-    const accounts = genAccounts(configNetwork)
-    const admin = accounts[0]
-    console.log('Using account', admin.address)
-
-    let configToken
-
-    if (args.token){
-        configToken = config.get('network.' + args.network + '.token.' + args.token)
-    }
-
-    if (configToken){
-        console.log('Using token', configToken.get('sym'))
-    }
-
     let deployedAddresses
     try{
         deployedAddresses = require('../../deployedAddresses')
@@ -255,64 +238,101 @@ const main = async () => {
         deployedAddresses = {}
     }
 
-    const deployedAddressesNetwork = deployedAddresses[args.network]
+    for (let configNetworkName of Object.keys(configMixer.get('network'))) {
+        let configNetwork = configMixer.get('network.' + configNetworkName)
+        if (!(configNetwork.has('disable'))){
+            console.log("Network:", configNetworkName);
 
-    let deployedAddressesToken
-    if (deployedAddressesNetwork && deployedAddressesNetwork.token){
-        deployedAddressesToken = deployedAddressesNetwork.token[args.token]
-    }
 
-    console.log("deployedAddressesToken", deployedAddressesToken)
+            console.log('Using network', configNetwork.get('supportedNetworkName'))
 
-    const deployer = new etherlime.JSONRPCPrivateKeyDeployer(
-        admin.privateKey,
-        configNetwork.get('url'),
-        {
-            chainId: configNetwork.get('chainId'),
-        },
-    )
+            const accounts = genAccounts(configNetwork)
+            const admin = accounts[0]
+            console.log('Using account', admin.address)
 
-    const {
-        relayerRegistryContract,
-        mimcContract,
-        tokenContract,
-        semaphoreContract,
-        mixerContract,
-    } = await deployAllContracts(
-        deployer,
-        configToken,
-        admin.address,
-        deployedAddressesNetwork,
-        deployedAddressesToken,
-    )
+            if (!deployedAddresses[configNetworkName]){
+                deployedAddresses[configNetworkName] = { token : {} }
+            }
 
-    const addresses = deployedAddresses
+            let deployedAddressesNetwork = deployedAddresses[configNetworkName]
 
-    addresses[args.network] = {
-        MiMC: mimcContract.contractAddress ? mimcContract.contractAddress : mimcContract.address,
-        RelayerRegistry: relayerRegistryContract.contractAddress ? relayerRegistryContract.contractAddress : relayerRegistryContract.address,
-        token : deployedAddressesNetwork.token ? deployedAddressesNetwork.token : {},
-    }
+            for (let configTokenName of Object.keys(configNetwork.get('token'))) {
+                console.log("Token:", configTokenName);
+                let configToken = configNetwork.get('token.' + configTokenName)
 
-    if (args.token){
-        addresses[args.network].token[args.token] = {
-            Mixer: mixerContract.contractAddress ? mixerContract.contractAddress : mixerContract.address,
-            Semaphore: semaphoreContract.contractAddress ? semaphoreContract.contractAddress : semaphoreContract.address,
+                if (configTokenName){
+                    configToken = configMixer.get('network.' + configNetworkName + '.token.' + configTokenName)
+                }
+
+                if (configToken){
+                    console.log('Using token', configToken.get('sym'))
+                }
+
+                if (!deployedAddressesNetwork.token[configTokenName]){
+                    deployedAddressesNetwork.token[configTokenName] = {}
+                }
+                let deployedAddressesToken = deployedAddressesNetwork.token[configTokenName]
+
+                const deployer = new etherlime.JSONRPCPrivateKeyDeployer(
+                    admin.privateKey,
+                    configNetwork.get('url'),
+                    {
+                        chainId: configNetwork.get('chainId'),
+                    },
+                )
+
+                const {
+                    relayerRegistryContract,
+                    mimcContract,
+                    tokenContract,
+                    semaphoreContract,
+                    mixerContract,
+                } = await deployAllContracts(
+                    deployer,
+                    configToken,
+                    admin.address,
+                    deployedAddressesNetwork,
+                    deployedAddressesToken,
+                )
+
+                deployedAddressesNetwork.MiMC =
+                  mimcContract.contractAddress ?
+                  mimcContract.contractAddress :
+                  mimcContract.address
+                deployedAddressesNetwork.RelayerRegistry =
+                  relayerRegistryContract.contractAddress ?
+                  relayerRegistryContract.contractAddress :
+                  relayerRegistryContract.address
+
+                if (configTokenName){
+                    deployedAddressesToken.Semaphore =
+                      semaphoreContract.contractAddress ?
+                      semaphoreContract.contractAddress :
+                      semaphoreContract.address
+                    deployedAddressesToken.Mixer =
+                      mixerContract.contractAddress ?
+                      mixerContract.contractAddress :
+                      mixerContract.address
+
+                    if (tokenContract){
+                        deployedAddressesToken.Token =
+                          tokenContract.contractAddress ?
+                          tokenContract.contractAddress :
+                          tokenContract.address
+                    }
+                }
+            }
         }
-        if (tokenContract){
-            addresses[args.network].token[args.token].Token = tokenContract.contractAddress ? tokenContract.contractAddress : tokenContract.address
-        }
-
     }
-
     const addressJsonPath = path.join(__dirname, '../..', outputAddressFile)
     fs.writeFileSync(
         addressJsonPath,
-        JSON.stringify(addresses),
+        JSON.stringify(deployedAddresses),
     )
 
-    console.log(addresses)
+    console.log(deployedAddresses)
 }
+
 
 if (require.main === module) {
     try {

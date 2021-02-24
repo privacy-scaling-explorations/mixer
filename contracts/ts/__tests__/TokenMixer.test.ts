@@ -8,7 +8,7 @@ const path = require('path');
 import * as etherlime from 'etherlime-lib'
 import * as ethers from 'ethers'
 
-import { config } from 'mixer-config'
+import { configMixer } from 'mixer-config'
 import {
     mix,
     mixERC20,
@@ -37,9 +37,9 @@ import {
     deployAllContracts,
 } from '../deploy/deploy'
 
-for (let configNetworkName of Object.keys(config.get('network-test'))) {
+for (let configNetworkName of Object.keys(configMixer.get('network-test'))) {
   console.log("Test network:", configNetworkName);
-  let configNetwork = config.get('network-test.' + configNetworkName)
+  let configNetwork = configMixer.get('network-test.' + configNetworkName)
 
   if (!(configNetwork.has('disable'))){
 
@@ -130,7 +130,7 @@ for (let configNetworkName of Object.keys(config.get('network-test'))) {
               })
 
               describe('Contract deployments', () => {
-                  
+
                   it('should not deploy Mixer if the Semaphore contract address is invalid', async () => {
                       assert.revert(
                           deployer.deploy(
