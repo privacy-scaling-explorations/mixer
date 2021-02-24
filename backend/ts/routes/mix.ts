@@ -4,23 +4,23 @@ import * as ethers from 'ethers'
 import * as errors from '../errors'
 
 import {
-    relayerAddress,
-    hotWalletPrivKeyPath,
-    feeAmtEth,
-    feeAmtToken,
-    chainId,
-    chainUrl,
     etcdHost,
     etcdPort,
     etcdLockTime,
+} from '../utils/configBackend'
+
+import {
+    hotWalletPrivKeyPath,
+    feeAmt,
+    chainId,
+    chainUrl,
     gasPrice,
     gasLimitMix,
-    tokenMixerAddress,
     mixerAddress,
     semaphoreAddress,
+    relayerAddress,
     relayerRegistryAddress,
-
-} from '../utils/configBackend'
+} from '../utils/configBackendNetwork'
 
 import { getContract } from 'mixer-contracts'
 import {
@@ -31,6 +31,8 @@ import {
 } from 'libsemaphore'
 import * as Locker from 'node-etcd-lock'
 import { genValidator } from './utils'
+
+console.log("hotWalletPrivKeyPath", hotWalletPrivKeyPath)
 
 const hotWalletPrivKey = JSON.parse(
     fs.readFileSync(hotWalletPrivKeyPath, 'utf-8')
@@ -53,8 +55,8 @@ const areEqualAddresses = (a: string, b: string) => {
 }
 
 // This operator accepts a fee that is large enough
-const operatorFeeWei = ethers.utils.parseUnits(feeAmtEth.toString(), 'ether')
-const operatorFeeTokens = feeAmtToken
+const operatorFeeWei = ethers.utils.parseUnits(feeAmt.toString(), 'ether')
+const operatorFeeTokens = feeAmt
 
 const _mixRoute = (forTokens: boolean) => async (
     depositProof: DepositProof,
@@ -88,7 +90,7 @@ const _mixRoute = (forTokens: boolean) => async (
         }
     }
 
-    const mixerContractAddress = forTokens ? tokenMixerAddress : mixerAddress
+    const mixerContractAddress = mixerAddress
 
     // verify the external nullifier
     if (!areEqualAddresses(mixerContractAddress, depositProof.input[3])) {

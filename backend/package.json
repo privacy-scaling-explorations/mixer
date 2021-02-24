@@ -1,31 +1,44 @@
 {
-	"name": "mixer-backend",
-	"version": "1.0.0",
-	"description": "",
-	"main": "build/index.js",
-	"author": "Koh Wei Jie",
-	"license": "GPL-3.0-or-later",
-	"_moduleAliases": {
-		"@mixer-backend": "."
-	},
-	"dependencies": {
-		"ajv": "^6.10.0",
-		"config": "3.1.0",
-		"ethers": "^4.0.30",
-		"koa": "^2.7.0",
-		"koa-bodyparser": "^4.2.1",
-		"koa-helmet": "^4.2.0",
-		"libsemaphore": "^0.0.16",
-		"module-alias": "^2.2.0",
-		"node-etcd-lock": "^0.3.3",
-		"verror": "^1.10.0"
-	},
-	"devDependencies": {
-        "@types/node": "^12.0.12",
-		"@types/jest": "^24.0.15",
-		"axios": "^0.19.0",
-		"jest": "^24.8.0",
-		"snarkjs": "^0.1.13",
-		"ts-jest": "^24.0.2"
-	}
+  "name": "mixer-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "build/index.js",
+  "scripts": {
+    "watch": "tsc --watch",
+    "server": "node build/index.js",
+    "server-debug": "node --inspect-brk build/index.js",
+    "test": "NODE_ENV=local-dev jest --testPathPattern=__tests__/",
+    "test-debug": "NODE_ENV=local-dev node --inspect-brk ./node_modules/.bin/jest --testPathPattern=__tests__/",
+    "test-mix": "NODE_ENV=local-dev jest --testPathPattern=__tests__/Mix.test.ts",
+    "test-mix-debug": "NODE_ENV=local-dev node --inspect-brk ./node_modules/.bin/jest --testPathPattern=__tests__/Mix.test.ts",
+    "build": "./scripts/copyVerifyingKey.sh && tsc"
+  },
+  "author": "Koh Wei Jie",
+  "license": "GPL-3.0-or-later",
+  "_moduleAliases": {
+    "@mixer-backend": "."
+  },
+  "dependencies": {
+    "ajv": "^6.10.0",
+    "ethers": "^4.0.30",
+    "koa": "^2.7.0",
+    "koa-bodyparser": "^4.2.1",
+    "koa-helmet": "^4.2.0",
+    "mixer-contracts": "1.0.0",
+    "libsemaphore": "^0.0.16",
+    "mixer-config": "1.0.0",
+    "mixer-utils": "1.0.0",
+    "mixer-config": "1.0.0",
+    "module-alias": "^2.2.0",
+    "node-etcd-lock": "^0.3.3",
+    "verror": "^1.10.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^24.0.15",
+    "@types/node": "^12.0.12",
+    "axios": "^0.19.0",
+    "snarkjs": "^0.1.13",
+    "jest": "^24.8.0",
+    "ts-jest": "^24.0.2"
+  }
 }

@@ -22,21 +22,22 @@ import {
     genPublicSignals,
 } from 'libsemaphore'
 import {
-    mixAmtEth,
-    mixAmtToken,
-    tokenDecimals,
-    feeAmtToken,
-    feeAmtEth,
     backendPort,
     backendHost,
+} from '../utils/configBackend'
+
+import {
+    isETH,
+    mixAmt,
+    tokenDecimals,
+    feeAmt,
     chainId,
     chainUrl,
     relayerAddress,
     testingPrivKeys,
     mixerAddress,
     tokenAddress,
-    tokenMixerAddress,
-} from '../utils/configBackend'
+} from '../utils/configBackendNetwork'
 
 import { post } from './utils'
 
@@ -45,9 +46,9 @@ jest.setTimeout(90000)
 const PORT = backendPort
 const HOST = backendHost + ':' + backendPort.toString()
 
-const depositAmtEth = ethers.utils.parseEther(mixAmtEth.toString())
+const depositAmtEth = ethers.utils.parseEther(mixAmt.toString())
 
-const feeAmtWei = ethers.utils.parseEther(feeAmtEth.toString())
+const feeAmtWei = ethers.utils.parseEther(feeAmt.toString())
 
 const provider = new ethers.providers.JsonRpcProvider(
     chainUrl,
@@ -63,13 +64,6 @@ const mixerContract = getContract(
     'Mixer',
     signer,
     mixerAddress,
-)
-
-const tokenMixerContract = getContract(
-    'TokenMixer',
-    signer,
-    tokenMixerAddress,
-    'Mixer',
 )
 
 const tokenContract = getContract(
@@ -124,177 +118,183 @@ describe('the mixer_mix_eth API call', () => {
         server = app.listen(PORT)
     })
 
-    test('accepts a valid proof to mix tokens and credits the recipient', async () => {
-        const expectedTokenAmtToReceive = mixAmtToken - feeAmtToken
-        // mint tokens for the sender
-        await tokenContract.mint(
-            signer.address,
-            (mixAmtToken * (10 ** tokenDecimals)).toString(),
-            { gasLimit: 100000, }
-        )
-        await tokenContract.approve(
-            tokenMixerContract.address,
-            (mixAmtToken * (10 ** tokenDecimals)).toString(),
-            { gasLimit: 100000, }
-        )
+    if (isETH){
+        test('accepts a valid proof to mix ETH and credits the recipient', async () => {
+            // generate an identityCommitment
+            const identity = genIdentity()
+            const identityCommitment = genIdentityCommitment(identity)
 
-        // generate an identityCommitment
-        const identity = genIdentity()
-        const identityCommitment = genIdentityCommitment(identity)
+            const tx = await mixerContract.deposit(identityCommitment.toString(), { value: depositAmtEth, gasLimit: 1500000 })
+            const receipt = await tx.wait()
+            expect(receipt.status).toEqual(1)
 
-        const tx = await tokenMixerContract.depositERC20(
-            identityCommitment.toString(),
-            { gasLimit: 1500000, }
-        )
-        const receipt = await tx.wait()
+            // generate withdrawal proof
 
-        expect(receipt.status).toEqual(1)
+            const leaves = await mixerContract.getLeaves()
+            const externalNullifier = mixerContract.address
 
-        const leaves = await tokenMixerContract.getLeaves()
-        const externalNullifier = tokenMixerContract.address
+            const {
+                witness,
+                signal,
+                signalHash,
+                signature,
+                msg,
+                tree,
+                identityPath,
+                identityPathIndex,
+                identityPathElements,
+            } = await genMixerWitness(
+                circuit,
+                identity,
+                leaves,
+                20,
+                recipientAddress,
+                relayerAddress,
+                feeAmt,
+                externalNullifier,
+            )
 
-        const {
-            witness,
-            signal,
-            signalHash,
-            signature,
-            msg,
-            tree,
-            identityPath,
-            identityPathIndex,
-            identityPathElements,
-        } = await genMixerWitness(
-            circuit,
-            identity,
-            leaves,
-            20,
-            recipientAddress,
-            relayerAddress,
-            feeAmtToken * 10 ** tokenDecimals,
-            externalNullifier,
-        )
+            const publicSignals = genPublicSignals(witness, circuit)
 
-        const publicSignals = genPublicSignals(witness, circuit)
+            const proof = await genProof(witness, provingKey)
 
-        const proof = await genProof(witness, provingKey)
+            const isVerified = verifyProof(verifyingKey, proof, publicSignals)
+            expect(isVerified).toBeTruthy()
 
-        const isVerified = verifyProof(verifyingKey, proof, publicSignals)
-        expect(isVerified).toBeTruthy()
-        const params = genMixParams(
-            signal,
-            proof,
-            recipientAddress,
-            BigInt((feeAmtToken * 10 ** tokenDecimals).toString()),
-            publicSignals,
-        )
+            const params = genMixParams(
+                signal,
+                proof,
+                recipientAddress,
+                BigInt(feeAmt.toString()),
+                publicSignals,
+            )
 
-        validParamsForTokens = params
+            validParamsForEth = params
 
-        recipientBalanceBefore = await tokenContract.balanceOf(recipientAddress)
+            recipientBalanceBefore = await provider.getBalance(recipientAddress)
 
-        // make the API call to submit the proof
-        const resp = await post(1, 'mixer_mix_tokens', params)
+            // make the API call to submit the proof
+            const resp = await post(1, 'mixer_mix_eth', params)
 
-        if (resp.data.error) {
-            console.log(params)
-            console.error(resp.data.error)
-        }
-
-        expect(resp.data.result.txHash).toMatch(/^0x[a-fA-F0-9]{40}/)
-
-        // wait for the tx to be mined
-        while (true) {
-            const receipt = await provider.getTransactionReceipt(resp.data.result.txHash)
-            if (receipt == null) {
-                await sleep(1000)
-            } else {
-                break
+            if (resp.data.error) {
+                console.log(params)
+                console.error(resp.data.error)
             }
-        }
 
-        recipientBalanceAfter = await tokenContract.balanceOf(recipientAddress)
-        const diff = recipientBalanceAfter.sub(recipientBalanceBefore).toString()
-        expect(diff).toEqual((expectedTokenAmtToReceive * (10 ** tokenDecimals)).toString())
-    })
+            expect(resp.data.result.txHash).toMatch(/^0x[a-fA-F0-9]{40}/)
 
-    test('accepts a valid proof to mix ETH and credits the recipient', async () => {
-        // generate an identityCommitment
-        const identity = genIdentity()
-        const identityCommitment = genIdentityCommitment(identity)
-
-        const tx = await mixerContract.deposit(identityCommitment.toString(), { value: depositAmtEth, gasLimit: 1500000 })
-        const receipt = await tx.wait()
-        expect(receipt.status).toEqual(1)
-
-        // generate withdrawal proof
-
-        const leaves = await mixerContract.getLeaves()
-        const externalNullifier = mixerContract.address
-
-        const {
-            witness,
-            signal,
-            signalHash,
-            signature,
-            msg,
-            tree,
-            identityPath,
-            identityPathIndex,
-            identityPathElements,
-        } = await genMixerWitness(
-            circuit,
-            identity,
-            leaves,
-            20,
-            recipientAddress,
-            relayerAddress,
-            feeAmtWei,
-            externalNullifier,
-        )
-
-        const publicSignals = genPublicSignals(witness, circuit)
-
-        const proof = await genProof(witness, provingKey)
-
-        const isVerified = verifyProof(verifyingKey, proof, publicSignals)
-        expect(isVerified).toBeTruthy()
-
-        const params = genMixParams(
-            signal,
-            proof,
-            recipientAddress,
-            BigInt(feeAmtWei.toString()),
-            publicSignals,
-        )
-
-        validParamsForEth = params
-
-        recipientBalanceBefore = await provider.getBalance(recipientAddress)
-
-        // make the API call to submit the proof
-        const resp = await post(1, 'mixer_mix_eth', params)
-
-        if (resp.data.error) {
-            console.log(params)
-            console.error(resp.data.error)
-        }
-
-        expect(resp.data.result.txHash).toMatch(/^0x[a-fA-F0-9]{40}/)
-
-        // wait for the tx to be mined
-        while (true) {
-            const receipt = await provider.getTransactionReceipt(resp.data.result.txHash)
-            if (receipt == null) {
-                await sleep(1000)
-            } else {
-                break
+            // wait for the tx to be mined
+            while (true) {
+                const receipt = await provider.getTransactionReceipt(resp.data.result.txHash)
+                if (receipt == null) {
+                    await sleep(1000)
+                } else {
+                    break
+                }
             }
-        }
 
-        recipientBalanceAfter = await provider.getBalance(recipientAddress)
-        expect(ethers.utils.formatEther(recipientBalanceAfter.sub(recipientBalanceBefore)))
-            .toEqual('0.099')
-    })
+            recipientBalanceAfter = await provider.getBalance(recipientAddress)
+            expect(ethers.utils.formatEther(recipientBalanceAfter.sub(recipientBalanceBefore)))
+                .toEqual('0.099')
+        })
+    }else{
+        test('accepts a valid proof to mix tokens and credits the recipient', async () => {
+            const expectedTokenAmtToReceive = mixAmt - feeAmt
+            // mint tokens for the sender
+            await tokenContract.mint(
+                signer.address,
+                (mixAmt * (10 ** tokenDecimals)).toString(),
+                { gasLimit: 100000, }
+            )
+            await tokenContract.approve(
+                mixerContract.address,
+                (mixAmt * (10 ** tokenDecimals)).toString(),
+                { gasLimit: 100000, }
+            )
+
+            // generate an identityCommitment
+            const identity = genIdentity()
+            const identityCommitment = genIdentityCommitment(identity)
+
+            const tx = await mixerContract.depositERC20(
+                identityCommitment.toString(),
+                { gasLimit: 1500000, }
+            )
+            const receipt = await tx.wait()
+
+            expect(receipt.status).toEqual(1)
+
+            const leaves = await mixerContract.getLeaves()
+            const externalNullifier = mixerContract.address
+
+            const {
+                witness,
+                signal,
+                signalHash,
+                signature,
+                msg,
+                tree,
+                identityPath,
+                identityPathIndex,
+                identityPathElements,
+            } = await genMixerWitness(
+                circuit,
+                identity,
+                leaves,
+                20,
+                recipientAddress,
+                relayerAddress,
+                feeAmt * 10 ** tokenDecimals,
+                externalNullifier,
+            )
+
+            const publicSignals = genPublicSignals(witness, circuit)
+
+            const proof = await genProof(witness, provingKey)
+
+            const isVerified = verifyProof(verifyingKey, proof, publicSignals)
+            expect(isVerified).toBeTruthy()
+            const params = genMixParams(
+                signal,
+                proof,
+                recipientAddress,
+                BigInt((feeAmt * 10 ** tokenDecimals).toString()),
+                publicSignals,
+            )
+
+            validParamsForTokens = params
+
+            recipientBalanceBefore = await tokenContract.balanceOf(recipientAddress)
+
+            // make the API call to submit the proof
+            const resp = await post(1, 'mixer_mix_tokens', params)
+
+            if (resp.data.error) {
+                console.log(params)
+                console.error(resp.data.error)
+            }
+
+            expect(resp.data.result.txHash).toMatch(/^0x[a-fA-F0-9]{40}/)
+
+            // wait for the tx to be mined
+            while (true) {
+                const receipt = await provider.getTransactionReceipt(resp.data.result.txHash)
+                if (receipt == null) {
+                    await sleep(1000)
+                } else {
+                    break
+                }
+            }
+
+            recipientBalanceAfter = await tokenContract.balanceOf(recipientAddress)
+            const diff = recipientBalanceAfter.sub(recipientBalanceBefore).toString()
+            expect(diff).toEqual((expectedTokenAmtToReceive * (10 ** tokenDecimals)).toString())
+        })
+
+    }
+
+
+
 
     test('rejects a request where the JSON-RPC schema is invalid', async () => {
         const resp = await post(1, 'mixer_mix_eth', schemaInvalidParamsForEth)

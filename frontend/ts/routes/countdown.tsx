@@ -31,6 +31,7 @@ import { ErrorCodes } from '../errors'
 
 import {
     isETH,
+    network,
     mixAmt,
     operatorFee,
     tokenDecimals,
@@ -64,6 +65,7 @@ export default () => {
     const [errorMsg, setErrorMsg] = useState('')
 
     const progress = (line: string) => {
+        console.log(line)
         setProofGenProgress(line)
     }
 
@@ -88,11 +90,9 @@ export default () => {
 
         if (isETH) {
             const recipientBalanceBefore = await provider.getBalance(recipientAddress)
-            console.log('The recipient has', ethers.utils.formatEther(recipientBalanceBefore), 'ETH')
         } else {
             tokenContract = await getTokenContract(context)
             const recipientBalanceBefore = (await tokenContract.balanceOf(recipientAddress)) / (10 ** tokenDecimals)
-            console.log('The recipient has', recipientBalanceBefore.toString(), 'tokens')
         }
 
         try {
@@ -100,91 +100,109 @@ export default () => {
 
             const externalNullifier = mixerContract.address
 
-            progress('Downloading leaves...')
+            //cache in local storage
+            const localStorage = window.localStorage
 
-            const leaves = await mixerContract.getLeaves()
+            const cacheID = 'cacheParam.' + network + "." + mixerContract.address.slice(4).toLowerCase()
 
-            // TODO: serialise and deserialise the identity
-            const pubKey = genPubKey(identityStored.privKey)
+            let paramsStr = localStorage.getItem(cacheID)
 
-            const identity: Identity = {
-                keypair: { pubKey, privKey: identityStored.privKey },
-                identityNullifier: identityStored.identityNullifier,
-                identityTrapdoor: identityStored.identityTrapdoor,
+            let params
+
+            if (paramsStr){
+                params = JSON.parse(paramsStr)
             }
 
-            const identityCommitment = genIdentityCommitment(identity)
+            if (!params){
+                progress('Downloading leaves...')
 
-            progress('Downloading circuit...')
-            const cirDef = await (await fetchWithoutCache(snarksPathsCircuit)).json()
-            const circuit = genCircuit(cirDef)
+                const leaves = await mixerContract.getLeaves()
 
-            progress('Generating witness...')
-            console.log(recipientAddress,relayerAddress,feeAmt)
-            let result
-            try {
-                result = await genMixerWitness(
-                    circuit,
-                    identity,
-                    leaves,
-                    20,
-                    recipientAddress,
-                    relayerAddress,
-                    feeAmt,
-                    externalNullifier,
+                // TODO: serialise and deserialise the identity
+                const pubKey = genPubKey(identityStored.privKey)
+
+                const identity: Identity = {
+                    keypair: { pubKey, privKey: identityStored.privKey },
+                    identityNullifier: identityStored.identityNullifier,
+                    identityTrapdoor: identityStored.identityTrapdoor,
+                }
+
+                const identityCommitment = genIdentityCommitment(identity)
+
+                progress('Downloading circuit...')
+                const cirDef = await (await fetchWithoutCache(snarksPathsCircuit)).json()
+                progress('Generating circuit...')
+                const circuit = genCircuit(cirDef)
+
+                progress('Generating witness...')
+                let result
+                try {
+                    result = await genMixerWitness(
+                        circuit,
+                        identity,
+                        leaves,
+                        20,
+                        recipientAddress,
+                        relayerAddress,
+                        feeAmt,
+                        externalNullifier,
+                    )
+
+                } catch (err) {
+                    console.error(err)
+                    throw {
+                        code: ErrorCodes.WITNESS_GEN_ERROR,
+                    }
+                }
+
+                const validSig = verifySignature(result.msg, result.signature, pubKey)
+                if (!validSig) {
+                    throw {
+                        code: ErrorCodes.INVALID_SIG,
+                    }
+                }
+
+                if (!circuit.checkWitness(result.witness)) {
+                    throw {
+                        code: ErrorCodes.INVALID_WITNESS,
+                    }
+                }
+
+                progress('Downloading proving key...')
+                const provingKey = new Uint8Array(
+                    await (await fetch(snarksPathsProvingKey)).arrayBuffer()
                 )
 
-            } catch (err) {
-                console.error(err)
-                throw {
-                    code: ErrorCodes.WITNESS_GEN_ERROR,
+                progress('Downloading verification key...')
+                const verifyingKey = parseVerifyingKeyJson(
+                    // @ts-ignore
+                    await (await fetch(snarksPathsVerificationKey)).text()
+                )
+
+                progress('Generating proof...')
+                const proof = await genProof(result.witness, provingKey)
+
+                const publicSignals = genPublicSignals(result.witness, circuit)
+
+                const isVerified = verifyProof(verifyingKey, proof, publicSignals)
+
+                if (!isVerified) {
+                    throw {
+                        code: ErrorCodes.INVALID_PROOF,
+                    }
                 }
+
+                params = genMixParams(
+                    result.signal,
+                    proof,
+                    recipientAddress,
+                    BigInt(feeAmt.toString()),
+                    publicSignals,
+                )
+
+                localStorage.setItem(cacheID, JSON.stringify(params))
+
             }
-
-            const validSig = verifySignature(result.msg, result.signature, pubKey)
-            if (!validSig) {
-                throw {
-                    code: ErrorCodes.INVALID_SIG,
-                }
-            }
-
-            if (!circuit.checkWitness(result.witness)) {
-                throw {
-                    code: ErrorCodes.INVALID_WITNESS,
-                }
-            }
-
-            progress('Downloading proving key...')
-            const provingKey = new Uint8Array(
-                await (await fetch(snarksPathsProvingKey)).arrayBuffer()
-            )
-
-            progress('Downloading verification key...')
-            const verifyingKey = parseVerifyingKeyJson(
-                // @ts-ignore
-                await (await fetch(snarksPathsVerificationKey)).text()
-            )
-
-            progress('Generating proof...')
-            const proof = await genProof(result.witness, provingKey)
-
-            const publicSignals = genPublicSignals(result.witness, circuit)
-
-            const isVerified = verifyProof(verifyingKey, proof, publicSignals)
-
-            if (!isVerified) {
-                throw {
-                    code: ErrorCodes.INVALID_PROOF,
-                }
-            }
-
-            const params = genMixParams(
-                result.signal,
-                proof,
-                recipientAddress,
-                BigInt(feeAmt.toString()),
-                publicSignals,
-            )
 
             const method = isETH ? 'mixer_mix_eth' : 'mixer_mix_tokens'
 
@@ -196,7 +214,7 @@ export default () => {
             }
 
             progress('Sending JSON-RPC call to the relayer...')
-            console.log(request)
+            console.log("request:", request.toString(), request)
 
             const response = await fetch(
                 '/api',
@@ -213,7 +231,7 @@ export default () => {
             if (responseJson.result) {
                 progress('')
                 setTxHash(responseJson.result.txHash)
-                console.log(responseJson.result.txHash)
+                console.log("json to serveur", responseJson.result.txHash)
                 updateWithdrawTxHash(identityStored, responseJson.result.txHash)
 
                 await sleep(4000)
@@ -267,7 +285,6 @@ export default () => {
     // Dev only
     if (!endsAtMidnight && !midnightOver) {
         expiryTimestamp = new Date()
-        console.log(endsAfterSecs)
         expiryTimestamp.setSeconds(
             expiryTimestamp.getSeconds() + endsAfterSecs
         )
