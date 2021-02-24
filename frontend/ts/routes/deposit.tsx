@@ -4,10 +4,6 @@ import { Redirect } from 'react-router-dom'
 import * as ethers from 'ethers'
 import { Buffer } from 'buffer'
 import { useWeb3Context } from 'web3-react'
-const config = require('../../exported_config')
-//const deployedAddresses = config.chain.deployedAddresses
-//TODO jrastit fix deployedAddresses
-const deployedAddresses = require('../deployedAddresses')
 import { Erc20ApproveButton, TxButton, TxStatuses } from '../components/txButton'
 import { TxHashMessage } from '../components/txHashMessage'
 import { sleep } from 'mixer-utils'
@@ -21,7 +17,7 @@ import {
     getNumUnwithdrawn,
 } from '../storage'
 
-import { getBalance, getTokenBalance } from '../web3/balance'
+import { getBalance, getBalanceETH } from '../web3/balance'
 import { depositEth, depositTokens, getTokenAllowance, approveTokens } from '../web3/deposit'
 import {
     genIdentity,
@@ -29,39 +25,45 @@ import {
 } from 'libsemaphore'
 
 import {
-    mixAmtEth,
-    operatorFeeEth,
-    mixAmtTokens,
-    operatorFeeTokens,
-} from '../utils/mixAmts'
-
-const tokenSym = config.tokenSym
-const blockExplorerTxPrefix = config.frontend.blockExplorerTxPrefix
+    isETH,
+    mixAmt,
+    operatorFee,
+    tokenSym,
+    blockExplorerTxPrefix,
+    tokenDecimals,
+    supportedNetworkName,
+    configEnv,
+    mixerAddress,
+} from '../utils/configFrontend'
 
 const name = 'MicroMix'
 
 const topUpEthMsg =
     <div className="column is-8 is-offset-2">
         <p>
-            Please top up your account with at least 0.11
-            KETH (0.1 to deposit and 0.01 for gas). You can get KETH
-            from a faucet <a target="_blank" 
-            href="https://faucet.kovan.network/">here</a> or <a 
+            Please top up your account with at least {mixAmt.toString()}
+            {tokenSym} ({mixAmt.toString()} to deposit and 0.1 for fee). You can get KETH
+            from a faucet <a target="_blank"
+            href="https://faucet.kovan.network/">here</a> or <a
             target="_blank" href="https://gitter.im/kovan-testnet/faucet">here</a>.
         </p>
     </div>
 
-const topUpDaiMsg =
+let topUpDaiMsg
+
+if (!isETH)
+    topUpDaiMsg =
     <div className="column is-8 is-offset-2">
         <p>
-            Please top up your account with at least {mixAmtTokens.toString()} DAI 
-            and 0.01 KETH for gas. You can convert KETH to DAI <a
+            Please top up your account with at least {mixAmt.toString()} {tokenSym}
+            and {operatorFee.toString()} for fee. You can convert KETH to DAI <a
             href="https://cdp.makerdao.com" target="_blank">here</a>, and you can get KETH
             from a faucet <a target="_blank" href="https://faucet.kovan.network/">here</a> or <a target="_blank" href="https://gitter.im/kovan-testnet/faucet">here</a>.
         </p>
     </div>
 
 export default () => {
+
     const [storageHasBeenInit, setStorageHasBeenInit] = useState(false)
     const [txStatus, setTxStatus] = useState(TxStatuses.None)
     const [erc20ApproveTxStatus, setErc20ApproveTxStatus] = useState(TxStatuses.None)
@@ -69,24 +71,13 @@ export default () => {
     const [recipientAddress, setRecipientAddress] = useState('')
     const [errorMsg, setErrorMsg] = useState('')
     const [enoughEth, setEnoughEth] = useState(true)
-    const [enoughEthAndDai, setEnoughEthAndDai] = useState(false)
-    const [tokenType, setTokenType] = useState('ETH')
+    const [enoughEthAndToken, setenoughEthAndToken] = useState(false)
+    const [tokenType, setTokenType] = useState(tokenSym)
     const [tokenAllowanceNeeded, setTokenAllowanceNeeded] = useState(-1)
 
     if (!storageHasBeenInit) {
         initStorage()
         setStorageHasBeenInit(true)
-    }
-
-    const isEth = tokenType === 'ETH'
-
-    // The operator's fee is equal to the burn fee by default but this isn't
-    // enforced by the contract
-    let mixAmt: string
-    if (isEth) {
-        mixAmt = mixAmtEth.toString()
-    } else {
-        mixAmt = mixAmtTokens.toString()
     }
 
     const validRecipientAddress= recipientAddress.match(/^0x[a-fA-F0-9]{40}$/)
@@ -105,7 +96,7 @@ export default () => {
     const handleTokenApproveBtnClick = async () => {
         setErc20ApproveTxStatus(TxStatuses.Pending)
 
-        const tx = await approveTokens(context, tokenAllowanceNeeded * (10 ** config.tokenDecimals))
+        const tx = await approveTokens(context, tokenAllowanceNeeded * (10 ** tokenDecimals))
         await tx.wait()
         setErc20ApproveTxStatus(TxStatuses.Mined)
     }
@@ -126,11 +117,11 @@ export default () => {
             setTxStatus(TxStatuses.Pending)
 
             let tx
-            if (isEth) {
+            if (isETH) {
                 tx = await depositEth(
                     context,
                     identityCommitment,
-                    ethers.utils.parseEther(mixAmt),
+                    ethers.utils.parseEther(mixAmt.toString()),
                 )
             } else {
                 tx = await depositTokens(
@@ -143,7 +134,7 @@ export default () => {
 
             storeDeposit(identity, recipientAddress, tokenType)
 
-            if (config.env === 'local-dev') {
+            if (configEnv === 'local-dev') {
                 await sleep(3000)
             }
 
@@ -161,7 +152,7 @@ export default () => {
                 err.reason === 'contract not deployed'
             ) {
                 setErrorMsg(`The mixer contract was not deployed to the expected ` +
-                    `address ${deployedAddresses.Mixer}`)
+                    `address ${mixerAddress}`)
             } else {
                 setErrorMsg('An error with the transaction occurred.')
             }
@@ -170,54 +161,31 @@ export default () => {
 
     const checkBalances = async () => {
         if (mixAmt && context.connector && context.account) {
-            const balance = await getBalance(context)
-            const minAmt = isEth && mixAmt ? parseFloat(mixAmt) + 0.01 : 0.01
+            const balance = await getBalanceETH(context)
+            const minAmt = isETH ? mixAmt + operatorFee : operatorFee
             let enoughEth
             if (balance) {
                 enoughEth = balance.gte(ethers.utils.parseEther(minAmt.toString()))
                 setEnoughEth(enoughEth)
             }
-
-            if (tokenType === 'DAI') {
-                const daiBalance = await getTokenBalance(context)
-                const enoughDai = daiBalance >= minAmt
-                setEnoughEthAndDai(enoughEth && enoughDai)
+            if (!isETH) {
+                const tokenBalance = await getBalance(context)
+                const enoughToken = tokenBalance >= mixAmt
+                setenoughEthAndToken(enoughEth && enoughToken)
             }
         }
     }
 
-    const mixEthInfo = (
-        <div>
-            <p>
-                {`The fee is ${operatorFeeEth} ETH.`}
-            </p>
-            <p>
-                {`The recipient will receive ${mixAmtEth - operatorFeeEth} ETH after midnight, UTC.`}
-            </p>
-        </div>
-    )
-
-    const mixTokensInfo = (
-        <div>
-            <p>
-                {`The fee is ${operatorFeeTokens} ${tokenSym}.`}
-            </p>
-            <p>
-                {`The recipient will receive ${mixAmtTokens - operatorFeeTokens} ${tokenSym} after midnight, UTC.`}
-            </p>
-        </div>
-    )
-
     const checkTokenAllowance = async () => {
-        if (mixAmtTokens && context.connector) {
-            const mixAmtTokensFull = mixAmtTokens * 10 ** config.tokenDecimals
+        if (mixAmt && context.connector) {
+            const mixAmtFull = mixAmt * 10 ** tokenDecimals
             const allowance = await getTokenAllowance(context)
 
-            let x = mixAmtTokensFull - allowance
+            let x = mixAmtFull - allowance
             if (x < 0) {
                 x = 0
             }
-            setTokenAllowanceNeeded(x / (10 ** config.tokenDecimals))
+            setTokenAllowanceNeeded(x / (10 ** tokenDecimals))
         }
     }
 
@@ -236,8 +204,8 @@ export default () => {
 
     const showMixForm = context.error == null &&
         (
-            (!isEth && tokenAllowanceNeeded === 0 && enoughEthAndDai) ||
-            (isEth && enoughEth)
+            (!isETH && tokenAllowanceNeeded === 0 && enoughEthAndToken) ||
+            (isETH && enoughEth)
         )
 
     const handleTokenTypeSelect = (e) => {
@@ -246,7 +214,9 @@ export default () => {
     }
 
     checkBalances()
-    checkTokenAllowance()
+    if (!isETH){
+        checkTokenAllowance()
+    }
 
     return (
         <div className='columns has-text-centered'>
@@ -262,13 +232,12 @@ export default () => {
                         <span>Send</span>
                         <div className="control token-select">
                             <div className="select is-primary">
-                                <select 
+                                <select
                                     value={tokenType}
                                     id="token"
                                     onChange={handleTokenTypeSelect}
                                 >
-                                    <option value="ETH">{mixAmtEth.toString()} ETH</option>
-                                    <option value="DAI">{mixAmtTokens.toString()} DAI</option>
+                                    <option value="{tokenSym}">{mixAmt.toString()} {tokenSym}</option>
                                 </select>
                             </div>
                         </div>
@@ -281,7 +250,7 @@ export default () => {
                                 spellCheck={false}
                                 className="input eth_address"
                                 type="text"
-                                placeholder="0x........" 
+                                placeholder="0x........"
                                 value={recipientAddress}
                                 onChange={(e) => {
                                     setRecipientAddress(e.target.value)
@@ -296,18 +265,24 @@ export default () => {
                     { (context.error != null && context.error['code'] === 'UNSUPPORTED_NETWORK') ?
                         <p>
                             Please connect to
-                            the {config.frontend.supportedNetworkName} Ethereum
+                            the {supportedNetworkName} Ethereum
                             network.
                         </p>
                         :
                         <div className='column is-12'>
-                            { isEth && mixEthInfo }
-                            { !isEth && mixTokensInfo }
+                            <div>
+                                <p>
+                                    {`The fee is ${operatorFee} ${tokenSym}.`}
+                                </p>
+                                <p>
+                                    {`The recipient will receive ${mixAmt - operatorFee} ${tokenSym} after midnight, UTC.`}
+                                </p>
+                            </div>
 
-                            { isEth && !enoughEth && topUpEthMsg }
-                            { !isEth && !enoughEthAndDai && topUpDaiMsg }
+                            { isETH && !enoughEth && topUpEthMsg }
+                            { !isETH && !enoughEthAndToken && topUpDaiMsg }
 
-                            { !isEth && enoughEthAndDai && tokenAllowanceNeeded > 0 && tokenAllowanceBtn }
+                            { !isETH && enoughEthAndToken && tokenAllowanceNeeded > 0 && tokenAllowanceBtn }
                         </div>
                     }
 
@@ -325,13 +300,13 @@ export default () => {
                         { txHash.length > 0 &&
                             <div>
                                 <br />
-                                <TxHashMessage 
+                                <TxHashMessage
                                     mixSuccessful={false}
                                     txHash={txHash}
                                     txStatus={TxStatuses.Pending} />
                             </div>
                         }
-                            
+
                         { txStatus === TxStatuses.Mined &&
                             <article className="message is-success">
                                 <div className="message-body">

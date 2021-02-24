@@ -1,8 +1,10 @@
 import React, { useState, Component } from 'react'
 import ReactDOM from 'react-dom'
 import { TxStatuses } from './txButton'
-const config = require('../../exported_config')
-const blockExplorerTxPrefix = config.frontend.blockExplorerTxPrefix
+
+import{
+    blockExplorerTxPrefix,
+} from '../utils/configFrontend'
 
 const TxHashMessage = ({
     txStatus,

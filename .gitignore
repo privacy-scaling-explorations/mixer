@@ -46,3 +46,5 @@ Sessionx.vim
 tags
 # Persistent undo
 [._]*.un~
+backend/exported_config.json
+frontend/exported_config.json

@@ -8,7 +8,6 @@ import * as JsonRpc from '../jsonRpc'
 const fs = require('fs');
 const path = require('path');
 import { sleep, genMixParams } from 'mixer-utils'
-import { config } from 'mixer-config'
 import * as errors from '../errors'
 import { getContract } from 'mixer-contracts'
 import {
@@ -22,50 +21,61 @@ import {
     verifySignature,
     genPublicSignals,
 } from 'libsemaphore'
+import {
+    mixAmtEth,
+    mixAmtToken,
+    tokenDecimals,
+    feeAmtToken,
+    feeAmtEth,
+    backendPort,
+    backendHost,
+    chainId,
+    chainUrl,
+    relayerAddress,
+    testingPrivKeys,
+    mixerAddress,
+    tokenAddress,
+    tokenMixerAddress,
+} from '../utils/configBackend'
 
 import { post } from './utils'
 
 jest.setTimeout(90000)
 
-const deployedAddresses = require('@mixer-backend/deployedAddresses.json')
+const PORT = backendPort
+const HOST = backendHost + ':' + backendPort.toString()
 
-const PORT = config.get('backend.port')
-const HOST = config.get('backend.host') + ':' + PORT.toString()
+const depositAmtEth = ethers.utils.parseEther(mixAmtEth.toString())
 
-const depositAmtEth = ethers.utils.parseEther(config.get('mixAmtEth').toString())
-const depositAmtTokens = config.get('mixAmtTokens')
-const tokenDecimals = config.get('tokenDecimals')
-
-const feeAmtEth = ethers.utils.parseEther(config.get('feeAmtEth').toString())
-const feeAmtTokens = config.get('feeAmtTokens')
+const feeAmtWei = ethers.utils.parseEther(feeAmtEth.toString())
 
 const provider = new ethers.providers.JsonRpcProvider(
-    config.get('chain.url'),
-    config.get('chain.chainId'),
+    chainUrl,
+    chainId,
 )
 
 const signer = new ethers.Wallet(
-    config.get('backend.testing.privKeys')[0],
+    testingPrivKeys[0],
     provider,
 )
 
 const mixerContract = getContract(
     'Mixer',
     signer,
-    deployedAddresses,
+    mixerAddress,
 )
 
 const tokenMixerContract = getContract(
     'TokenMixer',
     signer,
-    deployedAddresses,
+    tokenMixerAddress,
     'Mixer',
 )
 
 const tokenContract = getContract(
     'Token',
     signer,
-    deployedAddresses,
+    tokenAddress,
     'ERC20Mintable',
 )
 
@@ -103,7 +113,6 @@ const schemaInvalidParamsForEth = {
 }
 
 let server
-const relayerAddress = config.backend.relayerAddress
 const recipientAddress = '0xC5fdf4076b8F3A5357c5E395ab970B5B54098Fef'
 
 describe('the mixer_mix_eth API call', () => {
@@ -116,16 +125,16 @@ describe('the mixer_mix_eth API call', () => {
     })
 
     test('accepts a valid proof to mix tokens and credits the recipient', async () => {
-        const expectedTokenAmtToReceive = depositAmtTokens - feeAmtTokens
+        const expectedTokenAmtToReceive = mixAmtToken - feeAmtToken
         // mint tokens for the sender
         await tokenContract.mint(
             signer.address,
-            (depositAmtTokens * (10 ** tokenDecimals)).toString(),
+            (mixAmtToken * (10 ** tokenDecimals)).toString(),
             { gasLimit: 100000, }
         )
         await tokenContract.approve(
             tokenMixerContract.address,
-            (depositAmtTokens * (10 ** tokenDecimals)).toString(),
+            (mixAmtToken * (10 ** tokenDecimals)).toString(),
             { gasLimit: 100000, }
         )
 
@@ -161,7 +170,7 @@ describe('the mixer_mix_eth API call', () => {
             20,
             recipientAddress,
             relayerAddress,
-            feeAmtTokens * 10 ** tokenDecimals,
+            feeAmtToken * 10 ** tokenDecimals,
             externalNullifier,
         )
 
@@ -175,7 +184,7 @@ describe('the mixer_mix_eth API call', () => {
             signal,
             proof,
             recipientAddress,
-            BigInt((feeAmtTokens * 10 ** tokenDecimals).toString()),
+            BigInt((feeAmtToken * 10 ** tokenDecimals).toString()),
             publicSignals,
         )
 
@@ -185,7 +194,7 @@ describe('the mixer_mix_eth API call', () => {
 
         // make the API call to submit the proof
         const resp = await post(1, 'mixer_mix_tokens', params)
-        
+
         if (resp.data.error) {
             console.log(params)
             console.error(resp.data.error)
@@ -239,7 +248,7 @@ describe('the mixer_mix_eth API call', () => {
             20,
             recipientAddress,
             relayerAddress,
-            feeAmtEth, 
+            feeAmtWei,
             externalNullifier,
         )
 
@@ -254,7 +263,7 @@ describe('the mixer_mix_eth API call', () => {
             signal,
             proof,
             recipientAddress,
-            BigInt(feeAmtEth.toString()),
+            BigInt(feeAmtWei.toString()),
             publicSignals,
         )
 
@@ -264,7 +273,7 @@ describe('the mixer_mix_eth API call', () => {
 
         // make the API call to submit the proof
         const resp = await post(1, 'mixer_mix_eth', params)
-        
+
         if (resp.data.error) {
             console.log(params)
             console.error(resp.data.error)
@@ -343,7 +352,7 @@ describe('the mixer_mix_eth API call', () => {
 
         expect(resp.data.error.code).toEqual(errors.errorCodes.BACKEND_MIX_INSUFFICIENT_TOKEN_FEE)
     })
-    
+
     test('rejects a proof where the ETH fee is too low', async () => {
         // deep copy and make the fee too low
         const lowFeeProof = JSON.parse(JSON.stringify(validParamsForEth))

@@ -8,6 +8,7 @@ import AboutRoute from './routes/about'
 import DepositRoute from './routes/deposit'
 import CountdownRoute from './routes/countdown'
 import QuickWithdrawRoute from './routes/quickWithdraw'
+import ContractInfoRoute from './routes/contractInfo'
 import connectors from './web3'
 import '../less/index.less'
 
@@ -16,6 +17,7 @@ import {
 } from './storage'
 
 const App = () => {
+
     initStorage()
     return (
         <Web3Provider connectors={connectors} libraryName='ethers.js'>
@@ -30,6 +32,7 @@ const App = () => {
                             <Route path='/about' exact component={AboutRoute} />
                             <Route path='/countdown' exact component={CountdownRoute} />
                             <Route path='/quick_withdraw' exact component={QuickWithdrawRoute} />
+                            <Route path='/contract_info' exact component={ContractInfoRoute} />
                         </Router>
                     </div>
                 </div>

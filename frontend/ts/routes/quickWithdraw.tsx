@@ -4,18 +4,27 @@ import { useWeb3Context } from 'web3-react'
 import * as ethers from 'ethers'
 import { utils } from 'mixer-contracts'
 import { sleep } from 'mixer-utils'
-const config = require('../../exported_config')
+
 import { TxButton, TxStatuses } from '../components/txButton'
 import { TxHashMessage } from '../components/txHashMessage'
 import { quickWithdrawEth, quickWithdrawTokens } from '../web3/quickWithdraw'
-import { getMixerContract, getTokenMixerContract } from '../web3/mixer'
+import { getMixerContract } from '../web3/mixer'
 import { fetchWithoutCache } from '../utils/fetcher'
-//const deployedAddresses = config.chain.deployedAddresses
-//TODO jrastit fix deployedAddresses
-const deployedAddresses = require('../deployedAddresses')
-const tokenDecimals = config.tokenDecimals
 
-import { 
+import{
+    isETH,
+    mixAmt,
+    operatorFee,
+    tokenDecimals,
+    configEnv,
+    blockExplorerTxPrefix,
+    mixerAddress,
+    snarksPathsCircuit,
+    snarksPathsProvingKey,
+    snarksPathsVerificationKey,
+} from '../utils/configFrontend'
+
+import {
     genCircuit,
     genMixerWitness,
     genPublicSignals,
@@ -36,16 +45,6 @@ import {
     getFirstUnwithdrawn,
     getNumUnwithdrawn,
 } from '../storage'
-
-import {
-    mixAmtEth,
-    operatorFeeEth,
-    mixAmtTokens,
-    operatorFeeTokens,
-    feeAmtWei,
-} from '../utils/mixAmts'
-
-const blockExplorerTxPrefix = config.frontend.blockExplorerTxPrefix
 
 const noItemsCol = (
     <div className='column is-8 is-offset-2'>
@@ -87,11 +86,8 @@ export default () => {
     const identityStored = getFirstUnwithdrawn()
 
     const tokenType = identityStored.tokenType
-    const isEth = tokenType === 'ETH'
 
-    const mixAmt = isEth ? mixAmtEth : mixAmtTokens
-    const operatorFee = isEth ? operatorFeeEth : operatorFeeTokens
-    const feeAmt = isEth ? feeAmtWei : operatorFeeTokens * (10 ** tokenDecimals)
+    const feeAmt = operatorFee * (10 ** tokenDecimals)
 
     const withdrawTxHash = identityStored.withdrawTxHash
     const recipientAddress = identityStored.recipientAddress
@@ -110,8 +106,7 @@ export default () => {
         }
 
         try {
-            const mixerContract = isEth ?
-                await getMixerContract(context) : await getTokenMixerContract(context)
+            const mixerContract = await getMixerContract(context)
 
             const relayerAddress = context.account
 
@@ -132,14 +127,14 @@ export default () => {
             const identityCommitment = genIdentityCommitment(identity)
 
             progress('Downloading circuit...')
-            const cirDef = await (await fetchWithoutCache(config.frontend.snarks.paths.circuit)).json()
+            const cirDef = await (await fetchWithoutCache(snarksPathsCircuit)).json()
             const circuit = genCircuit(cirDef)
 
             progress('Generating witness...')
             let result
             try {
                 result = await genMixerWitness(
-                    circuit, 
+                    circuit,
                     identity,
                     leaves,
                     20,
@@ -172,14 +167,14 @@ export default () => {
             progress('Downloading proving key...')
 
             const provingKey = new Uint8Array(
-                await (await fetch(config.frontend.snarks.paths.provingKey)).arrayBuffer()
+                await (await fetch(snarksPathsProvingKey)).arrayBuffer()
             )
 
             progress('Downloading verifying key')
 
             const verifyingKey = parseVerifyingKeyJson(
                 // @ts-ignore
-                await (await fetch(config.frontend.snarks.paths.verificationKey)).text()
+                await (await fetch(snarksPathsVerificationKey)).text()
             )
 
             progress('Generating proof')
@@ -198,7 +193,7 @@ export default () => {
             progress('Performing transaction')
 
             let tx
-            const quickWithdrawFunc = isEth ? quickWithdrawEth : quickWithdrawTokens
+            const quickWithdrawFunc = isETH ? quickWithdrawEth : quickWithdrawTokens
             tx = await quickWithdrawFunc(
                 context,
                 result.signal,
@@ -214,7 +209,7 @@ export default () => {
 
             const receipt = await tx.wait()
 
-            if (config.env === 'local-dev') {
+            if (configEnv === 'local-dev') {
                 await sleep(2000)
             }
 
@@ -235,7 +230,7 @@ export default () => {
                 err.code === ethers.errors.UNSUPPORTED_OPERATION &&
                 err.reason === 'contract not deployed'
             ) {
-                setErrorMsg(`The mixer contract was not deployed to the expected address ${deployedAddresses.Mixer}`)
+                setErrorMsg(`The mixer contract was not deployed to the expected address ${mixerAddress}`)
             } else if (err.code === ErrorCodes.WITNESS_GEN_ERROR) {
                 setErrorMsg('Could not generate witness.')
             } else if (err.code === ErrorCodes.INVALID_WITNESS) {
@@ -262,14 +257,14 @@ export default () => {
                               <br />
                               <br />
                               <pre>
-                                  {recipientAddress} 
+                                  {recipientAddress}
                               </pre>
                           </h2>
                       </div>
 
                     <div className='section'>
                           <label className="checkbox">
-                              <input 
+                              <input
                                   onChange={() => {
                                       setConsentChecked(!consentChecked)
                                   }}
@@ -292,7 +287,7 @@ export default () => {
                           { pendingTxHash.length > 0 &&
                               <div>
                                   <br />
-                                  <TxHashMessage 
+                                  <TxHashMessage
                                       mixSuccessful={false}
                                       txHash={pendingTxHash}
                                       txStatus={TxStatuses.Pending} />
@@ -302,7 +297,7 @@ export default () => {
                           <br />
                           <br />
 
-                          { proofGenProgress.length > 0 && 
+                          { proofGenProgress.length > 0 &&
                               <div className="has-text-left">
                                   <br />
                                   <pre>
@@ -328,7 +323,7 @@ export default () => {
 
                { completedWithdraw &&
                     <div className='column is-8 is-offset-2'>
-                        <TxHashMessage 
+                        <TxHashMessage
                             mixSuccessful={true}
                             txHash={pendingTxHash}
                             txStatus={TxStatuses.Mined} />

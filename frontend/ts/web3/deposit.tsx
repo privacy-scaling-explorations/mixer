@@ -1,13 +1,15 @@
 import * as ethers from 'ethers'
-const config = require('../../exported_config')
-//TODO jrastit fix deployedAddresses
-const deployedAddresses = require('../deployedAddresses')
+
 import {
     getMixerContract,
-    getTokenMixerContract,
     getTokenContract,
 } from './mixer'
 
+import{
+    blockExplorerTxPrefix,
+    chainId,
+    mixerAddress,
+} from '../utils/configFrontend'
 /*
  * Perform a web3 transaction to make a deposit
  * @param context The web3-react context
@@ -24,13 +26,15 @@ const depositEth = async (
     const connector = context.connector
     if (library && connector) {
         const provider = new ethers.providers.Web3Provider(
-            await connector.getProvider(config.chain.chainId),
+            await connector.getProvider(chainId),
         )
         const signer = provider.getSigner()
 
         const mixerContract = await getMixerContract(context)
 
+        console.log("deposit:",mixAmt)
         const tx = await mixerContract.deposit(identityCommitment, { value: mixAmt, gasLimit: 8000000 })
+        console.log("deposit ok")
         return tx
     }
 }
@@ -44,11 +48,11 @@ const depositTokens = async(
     const connector = context.connector
     if (library && connector) {
         const provider = new ethers.providers.Web3Provider(
-            await connector.getProvider(config.chain.chainId),
+            await connector.getProvider(chainId),
         )
         const signer = provider.getSigner()
 
-        const mixerContract = await getTokenMixerContract(context)
+        const mixerContract = await getMixerContract(context)
 
         const tx = await mixerContract.depositERC20(identityCommitment, { gasLimit: 8000000 })
 
@@ -63,14 +67,13 @@ const getTokenAllowance = async (
     const connector = context.connector
     if (library && connector) {
         const provider = new ethers.providers.Web3Provider(
-            await connector.getProvider(config.chain.chainId),
+            await connector.getProvider(chainId),
         )
         const signer = provider.getSigner()
 
         const tokenContract = await getTokenContract(context)
-        const tokenMixerAddress = deployedAddresses.TokenMixer
 
-        const tx = await tokenContract.allowance(context.account, tokenMixerAddress)
+        const tx = await tokenContract.allowance(context.account, mixerAddress)
         return tx
     }
 }
@@ -89,14 +92,13 @@ const approveTokens = async (
     const connector = context.connector
     if (library && connector) {
         const provider = new ethers.providers.Web3Provider(
-            await connector.getProvider(config.chain.chainId),
+            await connector.getProvider(chainId),
         )
         const signer = provider.getSigner()
 
         const tokenContract = await getTokenContract(context)
-        const tokenMixerAddress = deployedAddresses.TokenMixer
 
-        const tx = await tokenContract.approve(tokenMixerAddress, numTokens.toString())
+        const tx = await tokenContract.approve(mixerAddress, numTokens.toString())
 
         return tx
     }

@@ -3,7 +3,7 @@ import * as ethers from 'ethers'
 const getContract = (
     name: string,
     signer: ethers.Signer,
-    deployedAddresses: object,
+    deployedAddresses: string,
     abiName?: string
 ) => {
     if (!abiName) {
@@ -13,7 +13,7 @@ const getContract = (
     const abi = require(`../compiled/abis/${abiName}-abi.json`)
 
     const contract = new ethers.Contract(
-        deployedAddresses[name],
+        deployedAddresses,
         abi,
         signer,
     )

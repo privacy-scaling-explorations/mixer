@@ -4,10 +4,10 @@ import { useTimer } from 'react-timer-hook'
 import * as ethers from 'ethers'
 import { useWeb3Context } from 'web3-react'
 import { Redirect } from 'react-router-dom'
-import { getMixerContract, getTokenMixerContract, getTokenContract } from '../web3/mixer'
+import { getMixerContract, getTokenContract } from '../web3/mixer'
 import { genMixParams, sleep } from 'mixer-utils'
 import { fetchWithoutCache } from '../utils/fetcher'
-import { 
+import {
     genCircuit,
     genMixerWitness,
     genPublicSignals,
@@ -30,22 +30,20 @@ import {
 import { ErrorCodes } from '../errors'
 
 import {
-    mixAmtEth,
-    operatorFeeEth,
-    mixAmtTokens,
-    operatorFeeTokens,
-    feeAmtWei,
-} from '../utils/mixAmts'
-
-const config = require('../../exported_config')
-//const deployedAddresses = config.chain.deployedAddresses
-//TODO jrastit fix deployedAddresses
-const deployedAddresses = require('../deployedAddresses')
-const relayerAddress = config.backend.relayerAddress
-const tokenDecimals = config.tokenDecimals
-const blockExplorerTxPrefix = config.frontend.blockExplorerTxPrefix
-const endsAtMidnight = config.frontend.countdown.endsAtUtcMidnight
-const endsAfterSecs = config.frontend.countdown.endsAfterSecs
+    isETH,
+    mixAmt,
+    operatorFee,
+    tokenDecimals,
+    relayerAddress,
+    blockExplorerTxPrefix,
+    endsAtMidnight,
+    endsAfterSecs,
+    mixerAddress,
+    chainId,
+    snarksPathsCircuit,
+    snarksPathsProvingKey,
+    snarksPathsVerificationKey,
+} from '../utils/configFrontend'
 
 const months = [
     'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
@@ -73,11 +71,8 @@ export default () => {
     const recipientAddress = identityStored.recipientAddress
 
     const tokenType = identityStored.tokenType
-    const isEth = tokenType === 'ETH'
 
-    const mixAmt = isEth ? mixAmtEth : mixAmtTokens
-    const operatorFee = isEth ? operatorFeeEth : operatorFeeTokens
-    const feeAmt = isEth ? feeAmtWei : operatorFeeTokens * (10 ** tokenDecimals)
+    const feeAmt = operatorFee * (10 ** tokenDecimals)
 
     const context = useWeb3Context()
 
@@ -86,23 +81,22 @@ export default () => {
             return
         }
         const provider = new ethers.providers.Web3Provider(
-            await context.connector.getProvider(config.chain.chainId),
+            await context.connector.getProvider(chainId),
         )
 
-        const tokenContract = await getTokenContract(context)
+        let tokenContract
 
-        if (isEth) {
+        if (isETH) {
             const recipientBalanceBefore = await provider.getBalance(recipientAddress)
             console.log('The recipient has', ethers.utils.formatEther(recipientBalanceBefore), 'ETH')
         } else {
+            tokenContract = await getTokenContract(context)
             const recipientBalanceBefore = (await tokenContract.balanceOf(recipientAddress)) / (10 ** tokenDecimals)
-
             console.log('The recipient has', recipientBalanceBefore.toString(), 'tokens')
         }
 
         try {
-            const mixerContract = isEth ?
-                await getMixerContract(context) : await getTokenMixerContract(context)
+            const mixerContract = await getMixerContract(context)
 
             const externalNullifier = mixerContract.address
 
@@ -122,14 +116,14 @@ export default () => {
             const identityCommitment = genIdentityCommitment(identity)
 
             progress('Downloading circuit...')
-            const cirDef = await (await fetchWithoutCache(config.frontend.snarks.paths.circuit)).json()
+            const cirDef = await (await fetchWithoutCache(snarksPathsCircuit)).json()
             const circuit = genCircuit(cirDef)
 
             progress('Generating witness...')
             let result
             try {
                 result = await genMixerWitness(
-                    circuit, 
+                    circuit,
                     identity,
                     leaves,
                     20,
@@ -161,13 +155,13 @@ export default () => {
 
             progress('Downloading proving key...')
             const provingKey = new Uint8Array(
-                await (await fetch(config.frontend.snarks.paths.provingKey)).arrayBuffer()
+                await (await fetch(snarksPathsProvingKey)).arrayBuffer()
             )
 
             progress('Downloading verification key...')
             const verifyingKey = parseVerifyingKeyJson(
                 // @ts-ignore
-                await (await fetch(config.frontend.snarks.paths.verificationKey)).text()
+                await (await fetch(snarksPathsVerificationKey)).text()
             )
 
             progress('Generating proof...')
@@ -191,7 +185,7 @@ export default () => {
                 publicSignals,
             )
 
-            const method = isEth ? 'mixer_mix_eth' : 'mixer_mix_tokens'
+            const method = isETH ? 'mixer_mix_eth' : 'mixer_mix_tokens'
 
             const request = {
                 jsonrpc: '2.0',
@@ -223,7 +217,7 @@ export default () => {
 
                 await sleep(4000)
 
-                if (isEth) {
+                if (isETH) {
                     const recipientBalanceAfter = await provider.getBalance(recipientAddress)
                     console.log('The recipient now has', ethers.utils.formatEther(recipientBalanceAfter), 'ETH')
                 } else {
@@ -243,7 +237,7 @@ export default () => {
                 err.code === ethers.errors.UNSUPPORTED_OPERATION &&
                 err.reason === 'contract not deployed'
             ) {
-                setErrorMsg(`The mixer contract was not deployed to the expected address ${deployedAddresses.Mixer}`)
+                setErrorMsg(`The mixer contract was not deployed to the expected address ${mixerAddress}`)
             } else if (err.code === ErrorCodes.WITNESS_GEN_ERROR) {
                 setErrorMsg('Could not generate witness.')
             } else if (err.code === ErrorCodes.INVALID_WITNESS) {
@@ -260,18 +254,19 @@ export default () => {
 
         }
     }
-    
+
     let expiryTimestamp = new Date(identityStored.timestamp)
     expiryTimestamp.setUTCHours(0, 0, 0, 0)
     expiryTimestamp.setDate(expiryTimestamp.getDate() + 1)
 
     // Whether the current time is greater than the expiry timestamp (i.e.
-    // UTC midnight 
+    // UTC midnight
     let midnightOver = firstLoadTime > expiryTimestamp
 
     // Dev only
     if (!endsAtMidnight && !midnightOver) {
         expiryTimestamp = new Date()
+        console.log(endsAfterSecs)
         expiryTimestamp.setSeconds(
             expiryTimestamp.getSeconds() + endsAfterSecs
         )
@@ -324,10 +319,10 @@ export default () => {
                             <br />
                             <br />
                             <pre>
-                                {recipientAddress} 
+                                {recipientAddress}
                             </pre>
                             <br />
-                            can receive {mixAmt - operatorFee} {tokenType} 
+                            can receive {mixAmt - operatorFee} {tokenType}
                             { countdownDone || midnightOver || withdrawBtnClicked ?
                                 <span>
                                     { (txHash.length === 0 && midnightOver) ?
@@ -337,7 +332,7 @@ export default () => {
                                             {' '}.
                                         </span>
                                     }
-                                  { proofGenProgress.length > 0 && 
+                                  { proofGenProgress.length > 0 &&
                                       <div className="has-text-left">
                                           <br />
                                           <pre>
@@ -428,8 +423,8 @@ export default () => {
                                     setShowAdvanced(!showAdvanced)
                                 }
                             }>
-                                Advanced options 
-                                <span 
+                                Advanced options
+                                <span
                                     className={
                                         showAdvanced ? "chevron-up" : "chevron-down"
                                     }>
@@ -467,4 +462,3 @@ export default () => {
         </div>
     )
 }
-

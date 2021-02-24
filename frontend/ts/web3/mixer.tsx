@@ -3,22 +3,26 @@ const mixerAbi = require('../../abis/Mixer-abi.json')
 const semaphoreAbi = require('../../abis/Semaphore-abi.json')
 const relayerRegistryAbi = require('../../abis/RelayerRegistry-abi.json')
 const tokenAbi = require('../../abis/ERC20-abi.json')
-const config = require('../../exported_config')
-//const deployedAddresses = config.chain.deployedAddresses
-//TODO jrastit fix deployedAddresses
-const deployedAddresses = require('../deployedAddresses')
+
+import{
+    chainId,
+    tokenAddress,
+    relayerRegistryAddress,
+    mixerAddress,
+    semaphoreAddress,
+} from '../utils/configFrontend'
 
 // It's not trivial to generalise these functions as Parcel won't let you
 // dynamically require JSON files
 
 const getRelayerRegistryContract = async (context) => {
     const provider = new ethers.providers.Web3Provider(
-        await context.connector.getProvider(config.chain.chainId),
+        await context.connector.getProvider(chainId),
     )
     const signer = provider.getSigner()
 
     return new ethers.Contract(
-        deployedAddresses.RelayerRegistry,
+        relayerRegistryAddress,
         relayerRegistryAbi,
         signer,
     )
@@ -26,25 +30,12 @@ const getRelayerRegistryContract = async (context) => {
 
 const getMixerContract = async (context) => {
     const provider = new ethers.providers.Web3Provider(
-        await context.connector.getProvider(config.chain.chainId),
+        await context.connector.getProvider(chainId),
     )
     const signer = provider.getSigner()
 
     return new ethers.Contract(
-        deployedAddresses.Mixer,
-        mixerAbi,
-        signer,
-    )
-}
-
-const getTokenMixerContract = async (context) => {
-    const provider = new ethers.providers.Web3Provider(
-        await context.connector.getProvider(config.chain.chainId),
-    )
-    const signer = provider.getSigner()
-
-    return new ethers.Contract(
-        deployedAddresses.TokenMixer,
+        mixerAddress,
         mixerAbi,
         signer,
     )
@@ -52,25 +43,12 @@ const getTokenMixerContract = async (context) => {
 
 const getSemaphoreContract = async (context) => {
     const provider = new ethers.providers.Web3Provider(
-        await context.connector.getProvider(config.chain.chainId),
+        await context.connector.getProvider(chainId),
     )
     const signer = provider.getSigner()
 
     return new ethers.Contract(
-        deployedAddresses.Semaphore,
-        semaphoreAbi,
-        signer,
-    )
-}
-
-const getTokenSemaphoreContract = async (context) => {
-    const provider = new ethers.providers.Web3Provider(
-        await context.connector.getProvider(config.chain.chainId),
-    )
-    const signer = provider.getSigner()
-
-    return new ethers.Contract(
-        deployedAddresses.TokenSemaphore,
+        semaphoreAddress,
         semaphoreAbi,
         signer,
     )
@@ -78,12 +56,12 @@ const getTokenSemaphoreContract = async (context) => {
 
 const getTokenContract = async (context) => {
     const provider = new ethers.providers.Web3Provider(
-        await context.connector.getProvider(config.chain.chainId),
+        await context.connector.getProvider(chainId),
     )
     const signer = provider.getSigner()
 
     return new ethers.Contract(
-        deployedAddresses.Token,
+        tokenAddress,
         tokenAbi,
         signer,
     )
@@ -93,7 +71,5 @@ export {
     getRelayerRegistryContract,
     getMixerContract,
     getSemaphoreContract,
-    getTokenMixerContract,
-    getTokenSemaphoreContract,
     getTokenContract,
 }

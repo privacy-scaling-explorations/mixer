@@ -3,8 +3,13 @@ import * as snarkjs from 'snarkjs'
 import * as JsonRpc from '../jsonRpc'
 import { config } from 'mixer-config'
 
-const PORT = config.get('backend.port')
-const HOST = config.get('backend.host') + ':' + PORT.toString()
+import {
+    backendPort,
+    backendHost,
+} from '../utils/configBackend'
+
+const PORT = backendPort
+const HOST = backendHost + ':' + PORT.toString()
 
 const OPTS = {
     headers: {

@@ -4,11 +4,14 @@ import * as Ajv from 'ajv'
 import echoRoute from './echo'
 import { mixEthRoute, mixTokensRoute } from './mix'
 import backendStatusRoute from './status'
-import { config } from 'mixer-config'
+
+import {
+    configEnv,
+} from '../utils/configBackend'
 
 interface Route {
     reqValidator: Ajv.ValidateFunction
-    route(bodyData: JsonRpc.Request): Promise<JsonRpc.Response> 
+    route(bodyData: JsonRpc.Request): Promise<JsonRpc.Response>
 }
 
 // Define routes here
@@ -19,7 +22,7 @@ const routes = {
 }
 
 // Dev-only routes for testing
-if (config.get('env') !== 'production') {
+if (configEnv !== 'production') {
     routes['mixer_echo'] = echoRoute
 }
 
@@ -35,7 +38,7 @@ const handle = async (reqData: JsonRpc.Request) => {
         } else {
 
             return JsonRpc.genErrorResponse(
-                reqData.id, 
+                reqData.id,
                 JsonRpc.Errors.invalidParams.code,
                 JsonRpc.Errors.invalidParams.message,
             )

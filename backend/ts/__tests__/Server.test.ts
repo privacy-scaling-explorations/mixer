@@ -2,12 +2,16 @@ import { createApp } from '../index'
 const Koa = require('koa')
 import axios from 'axios'
 import * as JsonRpc from '../jsonRpc'
-import { config } from 'mixer-config'
 import * as errors from '../errors'
 import { post } from './utils'
 
-const PORT = config.get('backend.port')
-const HOST = config.get('backend.host') + ':' + PORT.toString()
+import {
+    backendPort,
+    backendHost,
+} from '../utils/configBackend'
+
+const PORT = backendPort
+const HOST = backendHost + ':' + PORT.toString()
 
 const OPTS = {
     headers: {
@@ -109,7 +113,7 @@ describe('Backend API', () => {
         expect(resp.status).toEqual(200)
         expect(resp.data.length).toEqual(data.length)
         const expected = JSON.stringify(
-            [ 
+            [
                 { jsonrpc: '2.0', id: 0, result: { message: 0 } },
                 { jsonrpc: '2.0', id: 1, result: { message: 1 } },
                 { jsonrpc: '2.0', id: 2, result: { message: 2 } },

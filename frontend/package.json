@@ -6,7 +6,7 @@
     "scripts": {
         "watch": "tsc --watch",
         "build": "tsc",
-	"server": "tsc && node server.js",
+        "server": "tsc && node server.js",
         "webpack-watch": "webpack-dev-server",
         "webpack-build": "echo 'Building frontend' && NODE_ENV=production webpack && cp -r favicons dist/",
         "lint": "tslint --project . 'js/**/*.ts[x]'",
@@ -31,10 +31,12 @@
         "react": "16.8.6",
         "react-dom": "16.8.6",
         "react-router-dom": "5.0.1",
+        "react-select": "^3.0.4",
         "react-timer-hook": "1.1.6",
         "web3-react": "5.0.4"
     },
     "devDependencies": {
+	"@types/node": "^12.0.12",
         "css-loader": "^3.2.0",
         "file-loader": "^4.2.0",
         "html-webpack-plugin": "^3.2.0",

@@ -1,9 +1,10 @@
 import * as ethers from 'ethers'
-import { getRelayerRegistryContract, getMixerContract, getTokenMixerContract } from './mixer'
-const config = require('../../exported_config')
-//const deployedAddresses = config.chain.deployedAddresses
-//TODO jrastit fix deployedAddresses
-const deployedAddresses = require('../deployedAddresses')
+import { getRelayerRegistryContract, getMixerContract } from './mixer'
+
+import{
+    chainId,
+    mixerAddress,
+} from '../utils/configFrontend'
 
 const genDepositProof = (
     signal,
@@ -15,7 +16,7 @@ const genDepositProof = (
     return {
         signal,
         a: [ proof.pi_a[0].toString(), proof.pi_a[1].toString() ],
-        b: [ 
+        b: [
             [ proof.pi_b[0][1].toString(), proof.pi_b[0][0].toString() ],
             [ proof.pi_b[1][1].toString(), proof.pi_b[1][0].toString() ],
         ],
@@ -44,7 +45,7 @@ const quickWithdrawEth = async (
     const connector = context.connector
     if (library && connector) {
         const provider = new ethers.providers.Web3Provider(
-            await connector.getProvider(config.chain.chainId),
+            await connector.getProvider(chainId),
         )
         const signer = provider.getSigner()
         const mixerContract = await getMixerContract(context)
@@ -70,7 +71,7 @@ const quickWithdrawEth = async (
             broadcasterAddress])
 
         return relayerRegistryContract.relayCall(
-            deployedAddresses.Mixer,
+            mixerAddress,
             callData,
             { gasLimit: 8000000 },
         )
@@ -95,10 +96,10 @@ const quickWithdrawTokens = async (
     const connector = context.connector
     if (library && connector) {
         const provider = new ethers.providers.Web3Provider(
-            await connector.getProvider(config.chain.chainId),
+            await connector.getProvider(chainId),
         )
         const signer = provider.getSigner()
-        const mixerContract = await getTokenMixerContract(context)
+        const mixerContract = await getMixerContract(context)
         const relayerRegistryContract = await getRelayerRegistryContract(context)
 
         const depositProof = genDepositProof(
@@ -121,7 +122,7 @@ const quickWithdrawTokens = async (
             broadcasterAddress])
 
         return relayerRegistryContract.relayCall(
-            deployedAddresses.TokenMixer,
+            mixerAddress,
             callData,
             { gasLimit: 8000000 },
         )

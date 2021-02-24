@@ -4,6 +4,8 @@ import ReactDOM from 'react-dom'
 import logo from '../img/logo.png'
 
 import WalletWidget from './components/walletWidget'
+import NetworkSelect from './components/networkSelect'
+import TokenSelect from './components/tokenSelect'
 
 const Nav = () => {
     const [menuToggle, setMenuToggle] = useState(false)
@@ -18,7 +20,7 @@ const Nav = () => {
                     <img src={logo} />
                 </a>
 
-                <a role='button' className={burgerClassName} 
+                <a role='button' className={burgerClassName}
                     onClick={ () => setMenuToggle(!menuToggle) }
                     aria-label='menu' aria-expanded='false'>
                     <span aria-hidden='true'></span>
@@ -30,6 +32,12 @@ const Nav = () => {
 
             <div className={ navbarMenuClassName }>
                 <div className='navbar-end'>
+                    <div className='navbar-item' id='network-select'>
+                        <NetworkSelect />
+                    </div>
+                    <div className='navbar-item' id='token-select'>
+                        <TokenSelect />
+                    </div>
                     <div className='navbar-item' id='wallet-widget'>
                         <WalletWidget />
                     </div>
@@ -46,6 +54,9 @@ const Nav = () => {
                         <div className='navbar-dropdown'>
                             <a className='navbar-item' href='/quick_withdraw'>
                                 Quick withdrawal
+                            </a>
+                            <a className='navbar-item' href='/contract_info'>
+                                Contract Info
                             </a>
 
                             {/*

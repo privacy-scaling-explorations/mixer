@@ -5,7 +5,10 @@ import * as bodyParser from 'koa-bodyparser'
 
 import * as helmet from 'koa-helmet'
 
-import { config } from 'mixer-config'
+import {
+    backendPort,
+} from './utils/configBackend'
+
 import { router } from './routes'
 import * as JsonRpc from './jsonRpc'
 
@@ -115,7 +118,7 @@ const createApp = () => {
 }
 
 const main = async () => {
-    const port = config.get('backend.port')
+    const port = backendPort
     const app = createApp()
     app.listen(port)
 

@@ -2,7 +2,26 @@ require('module-alias/register')
 import * as fs from 'fs'
 import * as ethers from 'ethers'
 import * as errors from '../errors'
-import { config } from 'mixer-config'
+
+import {
+    relayerAddress,
+    hotWalletPrivKeyPath,
+    feeAmtEth,
+    feeAmtToken,
+    chainId,
+    chainUrl,
+    etcdHost,
+    etcdPort,
+    etcdLockTime,
+    gasPrice,
+    gasLimitMix,
+    tokenMixerAddress,
+    mixerAddress,
+    semaphoreAddress,
+    relayerRegistryAddress,
+
+} from '../utils/configBackend'
+
 import { getContract } from 'mixer-contracts'
 import {
     verifyProof,
@@ -12,11 +31,9 @@ import {
 } from 'libsemaphore'
 import * as Locker from 'node-etcd-lock'
 import { genValidator } from './utils'
-const deployedAddresses = config.get('chain.deployedAddresses')
-const relayerAddress = config.get('backend.relayerAddress')
 
 const hotWalletPrivKey = JSON.parse(
-    fs.readFileSync(config.get('backend.hotWalletPrivKeyPath'), 'utf-8')
+    fs.readFileSync(hotWalletPrivKeyPath, 'utf-8')
 ).privateKey
 
 const verificationKey = require('@mixer-backend/verification_key.json')
@@ -36,8 +53,8 @@ const areEqualAddresses = (a: string, b: string) => {
 }
 
 // This operator accepts a fee that is large enough
-const operatorFeeWei = ethers.utils.parseUnits(config.get('feeAmtEth').toString(), 'ether')
-const operatorFeeTokens = config.get('feeAmtTokens')
+const operatorFeeWei = ethers.utils.parseUnits(feeAmtEth.toString(), 'ether')
+const operatorFeeTokens = feeAmtToken
 
 const _mixRoute = (forTokens: boolean) => async (
     depositProof: DepositProof,
@@ -71,7 +88,7 @@ const _mixRoute = (forTokens: boolean) => async (
         }
     }
 
-    const mixerContractAddress = forTokens ? deployedAddresses.TokenMixer : deployedAddresses.Mixer
+    const mixerContractAddress = forTokens ? tokenMixerAddress : mixerAddress
 
     // verify the external nullifier
     if (!areEqualAddresses(mixerContractAddress, depositProof.input[3])) {
@@ -173,8 +190,8 @@ const _mixRoute = (forTokens: boolean) => async (
     }
 
     const provider = new ethers.providers.JsonRpcProvider(
-        config.get('chain.url'),
-        config.get('chain.chainId'),
+        chainUrl,
+        chainId,
     )
 
     const signer = new ethers.Wallet(
@@ -184,29 +201,28 @@ const _mixRoute = (forTokens: boolean) => async (
 
     // TODO: check whether the contract has been deployed
     // Best to do this on server startup
-    
+
     const mixerContract = getContract(
         'Mixer',
         signer,
-        deployedAddresses,
+        mixerAddress,
     )
 
     let semaphoreContractName = forTokens ? 'TokenSemaphore' : 'Semaphore'
     const semaphoreContract = getContract(
         semaphoreContractName,
         signer,
-        deployedAddresses,
+        semaphoreAddress,
         'Semaphore',
     )
 
     const relayerRegistryContract = getContract(
         'RelayerRegistry',
         signer,
-        deployedAddresses,
+        relayerRegistryAddress,
     )
 
-    const etcdAddress = config.get('backend.etcd.host') + ':' +
-        config.get('backend.etcd.port')
+    const etcdAddress = etcdHost + ':' + etcdPort
 
     // TODO: handle the case if etcd isn't working
     const locker = new Locker({
@@ -216,7 +232,7 @@ const _mixRoute = (forTokens: boolean) => async (
     // Acquire a lock on the hot wallet address
     const lock = await locker.lock(
         signer.address,
-        config.get('backend.etcd.lockTime'),
+        etcdLockTime,
     )
 
     // Use the preBroadcastCheck view function to checks some inputs
@@ -285,16 +301,16 @@ const _mixRoute = (forTokens: boolean) => async (
         value: 0,
         data: mixCallData,
         nonce,
-        gasPrice: ethers.utils.parseUnits('20', 'gwei'),
-        gasLimit: config.get('chain.mix.gasLimit'),
+        gasPrice: gasPrice,
+        gasLimit: gasLimitMix,
     }
     //const unsignedTx = {
         //to: relayerRegistryContract.address,
         //value: 0,
         //data: relayCallData,
         //nonce,
-        //gasPrice: ethers.utils.parseUnits('20', 'gwei'),
-        //gasLimit: config.get('chain.mix.gasLimit'),
+        //gasPrice: gasPrice,
+        //gasLimit: gasLimitMix,
     //}
 
     // Sign the transaction
@@ -333,7 +349,7 @@ const mixTokensRoute = {
     reqValidator: genValidator('mix'),
 }
 
-export { 
+export {
     mixEthRoute,
     mixTokensRoute,
 }
