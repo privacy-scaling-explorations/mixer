@@ -23,6 +23,8 @@
   },
   "devDependencies": {
     "@types/jest": "^26.0.20",
+    "@types/node": "^14.14.31",
+    "@types/lodash": "^4.14.168",
     "argparse": "^2.0.1",
     "circomlib": "0.4.1",
     "etherlime": "^2.3.4",
