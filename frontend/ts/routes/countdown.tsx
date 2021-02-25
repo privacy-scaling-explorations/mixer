@@ -244,10 +244,16 @@ export default () => {
                     console.log('The recipient now has', recipientBalanceAfter.toString(), 'tokens')
                 }
 
-            } else if (responseJson.error.data.name === 'BACKEND_MIX_PROOF_PRE_BROADCAST_INVALID') {
+            } else if (responseJson.error && responseJson.error.data && responseJson.error.data.name === 'BACKEND_MIX_PROOF_PRE_BROADCAST_INVALID') {
                 throw {
                     code: ErrorCodes.PRE_BROADCAST_CHECK_FAILED
                 }
+            } else if (responseJson.error && responseJson.error.code && responseJson.error.message){
+                console.log(responseJson.error)
+                setErrorMsg('Server error : ' + responseJson.error.code + ' : ' + responseJson.error.message)
+            } else {
+                console.log(response)
+                setErrorMsg('Server error')
             }
         } catch (err) {
             console.error(err)
