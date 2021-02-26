@@ -3,57 +3,77 @@ import * as ethers from 'ethers'
 import * as argparse from 'argparse'
 import * as fs from 'fs'
 import * as path from 'path'
-import * as etherlime from 'etherlime-lib'
 import { configMixer } from 'mixer-config'
 import { genAccounts } from '../accounts'
 
 
 const ERC20Mintable = require('@mixer-contracts/compiled/ERC20Mintable.json')
 
-const deploySemaphore = (deployer, Semaphore, libraries) => {
+function link(bytecode, libName, libAddress) {
+  let symbol = "__" + libName + "_".repeat(40 - libName.length - 2);
+  return bytecode.split(symbol).join(libAddress.toLowerCase().substr(2))
+}
 
-    return deployer.deploy(
-        Semaphore,
-        libraries,
+const deploySemaphore = async (wallet, Semaphore, libraries) => {
+    //bytecode = link(bytecode, libraries[0].name, libraries[0].address)
+
+    console.log(libraries)
+
+    let factory = new ethers.ContractFactory(
+        Semaphore.abi,
+        Semaphore.bytecode,
+        wallet,
+    )
+    let contract = await factory.deploy(
         20,
         0,
         12312,
         1000,
     )
+    await contract.deployed()
+    return contract
 }
 
-const deployMixer = (
-    deployer,
+const deployMixer = async (
+    wallet,
     Mixer,
     semaphoreContractAddress,
     mixAmtToken,
     tokenAddress,
 ) => {
-
-    return deployer.deploy(Mixer,
-        {},
+    let factory = new ethers.ContractFactory(
+        Mixer.abi,
+        Mixer.bytecode,
+        wallet,
+    )
+    let contract = await factory.deploy(
         semaphoreContractAddress,
         mixAmtToken.toString(10),
         tokenAddress,
     )
+    await contract.deployed()
+    return contract
 }
 
 const deployToken = async (
-    deployer: any,
+    wallet: any,
 ) => {
-    const tokenContract = await deployer.deploy(
-        ERC20Mintable,
-        {},
+    let factory = new ethers.ContractFactory(
+        ERC20Mintable.abi,
+        ERC20Mintable.bytecode,
+        wallet,
+    )
+    let contract = await factory.deploy(
         'Token',
         'TKN',
         18,
     )
-
-    return tokenContract
+    await contract.deployed()
+    return contract
 }
 
 const deployAllContracts = async (
-    deployer,
+    wallet,
     configToken,
     adminAddress,
     deployedAddressesNetwork,
@@ -75,11 +95,11 @@ const deployAllContracts = async (
         relayerRegistryContract = new ethers.Contract(
                 deployedAddressesNetwork.RelayerRegistry,
                 RelayerRegistry.abi,
-                deployer.signer,
+                wallet,
             )
     } else {
         console.log('Deploying Relayer Registry')
-        relayerRegistryContract = await deployer.deploy(RelayerRegistry, {})
+        relayerRegistryContract = await wallet.deploy(RelayerRegistry)
     }
 
     //mimc contract
@@ -89,11 +109,11 @@ const deployAllContracts = async (
         mimcContract = new ethers.Contract(
             deployedAddressesNetwork.MiMC,
             MiMC.abi,
-            deployer.signer,
+            wallet,
         )
     }else{
         console.log('Deploying MiMC')
-        mimcContract = await deployer.deploy(MiMC, {})
+        mimcContract = await wallet.deploy(MiMC)
     }
 
     //libraries for semaphore
@@ -109,7 +129,7 @@ const deployAllContracts = async (
             tokenContract = new ethers.Contract(
                 configToken.deployedAddresse,
                 ERC20Mintable.abi,
-                deployer.signer,
+                wallet,
             )
         } else {
             if (deployedAddressesToken && deployedAddressesToken.token){
@@ -117,11 +137,11 @@ const deployAllContracts = async (
                 tokenContract = new ethers.Contract(
                     deployedAddressesToken.token.Token,
                     ERC20Mintable.abi,
-                    deployer.signer,
+                    wallet,
                 )
             }else{
                 console.log('Deploying token')
-                tokenContract = await deployToken(deployer)
+                tokenContract = await deployToken(wallet)
 
                 console.log('Minting tokens')
                 await tokenContract.mint(adminAddress, '100000000000000000000')
@@ -140,17 +160,17 @@ const deployAllContracts = async (
                 semaphoreContract = new ethers.Contract(
                     deployedAddressesToken.Semaphore,
                     Semaphore.abi,
-                    deployer.signer,
+                    wallet,
                 )
                 mixerContract = new ethers.Contract(
                     deployedAddressesToken.Mixer,
                     Mixer.abi,
-                    deployer.signer,
+                    wallet,
                 )
         } else {
             console.log('Deploying Semaphore for the Mixer')
             semaphoreContract = await deploySemaphore(
-                deployer,
+                wallet,
                 Semaphore,
                 libraries,
             )
@@ -173,7 +193,7 @@ const deployAllContracts = async (
 
             console.log('Deploying the Token Mixer')
             mixerContract = await deployMixer(
-                deployer,
+                wallet,
                 Mixer,
                 (semaphoreContract.contractAddress ? semaphoreContract.contractAddress : semaphoreContract.resolvedAddress),
                 mixAmtToken,
@@ -273,13 +293,19 @@ const main = async () => {
                 }
                 let deployedAddressesToken = deployedAddressesNetwork.token[configTokenName]
 
-                const deployer = new etherlime.JSONRPCPrivateKeyDeployer(
-                    admin.privateKey,
-                    configNetwork.get('url'),
-                    {
-                        chainId: configNetwork.get('chainId'),
-                    },
-                )
+                const provider = new ethers.providers.JsonRpcProvider(configNetwork.get('url'))
+                const wallet = new ethers.Wallet ( admin.privateKey , provider )
+                wallet["deploy"] = async (contractSource) => {
+
+                    let factory = new ethers.ContractFactory(
+                        contractSource.abi,
+                        contractSource.bytecode,
+                        this,
+                    )
+                    let contract = await factory.deploy()
+                    await contract.deployed()
+                    return contract
+                }
 
                 const {
                     relayerRegistryContract,
@@ -288,7 +314,7 @@ const main = async () => {
                     semaphoreContract,
                     mixerContract,
                 } = await deployAllContracts(
-                    deployer,
+                    wallet,
                     configToken,
                     admin.address,
                     deployedAddressesNetwork,

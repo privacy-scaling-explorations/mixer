@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 import { Semaphore } from "./Semaphore.sol";
-import { SafeMath } from "./SafeMath.sol";
+import { SafeMath } from "./openzeppelin/SafeMath.sol";
 import { IERC20 } from "./token/IERC20.sol";
 
 /*
@@ -196,7 +196,7 @@ contract Mixer {
         bool relayerTransferSucceeded = token.transfer(_forwarderAddress, _fee);
         require(relayerTransferSucceeded, "Mixer: failed to transfer the fee in tokens to the relayer");
 
-        // Transfer the tokens owed to the recipient, minus the fee 
+        // Transfer the tokens owed to the recipient, minus the fee
         uint256 recipientMixAmt = mixAmt.sub(_fee);
         bool recipientTransferSucceeded = token.transfer(_recipientAddress, recipientMixAmt);
         require(recipientTransferSucceeded, "Mixer: failed to transfer mixAmt tokens to the recipient");
@@ -216,7 +216,7 @@ contract Mixer {
         // Transfer the fee to the relayer
         _forwarderAddress.transfer(_fee);
 
-        // Transfer the ETH owed to the recipient, minus the fee 
+        // Transfer the ETH owed to the recipient, minus the fee
         uint256 recipientMixAmt = mixAmt.sub(_fee);
         _recipientAddress.transfer(recipientMixAmt);
 

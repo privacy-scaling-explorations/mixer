@@ -14,6 +14,7 @@
     "test-mix-stress-debug": "node --inspect-brk ./node_modules/.bin/etherlime test --path=build/__tests__/MixerStress.test.js --skip-compilation --timeout 5000000",
     "watch": "tsc --watch",
     "deploy": "./scripts/deploy.sh",
+    "compile": "tsc && node ./build/deploy/compile.js",
     "ganache": "./scripts/runGanache.sh"
   },
   "author": "Koh Wei Jie",
@@ -27,14 +28,11 @@
     "@types/lodash": "^4.14.168",
     "argparse": "^2.0.1",
     "circomlib": "0.4.1",
-    "etherlime": "^2.3.4",
-    "etherlime-lib": "^1.2.4",
     "module-alias": "^2.2.2",
     "ethers": "^4",
     "ganache-cli": "^6.12.2",
     "ganache-core": "^2.13.2",
-    "mixer-utils": "1.0.0",
-    "solc": "^0.8.1",
+    "solc": "^0.5.17",
     "truffle-artifactor": "^4.0.10"
   },
   "dependencies": {

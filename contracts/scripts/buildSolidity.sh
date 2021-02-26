@@ -9,12 +9,13 @@ rm -rf ./compiled/*
 mkdir -p ./compiled/abis
 
 # Copy the Semaphore contracts from the submodule into solidity/
-cp ../semaphore/semaphorejs/contracts/*.sol solidity/
-cp ../semaphore/semaphorejs/build/verifier.sol solidity/
+#cp ../semaphore/semaphorejs/contracts/*.sol solidity/
+#cp ../semaphore/semaphorejs/build/verifier.sol solidity/
 
 # Compile the contracts
 
-npx etherlime compile --solcVersion=0.8.1 --buildDirectory=compiled --workingDirectory=solidity --exportAbi
+#npx solc -o compiled solidity/*.sol solidity/token/*.sol solidity/access/*.sol --abi --bin
+npx solc -o compiled solidity/*.sol solidity/token/*.sol solidity/access/*.sol --abi --bin
 
 # Build the MiMC contract from bytecode
 node build/buildMiMC.js
