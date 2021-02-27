@@ -22,7 +22,7 @@
     "dependencies": {
         "buffer": "^6.0.3",
         "bulma": "^0.9.2",
-        "ethers": "^4",
+        "ethers": "^5",
         "libsemaphore": "^1.0.16",
         "mixer-contracts": "1.0.0",
         "mixer-utils": "1.0.0",
@@ -32,19 +32,18 @@
         "react-dom": "^16.14.0",
         "react-router-dom": "^5.2.0",
         "react-select": "^4.1.0",
-        "react-timer-hook": "^2.0.7",
-        "web3-react": "^5.0.5"
+        "react-timer-hook": "^2.0.7"
     },
     "devDependencies": {
-	    "@types/node": "^14.14.31",
-        "css-loader": "^5.0.2",
+    	"@types/node": "^14.14.31",
+        "css-loader": "^5.1.0",
         "file-loader": "^6.2.0",
         "html-webpack-plugin": "^5.2.0",
         "less": "^4.1.1",
         "less-loader": "^8.0.0",
         "style-loader": "^2.0.0",
         "terser-webpack-plugin": "^5.1.1",
-        "tslint": "^5.20.1",
+        "tslint": "^6.1.3",
         "typescript": "^4.2.2",
         "webpack": "^5.24.2",
         "webpack-cli": "^4.5.0"

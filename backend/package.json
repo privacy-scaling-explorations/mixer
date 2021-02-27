@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "ajv": "^7.1.1",
-    "ethers": "^4",
+    "ethers": "^5",
     "koa": "^2.13.1",
     "koa-bodyparser": "^4.3.0",
     "koa-helmet": "^6.0.0",

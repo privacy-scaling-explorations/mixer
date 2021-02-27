@@ -10,7 +10,7 @@
     "author": "Koh Wei Jie",
     "license": "GPL-3.0-or-later",
     "dependencies": {
-        "config": "3.3.3",
+        "config": "3.3.4",
         "js-yaml": "^4.0.0",
         "path": "^0.12.7"
     },

@@ -4,18 +4,16 @@
   "description": "",
   "main": "build/index.js",
   "scripts": {
-    "build": "tsc && ./scripts/buildSolidity.sh",
+    "build": "tsc && node ./build/buildContract/buildContract.js",
     "build-tsc": "tsc",
-    "test": "etherlime test --path=build/__tests__ --skip-compilation --timeout 90000",
+    "test": "NODE_ENV=local-dev jest --testPathPattern=__tests__/",
     "test-debug": "node --inspect-brk ./node_modules/.bin/etherlime test --path=build/__tests__ --skip-compilation --timeout 90000",
     "test-mix-tokens": "etherlime test --path=build/__tests__/TokenMixer.test.js --skip-compilation --timeout 600000",
     "test-mix-tokens-debug": "node --inspect-brk ./node_modules/.bin/etherlime test --path=build/__tests__/TokenMixer.test.js --skip-compilation --timeout 600000",
-    "test-mix-stress": "etherlime test --path=build/__tests__/MixerStress.test.js --skip-compilation --timeout 5000000",
-    "test-mix-stress-debug": "node --inspect-brk ./node_modules/.bin/etherlime test --path=build/__tests__/MixerStress.test.js --skip-compilation --timeout 5000000",
     "watch": "tsc --watch",
-    "deploy": "./scripts/deploy.sh",
+    "deploy": "tsc && node ./build/deploy/deployContract.js -o deployedAddresses.json",
     "compile": "tsc && node ./build/deploy/compile.js",
-    "ganache": "./scripts/runGanache.sh"
+    "ganache": "npx ganache-cli -a 10 -m='candy maple cake sugar pudding cream honey rich smooth crumble sweet treat' --gasLimit=800000000 --port 8545 -i 1234 --networkId 1234"
   },
   "author": "Koh Wei Jie",
   "license": "GPL-3.0-or-later",
@@ -29,11 +27,13 @@
     "argparse": "^2.0.1",
     "circomlib": "0.4.1",
     "module-alias": "^2.2.2",
-    "ethers": "^4",
+    "ethers": "^5",
     "ganache-cli": "^6.12.2",
     "ganache-core": "^2.13.2",
     "solc": "^0.5.17",
-    "truffle-artifactor": "^4.0.10"
+    "truffle-artifactor": "^4.0.10",
+    "jest": "^26.6.3",
+    "ts-jest": "^26.5.2"
   },
   "dependencies": {
     "config": "^3.3.3",

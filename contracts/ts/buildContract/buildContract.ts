@@ -2,10 +2,12 @@ const solc = require('solc');
 
 const fs = require('fs');
 
+import buildMiMC from './buildMiMC'
+
 const semaphorePath = '../semaphore/semaphorejs/contracts/'
 const solidityPath = 'solidity/'
 
-function compileInput(input, outputPath : string){
+const compileInput = (input, outputPath : string) => {
 
     let output = JSON.parse(solc.compile(JSON.stringify(input)));
 
@@ -24,14 +26,74 @@ function compileInput(input, outputPath : string){
             let outputfile = {
                 abi: output.contracts[contract][contractName].abi,
                 bytecode : output.contracts[contract][contractName].evm.bytecode.object,
+                linkReferences : output.contracts[contract][contractName].evm.bytecode.linkReferences,
                 }
             fs.writeFileSync(outputPath + contractName + '.json', JSON.stringify(outputfile))
         }
     }
 }
 
-function loadContract(path : string){
+const compileInputBytecode = (input) => {
+
+    let output = JSON.parse(solc.compile(JSON.stringify(input)));
+
+    if (output.errors){
+            console.log(output.errors)
+            process.exit(1)
+    }
+
+    for (var contract in output.contracts) {
+        for (var contractName in output.contracts[contract]) {
+            console.log("contract ", contractName)
+            return output.contracts[contract][contractName].evm.bytecode.object
+        }
+    }
+    return null
+}
+
+const loadContract = (path : string) => {
     return fs.readFileSync(path).toString()
+}
+
+const inputMiMC = {
+    language: 'Solidity',
+    sources: {
+        'MerkleTreeLib.sol' : {
+            content: loadContract(semaphorePath + 'MerkleTreeLib.sol'),
+        },
+    },
+    settings: {
+        outputSelection: {
+            '*': {
+                'MiMC': [ 'evm.bytecode.object', 'abi']
+            }
+        }
+    }
+}
+
+const inputSemaphore = {
+    language: 'Solidity',
+    sources: {
+        'verifier.sol': {
+            content: loadContract(semaphorePath + 'verifier.sol'),
+        },
+        'Semaphore.sol': {
+            content: loadContract(semaphorePath + 'Semaphore.sol'),
+        },
+        'MerkleTreeLib.sol' : {
+            content: loadContract(semaphorePath + 'MerkleTreeLib.sol'),
+        },
+        'Ownable.sol' : {
+            content: loadContract(semaphorePath + 'Ownable.sol'),
+        },
+    },
+    settings: {
+        outputSelection: {
+            '*': {
+                'Semaphore': [ 'evm.bytecode.object', 'abi', 'linkReferences' ]
+            }
+        }
+    }
 }
 
 const inputMixer = {
@@ -62,13 +124,13 @@ const inputMixer = {
     settings: {
         outputSelection: {
             '*': {
-                '*': [ 'evm.bytecode.object', 'abi']
+                'Mixer': [ 'evm.bytecode.object', 'abi']
             }
         }
     }
 }
 
-compileInput(inputMixer, 'compiled/')
+
 
 const inputToken = {
     language: 'Solidity',
@@ -98,10 +160,51 @@ const inputToken = {
     settings: {
         outputSelection: {
             '*': {
-                '*': [ 'evm.bytecode.object', 'abi']
+                'ERC20Mintable': [ 'evm.bytecode.object', 'abi']
             }
         }
     }
 }
 
-compileInput(inputToken, 'compiled/token/')
+
+
+const inputRelayerRegistry = {
+    language: 'Solidity',
+    sources: {
+        'MockRelayerRegistry.sol': {
+            content: loadContract(solidityPath + 'MockRelayerRegistry.sol'),
+        },
+    },
+    settings: {
+        outputSelection: {
+            '*': {
+                'RelayerRegistry': [ 'evm.bytecode.object', 'abi']
+            }
+        }
+    }
+}
+
+const getSemaphoreBytecode = async () => {
+    return compileInputBytecode(inputSemaphore)
+}
+
+const main = async () => {
+    buildMiMC()
+    //compileInput(inputMiMC, 'compiled/')
+    compileInput(inputSemaphore, 'compiled/')
+    compileInput(inputMixer, 'compiled/')
+    compileInput(inputToken, 'compiled/')
+    compileInput(inputRelayerRegistry, 'compiled/')
+}
+
+if (require.main === module) {
+    try {
+        main()
+    } catch (err) {
+        console.error(err)
+    }
+}
+
+export {
+    getSemaphoreBytecode
+}

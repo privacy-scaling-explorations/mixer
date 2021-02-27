@@ -72,7 +72,7 @@ network:
 
 network-test:
     ganache:
-        disable: true
+
         url: "http://localhost:8545"
         chainId: 1234
         supportedNetwork: 1234
@@ -84,11 +84,7 @@ network-test:
                 mixAmt: 0.1
                 feeAmt: 0.001
                 sym: 'ETH'
-            tkn:
-                decimals: 18
-                mixAmt: 20
-                feeAmt: 0.02
-                sym: 'TKN'
+            
         testing:
           privKeys:
             - "0xc87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3"
@@ -119,6 +115,7 @@ network-test:
             - "0xc87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3"
             - "0xae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f"
     arbitrum:
+        disable: true
         url: "https://kovan3.arbitrum.io/rpc"
         chainId: 79377087078960
         supportedNetwork: 79377087078960

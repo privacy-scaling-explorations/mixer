@@ -8,27 +8,62 @@ import { genAccounts } from '../accounts'
 
 
 const ERC20Mintable = require('@mixer-contracts/compiled/ERC20Mintable.json')
+const MiMC = require('@mixer-contracts/compiled/MiMC.json')
+const Semaphore = require('@mixer-contracts/compiled/Semaphore.json')
+const Mixer = require('@mixer-contracts/compiled/Mixer.json')
+const RelayerRegistry = require('@mixer-contracts/compiled/RelayerRegistry.json')
 
-function link(bytecode, libName, libAddress) {
-  let symbol = "__" + libName + "_".repeat(40 - libName.length - 2);
-  return bytecode.split(symbol).join(libAddress.toLowerCase().substr(2))
+const deployContract = async (wallet, contract, ...args: any[]) => {
+    let factory = new ethers.ContractFactory(
+        contract.abi,
+        contract.bytecode,
+        wallet,
+    )
+    let contractToDeploy = await factory.deploy(...args)
+    await contractToDeploy.deployed()
+    return contractToDeploy
+}
+
+const getWallet = (url, privateKey) => {
+    const provider = new ethers.providers.JsonRpcProvider(url)
+    const wallet = new ethers.Wallet ( privateKey , provider )
+    return wallet
+}
+
+//Replace link patern in semaphore of 20 bytes to the linked library address of 20 bytes
+function linkLibrary(bytecode, linkReferences, libraries) {
+    for (var library in libraries) {
+        let libraryAddress = libraries[library].toLowerCase().substr(2)
+        for (var linkFile in linkReferences) {
+            for (var linkRef in linkReferences[linkFile]) {
+                if (library == linkRef){
+                    linkReferences[linkFile][linkRef].forEach(ref => {
+                        bytecode = bytecode.substring(0, ref.start * 2) +
+                            libraryAddress +
+                            bytecode.substring(ref.start * 2 + ref.length * 2)
+                    })
+                }
+            }
+        }
+    }
+    return bytecode
 }
 
 const deploySemaphore = async (wallet, Semaphore, libraries) => {
-    //bytecode = link(bytecode, libraries[0].name, libraries[0].address)
 
-    console.log(libraries)
+    let bytecode = linkLibrary(Semaphore.bytecode, Semaphore.linkReferences, libraries)
+
+    let mimcAddress = libraries.MiMC.toLowerCase().substr(2)
 
     let factory = new ethers.ContractFactory(
         Semaphore.abi,
-        Semaphore.bytecode,
+        bytecode,
         wallet,
     )
     let contract = await factory.deploy(
         20,
         0,
         12312,
-        1000,
     )
     await contract.deployed()
     return contract
@@ -83,11 +118,6 @@ const deployAllContracts = async (
     let semaphoreContract
     let mixerContract
 
-    const MiMC = require('@mixer-contracts/compiled/MiMC.json')
-    const Semaphore = require('@mixer-contracts/compiled/Semaphore.json')
-    const Mixer = require('@mixer-contracts/compiled/Mixer.json')
-    const RelayerRegistry = require('@mixer-contracts/compiled/RelayerRegistry.json')
-
     //relay registry contract
     let relayerRegistryContract
     if (deployedAddressesNetwork && deployedAddressesNetwork.hasOwnProperty('RelayerRegistry')){
@@ -99,7 +129,7 @@ const deployAllContracts = async (
             )
     } else {
         console.log('Deploying Relayer Registry')
-        relayerRegistryContract = await wallet.deploy(RelayerRegistry)
+        relayerRegistryContract = await deployContract(wallet, RelayerRegistry)
     }
 
     //mimc contract
@@ -113,12 +143,13 @@ const deployAllContracts = async (
         )
     }else{
         console.log('Deploying MiMC')
-        mimcContract = await wallet.deploy(MiMC)
+        mimcContract = await deployContract(wallet, MiMC)
     }
 
     //libraries for semaphore
+
     const libraries = {
-        MiMC: mimcContract.contractAddress ? mimcContract.contractAddress : mimcContract.address,
+        MiMC: mimcContract.address,
     }
 
     //token contract
@@ -183,7 +214,7 @@ const deployAllContracts = async (
             if (configToken.has('decimals')){
                 let decimals = configToken.get('decimals')
                 mixAmtToken = mixAmt * (10 ** decimals)
-                tokenAddress = tokenContract.contractAddress ? tokenContract.contractAddress : tokenContract.address
+                tokenAddress = tokenContract.address
             //For ETH
             } else {
                 mixAmtToken = mixAmt * (10 ** 18)
@@ -195,13 +226,13 @@ const deployAllContracts = async (
             mixerContract = await deployMixer(
                 wallet,
                 Mixer,
-                (semaphoreContract.contractAddress ? semaphoreContract.contractAddress : semaphoreContract.resolvedAddress),
+                semaphoreContract.address,
                 mixAmtToken,
                 tokenAddress,
             )
 
             console.log('Transferring ownership of Semaphore to the Mixer')
-            let tx = await semaphoreContract.transferOwnership(mixerContract.contractAddress)
+            let tx = await semaphoreContract.transferOwnership(mixerContract.address)
             await tx.wait()
 
             console.log('Setting the external nullifier of the Semaphore contract')
@@ -224,31 +255,31 @@ const main = async () => {
         description: 'Deploy all contracts to an Ethereum network of your choice'
     })
 
-    parser.addArgument(
-        ['-t', '--token'],
+    parser.add_argument(
+        '-t', '--token',
         {
             help: 'The token to interact with',
             required: false
         }
     )
 
-    parser.addArgument(
-        ['-n', '--network'],
+    parser.add_argument(
+        '-n', '--network',
         {
             help: 'The network to deploy the contracts to',
             required: false
         }
     )
 
-    parser.addArgument(
-        ['-o', '--output'],
+    parser.add_argument(
+        '-o', '--output',
         {
             help: 'The filepath to save the addresses of the deployed contracts',
             required: true
         }
     )
 
-    const args = parser.parseArgs()
+    const args = parser.parse_args()
     const outputAddressFile = args.output
 
     let deployedAddresses
@@ -293,19 +324,7 @@ const main = async () => {
                 }
                 let deployedAddressesToken = deployedAddressesNetwork.token[configTokenName]
 
-                const provider = new ethers.providers.JsonRpcProvider(configNetwork.get('url'))
-                const wallet = new ethers.Wallet ( admin.privateKey , provider )
-                wallet["deploy"] = async (contractSource) => {
-
-                    let factory = new ethers.ContractFactory(
-                        contractSource.abi,
-                        contractSource.bytecode,
-                        this,
-                    )
-                    let contract = await factory.deploy()
-                    await contract.deployed()
-                    return contract
-                }
+                const wallet = getWallet(configNetwork.get('url'), admin.privateKey)
 
                 const {
                     relayerRegistryContract,
@@ -321,30 +340,15 @@ const main = async () => {
                     deployedAddressesToken,
                 )
 
-                deployedAddressesNetwork.MiMC =
-                  mimcContract.contractAddress ?
-                  mimcContract.contractAddress :
-                  mimcContract.address
-                deployedAddressesNetwork.RelayerRegistry =
-                  relayerRegistryContract.contractAddress ?
-                  relayerRegistryContract.contractAddress :
-                  relayerRegistryContract.address
+                deployedAddressesNetwork.MiMC = mimcContract.address
+                deployedAddressesNetwork.RelayerRegistry = relayerRegistryContract.address
 
                 if (configTokenName){
-                    deployedAddressesToken.Semaphore =
-                      semaphoreContract.contractAddress ?
-                      semaphoreContract.contractAddress :
-                      semaphoreContract.address
-                    deployedAddressesToken.Mixer =
-                      mixerContract.contractAddress ?
-                      mixerContract.contractAddress :
-                      mixerContract.address
+                    deployedAddressesToken.Semaphore = semaphoreContract.address
+                    deployedAddressesToken.Mixer = mixerContract.address
 
                     if (tokenContract){
-                        deployedAddressesToken.Token =
-                          tokenContract.contractAddress ?
-                          tokenContract.contractAddress :
-                          tokenContract.address
+                        deployedAddressesToken.Token = tokenContract.address
                     }
                 }
             }
@@ -369,6 +373,8 @@ if (require.main === module) {
 }
 
 export {
+    deployContract,
+    getWallet,
     deployToken,
     deployAllContracts,
 }

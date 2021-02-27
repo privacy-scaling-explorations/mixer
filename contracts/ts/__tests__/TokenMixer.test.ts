@@ -1,7 +1,4 @@
 require('module-alias/register')
-// Make Typescript happy
-declare var assert: any
-declare var before: any
 require('events').EventEmitter.defaultMaxListeners = 0
 
 const path = require('path');
@@ -28,13 +25,14 @@ import {
 } from 'libsemaphore'
 
 import { genAccounts } from '../accounts'
-import buildMiMC from '../buildMiMC'
 const Mixer = require('@mixer-contracts/compiled/Mixer.json')
 const ERC20Mintable = require('@mixer-contracts/compiled/ERC20Mintable.json')
 
 import {
+    deployContract,
+    getWallet,
     deployAllContracts,
-} from '../deploy/deploy'
+} from '../deploy/deployContract'
 
 for (let configNetworkName of Object.keys(configMixer.get('network-test'))) {
   console.log("Test network:", configNetworkName);
@@ -46,88 +44,104 @@ for (let configNetworkName of Object.keys(configMixer.get('network-test'))) {
           console.log("Test token:", configTokenName);
           let configToken = configNetwork.get('token.' + configTokenName)
 
-          const accounts = genAccounts(configNetwork)
-          assert(accounts[0], "Account 0 for deposit is not set")
-          const depositorAddress = accounts[0].address
-          assert(accounts[1], "Account 1 for recipient is not set")
-          const recipientAddress = accounts[1].address
-          assert(accounts[2], "Account 2 for relayer is not set")
-          let relayerAddress = accounts[2].address
-
-
-          let isETH = 0
-          if (!configToken.has('decimals')){
-              isETH = 1
-          }
-
-          let decimals
-          let mixAmtToken
-          let feeAmt
-          if (isETH){
-              decimals = 18
-          }else{
-              decimals = configToken.get('decimals')
-          }
-
-          mixAmtToken = ethers.utils.bigNumberify((configToken.get('mixAmt') * (10 ** decimals)).toString())
-          feeAmt = ethers.utils.bigNumberify((configToken.get('feeAmt') * (10 ** decimals)).toString())
-
-          const users = accounts.slice(1, 6).map((user) => user.address)
-          const identities = {}
-
-          const contractsPath = path.join(
-              __dirname,
-              '../..',
-              'compiled',
-          )
-
-          for (let i=0; i < users.length; i++) {
-              const user = users[i]
-
-              const identity = genIdentity()
-              identities[user] = identity
-          }
-
-          let mimcContract
-          let mixerContract
-          let semaphoreContract
-          let relayerRegistryContract
-          let tokenContract
-          let externalNullifier : string
-
           describe(configNetworkName + '.' + configTokenName + ' Mixer', () => {
 
-              const provider = new ethers.providers.JsonRpcProvider(configNetwork.get('url'))
-              const wallet = new ethers.Wallet ( accounts[0].privateKey , provider )
+              const accounts = genAccounts(configNetwork)
+              expect(accounts[0]).toBeTruthy();
+              const depositorAddress = accounts[0].address
+              expect(accounts[1]).toBeTruthy();
+              const recipientAddress = accounts[1].address
+              expect(accounts[2]).toBeTruthy();
+              let relayerAddress = accounts[2].address
 
-              before(async () => {
-                  await buildMiMC()
 
-                  const contracts = await deployAllContracts(
-                      wallet,
-                      configToken,
-                      depositorAddress,
-                      null,
-                      null,
-                  )
-                  mimcContract = contracts.mimcContract
-                  semaphoreContract = contracts.semaphoreContract
-                  mixerContract = contracts.mixerContract
-                  relayerRegistryContract = contracts.relayerRegistryContract
-                  tokenContract = contracts.tokenContract
+              let isETH = 0
+              if (!configToken.has('decimals')){
+                  isETH = 1
+              }
 
-                  // mint tokens
-                  // await tokenContract.mint(depositorAddress, '100000000000000000000000')
+              let decimals
+              let mixAmtToken
+              let feeAmt
+              if (isETH){
+                  decimals = 18
+              }else{
+                  decimals = configToken.get('decimals')
+              }
 
+              mixAmtToken = ethers.BigNumber.from((configToken.get('mixAmt') * (10 ** decimals)).toString())
+              feeAmt = ethers.BigNumber.from((configToken.get('feeAmt') * (10 ** decimals)).toString())
+
+              const users = accounts.slice(1, 6).map((user) => user.address)
+              const identities = {}
+
+              const contractsPath = path.join(
+                  __dirname,
+                  '../..',
+                  'compiled',
+              )
+
+              for (let i=0; i < users.length; i++) {
+                  const user = users[i]
+
+                  const identity = genIdentity()
+                  identities[user] = identity
+              }
+
+              let mimcContract
+              let mixerContract
+              let semaphoreContract
+              let relayerRegistryContract
+              let tokenContract
+              let externalNullifier : string
+              let wallet
+
+              wallet = getWallet(configNetwork.get('url'), accounts[0].privateKey)
+              expect(wallet).toBeTruthy()
+
+              beforeAll( done =>  {
+                  console.log("start0")
+                  const func_async = (async () => {
+                      console.log("start")
+                      const contracts = await deployAllContracts(
+                          wallet,
+                          configToken,
+                          depositorAddress,
+                          null,
+                          null,
+                      )
+
+                      expect(contracts).toBeTruthy()
+                      relayerRegistryContract = contracts.relayerRegistryContract
+                      mimcContract = contracts.mimcContract
+                      tokenContract = contracts.tokenContract
+                      semaphoreContract = contracts.semaphoreContract
+                      mixerContract = contracts.mixerContract
+                      expect(mimcContract).toBeTruthy()
+                      expect(semaphoreContract).toBeTruthy()
+                      expect(mixerContract).toBeTruthy()
+                      expect(relayerRegistryContract).toBeTruthy()
+                      if (isETH){
+                          expect(tokenContract).not.toBeTruthy()
+                      }else{
+                          expect(tokenContract).toBeTruthy()
+                      }
+                      console.log("to done")
+                      done()
+                      console.log("done")
+                  })
+
+                  func_async()
+                  //expect(semaphoreContract).toBeTruthy()
               })
+
 
               describe('Contract deployments', () => {
                   /*
                   it('should not deploy Mixer if the Semaphore contract address is invalid', async () => {
                       assert.revert(
-                          deployer.deploy(
+                          deployContract(wallet,
                               Mixer,
-                              {},
                               '0x0000000000000000000000000000000000000000',
                               mixAmtToken,
                               '0x0000000000000000000000000000000000000000',
@@ -138,46 +152,45 @@ for (let configNetworkName of Object.keys(configMixer.get('network-test'))) {
 
                   it('should not deploy mixer if the mixAmt is invalid', async () => {
                       assert.revert(
-                          deployer.deploy(
+                          deployContract(wallet,
                               Mixer,
-                              {},
-                              semaphoreContract.contractAddress,
+                              semaphoreContract.address,
                               ethers.utils.parseEther('0'),
                               '0x0000000000000000000000000000000000000000',
                           )
                       )
                       await sleep(1000)
                   })
-                  */
-                  it('should deploy contracts', () => {
-                      assert.notEqual(
-                          mimcContract._contract.bytecode,
-                          '0x',
-                          'the contract bytecode should not just be 0x'
-                      )
 
-                      assert.isAddress(mimcContract.contractAddress)
-                      assert.isAddress(semaphoreContract.contractAddress)
-                      assert.isAddress(mixerContract.contractAddress)
+                  it('should deploy contracts', () => {
+                      expect(mimcContract._contract.bytecode).not.toBe('0x')
+
+                      assert.isAddress(mimcContract.address)
+                      assert.isAddress(semaphoreContract.address)
+                      assert.isAddress(mixerContract.address)
 
                       // the external nullifier is the hash of the contract's address
-                      externalNullifier = mixerContract.contractAddress
+                      externalNullifier = mixerContract.address
                   })
-
+                  */
                   it('the Mixer contract should be the owner of the Semaphore contract', async () => {
-                      assert.equal((await semaphoreContract.owner()), mixerContract.contractAddress)
+                      expect(await semaphoreContract.owner()).toBe(mixerContract.address)
                   })
 
                   it('the Semaphore contract\'s external nullifier should be the mixer contract address', async () => {
                       const semaphoreExtNullifier = await semaphoreContract.getExternalNullifierByIndex(1)
-                      const mixerAddress = mixerContract.contractAddress
-                      assert.isTrue(areEqualAddresses(semaphoreExtNullifier, mixerAddress))
+                      const mixerAddress = mixerContract.address
+                      expect(areEqualAddresses(semaphoreExtNullifier, mixerAddress)).toBeTruthy()
                   })
               })
 
               describe('Deposits and withdrawals', () => {
                   // get the circuit, verifying key, and proving key
                   const { verifyingKey, provingKey, circuit } = getSnarks()
+
+                  expect(circuit).toBeTruthy();
+                  expect(verifyingKey).toBeTruthy();
+                  expect(provingKey).toBeTruthy();
 
                   const identity = identities[users[0]]
                   const identityCommitment = genIdentityCommitment(identity)
@@ -194,14 +207,14 @@ for (let configNetworkName of Object.keys(configMixer.get('network-test'))) {
                   let mixReceipt
 
                   if (isETH){
-
+                      /*
                       it('should not add the identity commitment to the contract if the amount is incorrect', async () => {
                           await assert.revert(mixerContract.deposit(identityCommitment.toString(), { value: 0 }))
 
                           const invalidValue = (BigInt(mixAmtToken) + BigInt(1)).toString()
                           await assert.revert(mixerContract.deposit(identityCommitment.toString(), { value: invalidValue }))
                       })
-
+                      */
 
                       it('should fail to call depositERC20() (which is not ETH)', async () => {
                           let reason: string = ''
@@ -217,7 +230,7 @@ for (let configNetworkName of Object.keys(configMixer.get('network-test'))) {
                               }
 
                           }
-                          assert.ok(reason == 'Mixer: only supports tokens' || reason == 'transaction failed', "Transaction should have given error message insteand of" + reason)
+                          expect(reason == 'Mixer: only supports tokens' || reason == 'transaction failed').toBeTruthy()
                       })
                   } else {
                       it('should fail to call deposit() (which is for ETH only)', async () => {
@@ -234,14 +247,13 @@ for (let configNetworkName of Object.keys(configMixer.get('network-test'))) {
                               }
 
                           }
-                          assert.ok(reason == 'Mixer: only supports ETH' || reason == 'transaction failed', "Transaction should have given error message insteand of" + reason)
+                          expect(reason == 'Mixer: only supports ETH' || reason == 'transaction failed').toBeTruthy()
                       })
                   }
 
-
                   it('should have setup semaphore', async () => {
                       const semaphoreBefore = await mixerContract.semaphore()
-                      assert.equal(semaphoreBefore, semaphoreContract.contractAddress, "Semaphore is not set")
+                      expect(semaphoreBefore).toBe(semaphoreContract.address)
                   })
 
                   it('should have setup mixAmt', async () => {
@@ -251,17 +263,17 @@ for (let configNetworkName of Object.keys(configMixer.get('network-test'))) {
                   it('should perform a deposit', async () => {
                       let balanceBefore
                       if (isETH){
-                          balanceBefore = await wallet.provider.getBalance(depositorAddress)
+                          balanceBefore = ethers.BigNumber.from(await wallet.provider.getBalance(depositorAddress))
+                          expect( parseFloat(ethers.utils.formatEther(balanceBefore))).toBeGreaterThan(0)
                       } else {
                           await tokenContract.approve(
-                              mixerContract.contractAddress,
+                              mixerContract.address,
                               mixAmtToken,
                           )
 
                           balanceBefore = await tokenContract.balanceOf(depositorAddress)
+                          expect(balanceBefore).toBeGreaterThan(0)
                       }
-
-                      assert.isTrue(balanceBefore > 0)
 
                       // make a deposit
                       let tx
@@ -280,30 +292,25 @@ for (let configNetworkName of Object.keys(configMixer.get('network-test'))) {
                       console.log('Gas used for this deposit:', gasUsed.toString())
 
                       // check that the leaf was added using the receipt
-                      assert.isTrue(utils.hasEvent(receipt, semaphoreContract.contract, 'LeafAdded'))
+                      expect(utils.hasEvent(receipt, semaphoreContract.contract, 'LeafAdded')).toBeTruthy()
                       const leafAddedEvent = utils.parseLogs(receipt, semaphoreContract.contract, 'LeafAdded')[0]
 
                       nextIndex = leafAddedEvent.leaf_index
-                      assert.equal(nextIndex, 0)
+                      expect(nextIndex).toBe(0)
 
                       // check that the leaf was added to the leaf history array in the contract
                       const leaves = (await mixerContract.getLeaves()).map((x) => {
                           return x.toString(10)
                       })
-                      assert.include(leaves, identityCommitment.toString())
+                      expect(leaves).toMatch(identityCommitment.toString())
 
                       let balanceAfter
                       if (isETH){
                           balanceAfter = await wallet.provider.getBalance(depositorAddress)
-                          assert.isTrue(
-                              balanceBefore.sub(balanceAfter) >= mixAmtToken,
-                          )
-                      }else{
+                          expect(balanceBefore.sub(balanceAfter)).toBeGreaterThanOrEqual(mixAmtToken)
+                      } else {
                           balanceAfter = await tokenContract.balanceOf(depositorAddress)
-                          assert.equal(
-                              balanceBefore.sub(balanceAfter).toString(),
-                              mixAmtToken.toString(),
-                          )
+                          expect(balanceBefore.sub(balanceAfter)).toEqual(mixAmtToken)
                       }
 
 
@@ -333,9 +340,9 @@ for (let configNetworkName of Object.keys(configMixer.get('network-test'))) {
                           externalNullifier,
                       )
 
-                      assert.isTrue(verifySignature(msg, signature, identity.keypair.pubKey))
+                      expect(verifySignature(msg, signature, identity.keypair.pubKey)).toBeTruthy()
 
-                      assert.isTrue(circuit.checkWitness(witness))
+                      expect(circuit.checkWitness(witness)).toBeTruthy()
 
                       const publicSignals = genPublicSignals(witness, circuit)
 
@@ -343,7 +350,7 @@ for (let configNetworkName of Object.keys(configMixer.get('network-test'))) {
 
                       // verify the proof off-chain
                       const isVerified = verifyProof(verifyingKey, proof, publicSignals)
-                      assert.isTrue(isVerified)
+                      expect(isVerified).toBeTruthy()
 
                       const mixInputs = await genDepositProof(
                           signal,
@@ -362,7 +369,7 @@ for (let configNetworkName of Object.keys(configMixer.get('network-test'))) {
                           signalHash.toString(),
                       )
 
-                      assert.isTrue(preBroadcastChecked)
+                      expect(preBroadcastChecked).toBeTruthy()
 
 
                       let mixTx
@@ -418,15 +425,12 @@ for (let configNetworkName of Object.keys(configMixer.get('network-test'))) {
 
                   it('should increase the relayer\'s token balance', () => {
                       relayerBalanceDiff = relayerBalanceAfter.sub(relayerBalanceBefore)
-                      assert.equal(relayerBalanceDiff.toString(), feeAmt.toString())
+                      expect(relayerBalanceDiff).toEqual(feeAmt)
                   })
 
                   it('should increase the recipient\'s token balance', () => {
                       recipientBalanceDiff = recipientBalanceAfter.sub(recipientBalanceBefore)
-                      assert.equal(
-                          recipientBalanceDiff.add(feeAmt).toString(),
-                          mixAmtToken,
-                      )
+                      expect(recipientBalanceDiff.add(feeAmt)).toEqual(mixAmtToken)
                   })
               })
           })
