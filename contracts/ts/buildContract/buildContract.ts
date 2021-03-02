@@ -1,6 +1,7 @@
 const solc = require('solc');
 
 const fs = require('fs');
+const fse = require('fs-extra');
 
 import buildMiMC from './buildMiMC'
 
@@ -189,12 +190,27 @@ const getSemaphoreBytecode = async () => {
 }
 
 const main = async () => {
-    buildMiMC()
-    //compileInput(inputMiMC, 'compiled/')
-    compileInput(inputSemaphore, 'compiled/')
-    compileInput(inputMixer, 'compiled/')
-    compileInput(inputToken, 'compiled/')
-    compileInput(inputRelayerRegistry, 'compiled/')
+
+    const outputPath = 'compiled/'
+
+    if (fs.existsSync(outputPath)){
+        fs.rmdirSync(outputPath, { recursive: true })
+        fs.mkdirSync(outputPath)
+    }
+
+    buildMiMC(outputPath)
+    //compileInput(inputMiMC, outputPath)
+    compileInput(inputSemaphore, outputPath)
+    compileInput(inputMixer, outputPath)
+    compileInput(inputToken, outputPath)
+    compileInput(inputRelayerRegistry, outputPath)
+
+
+    fs.rmSync('../frontend/' + outputPath, { recursive: true, force : true })
+
+    // To copy a folder or file
+    fse.copySync(outputPath, '../frontend/' + outputPath)
+
 }
 
 if (require.main === module) {

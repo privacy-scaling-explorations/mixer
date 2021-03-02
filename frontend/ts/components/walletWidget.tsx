@@ -1,8 +1,12 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useContext } from 'react'
 import ReactDOM from 'react-dom'
-import { useWeb3Context, Connectors } from 'web3-react'
+import { ethers } from 'ethers'
+
+import { ConnectionContext, connectionConnect } from '../utils/connectionContext'
+
 
 import{
+    chainId,
     blockExplorerTxPrefix,
     supportedNetworkName,
 } from '../utils/configFrontend'
@@ -18,21 +22,55 @@ const circleIcon = (className: string) => (
 )
 
 const WalletWidget = () => {
-    const context = useWeb3Context()
 
-    const setConnector = () => {
-        try {
-            if (!context.connector) {
-                context.setConnector('MetaMask')
+    const context =  useContext(ConnectionContext)
+
+    connectionConnect(context)
+
+    const provider : any = context.provider
+
+
+
+    let signer
+
+    const [address, setAddress] = useState(null)
+    const [walletChainId, setWalletChainId] = useState(null)
+
+
+    const connectWallet = () => {
+        if (provider){
+            try{
+                signer = provider.getSigner()
+            }catch (err){
+                console.log(err)
             }
-        } catch (e) {
+            if (signer){
+                try{
+                    signer.getChainId().then(
+                        _chainId => {setWalletChainId(_chainId)
+                    })
+                }catch (err){
+                    console.log(err)
+                }
+                try{
+                    signer.getAddress().then(
+                        _address => {setAddress(_address)
+                    })
+                }catch (err){
+                    console.log(err)
+                }   
+            }
         }
     }
 
-    setConnector()
+    connectWallet()
+
+    console.log(provider, signer, address)
 
     const render = () => {
-        // @ts-ignore
+
+
+
         if (!window.hasOwnProperty('ethereum')) {
             return (
                 <p>
@@ -43,16 +81,16 @@ const WalletWidget = () => {
                     </a>
                 </p>
             )
-        } else if (context.active && !context.error) {
+        } else if (provider && signer && address && walletChainId == chainId) {
             return (
                 <p>
                     <span className='is-family-monospace address'>
                         { circleIcon('ok') }
-                        { context.account }
+                        { address }
                     </span>
                 </p>
             )
-        } else if (context.error != null && context.error['code'] === 'UNSUPPORTED_NETWORK') {
+        } else if (provider && signer && walletChainId) {
             return (
                 <p>
                     { circleIcon('warn') }
@@ -63,7 +101,8 @@ const WalletWidget = () => {
             return (
                 <p className='button is-link is-rounded'
                     role='button'
-                    onClick={() => {setConnector()}} >
+                    //TODO fix connect
+                    onClick={() => {window.ethereum.enable().then(connectWallet())}} >
                     Connect wallet
                 </p>
             )
@@ -76,5 +115,6 @@ const WalletWidget = () => {
         </div>
     )
 }
+
 
 export default WalletWidget

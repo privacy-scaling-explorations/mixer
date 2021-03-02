@@ -1,8 +1,8 @@
 import * as ethers from 'ethers'
-const mixerAbi = require('../../abis/Mixer-abi.json')
-const semaphoreAbi = require('../../abis/Semaphore-abi.json')
-const relayerRegistryAbi = require('../../abis/RelayerRegistry-abi.json')
-const tokenAbi = require('../../abis/ERC20-abi.json')
+const Mixer = require('../../compiled/Mixer.json')
+const Semaphore = require('../../compiled/Semaphore.json')
+const RelayerRegistry = require('../../compiled/RelayerRegistry.json')
+const Token = require('../../compiled/ERC20Mintable.json')
 
 import{
     chainId,
@@ -15,59 +15,52 @@ import{
 // It's not trivial to generalise these functions as Parcel won't let you
 // dynamically require JSON files
 
-const getRelayerRegistryContract = async (context) => {
-    const provider = new ethers.providers.Web3Provider(
-        await context.connector.getProvider(chainId),
-    )
+const getRelayerRegistryContract = async (provider) => {
+
     const signer = provider.getSigner()
 
     return new ethers.Contract(
         relayerRegistryAddress,
-        relayerRegistryAbi,
+        RelayerRegistry.abi,
         signer,
     )
 }
 
-const getMixerContract = async (context) => {
-    const provider = new ethers.providers.Web3Provider(
-        await context.connector.getProvider(chainId),
-    )
+const getMixerContract = async (provider) => {
+
     const signer = provider.getSigner()
 
     return new ethers.Contract(
         mixerAddress,
-        mixerAbi,
+        Mixer.abi,
         signer,
     )
 }
 
-const getSemaphoreContract = async (context) => {
-    const provider = new ethers.providers.Web3Provider(
-        await context.connector.getProvider(chainId),
-    )
+const getSemaphoreContract = async (provider) => {
+
     const signer = provider.getSigner()
 
     return new ethers.Contract(
         semaphoreAddress,
-        semaphoreAbi,
+        Semaphore.abi,
         signer,
     )
 }
 
-const getTokenContract = async (context) => {
-    const provider = new ethers.providers.Web3Provider(
-        await context.connector.getProvider(chainId),
-    )
+const getTokenContract = async (provider) => {
+
     const signer = provider.getSigner()
 
     return new ethers.Contract(
         tokenAddress,
-        tokenAbi,
+        Token.abi,
         signer,
     )
 }
 
 export {
+    Mixer,
     getRelayerRegistryContract,
     getMixerContract,
     getSemaphoreContract,

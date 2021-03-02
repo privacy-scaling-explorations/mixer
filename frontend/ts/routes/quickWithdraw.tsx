@@ -1,6 +1,5 @@
 import React, { Component, useState } from 'react'
 import ReactDOM from 'react-dom'
-import { useWeb3Context } from 'web3-react'
 import * as ethers from 'ethers'
 import { utils } from 'mixer-contracts'
 import { sleep } from 'mixer-utils'
@@ -10,6 +9,7 @@ import { TxHashMessage } from '../components/txHashMessage'
 import { quickWithdrawEth, quickWithdrawTokens } from '../web3/quickWithdraw'
 import { getMixerContract } from '../web3/mixer'
 import { fetchWithoutCache } from '../utils/fetcher'
+import { ConnectionContext } from '../utils/connectionContext'
 
 import{
     isETH,
@@ -75,7 +75,10 @@ export default () => {
     const [consentChecked, setConsentChecked] = useState(false)
     const [errorMsg, setErrorMsg] = useState('')
 
-    const context = useWeb3Context()
+    const context = ConnectionContext
+
+    const provider : any = null
+    
     let withdrawBtnDisabled = !consentChecked
 
     const progress = (line: string) => {
@@ -98,17 +101,12 @@ export default () => {
             return
         }
 
-        const library = context.library
-        const connector = context.connector
-
-        if (!library || !connector) {
-            return
-        }
+        //TODO check provider
 
         try {
-            const mixerContract = await getMixerContract(context)
+            const mixerContract = await getMixerContract(provider)
 
-            const relayerAddress = context.account
+            const relayerAddress = provider.getSigner().getAddress()
 
             const externalNullifier = mixerContract.address
 
@@ -166,8 +164,8 @@ export default () => {
 
             progress('Downloading proving key...')
 
-            const provingKey = new Uint8Array(
-                await (await fetch(snarksPathsProvingKey)).arrayBuffer()
+            const provingKey = Buffer.from(new Uint8Array(
+                await (await fetch(snarksPathsProvingKey)).arrayBuffer())
             )
 
             progress('Downloading verifying key')
@@ -195,7 +193,7 @@ export default () => {
             let tx
             const quickWithdrawFunc = isETH ? quickWithdrawEth : quickWithdrawTokens
             tx = await quickWithdrawFunc(
-                context,
+                provider,
                 result.signal,
                 proof,
                 publicSignals,

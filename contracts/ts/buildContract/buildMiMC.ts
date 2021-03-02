@@ -1,9 +1,10 @@
 import * as Artifactor from 'truffle-artifactor'
 const mimcGenContract = require('circomlib/src/mimcsponge_gencontract.js');
-const artifactor = new Artifactor('compiled/')
+
 const SEED = 'mimcsponge'
 
-const buildMiMC = async () => {
+const buildMiMC = async (outputPath : string) => {
+    const artifactor = new Artifactor(outputPath)
     await artifactor.save({
         contractName: 'MiMC',
         abi: mimcGenContract.abi,
@@ -12,7 +13,9 @@ const buildMiMC = async () => {
 }
 
 if (require.main === module) {
-    buildMiMC()
+    const outputPath = 'compiled/'
+
+    buildMiMC(outputPath)
 }
 
 export default buildMiMC

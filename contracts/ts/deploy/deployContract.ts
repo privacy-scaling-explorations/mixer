@@ -163,10 +163,10 @@ const deployAllContracts = async (
                 wallet,
             )
         } else {
-            if (deployedAddressesToken && deployedAddressesToken.token){
+            if (deployedAddressesToken && deployedAddressesToken.Token){
                 console.log('Token already deployed')
                 tokenContract = new ethers.Contract(
-                    deployedAddressesToken.token.Token,
+                    deployedAddressesToken.Token,
                     ERC20Mintable.abi,
                     wallet,
                 )

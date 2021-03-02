@@ -48,3 +48,4 @@ tags
 [._]*.un~
 backend/exported_config.json
 frontend/exported_config.json
+frontend/compiled/

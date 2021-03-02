@@ -23,7 +23,7 @@
         "buffer": "^6.0.3",
         "bulma": "^0.9.2",
         "ethers": "^5",
-        "libsemaphore": "^1.0.16",
+        "libsemaphore": "^0.0.16",
         "mixer-contracts": "1.0.0",
         "mixer-utils": "1.0.0",
         "parcel-bundler": "^1.12.4",
@@ -35,6 +35,8 @@
         "react-timer-hook": "^2.0.7"
     },
     "devDependencies": {
+    	"@types/react": "^17.0.2",
+	"@types/react-dom": "^17.0.1",
     	"@types/node": "^14.14.31",
         "css-loader": "^5.1.0",
         "file-loader": "^6.2.0",

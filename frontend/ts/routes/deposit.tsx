@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom'
 import { Redirect } from 'react-router-dom'
 import * as ethers from 'ethers'
 import { Buffer } from 'buffer'
-import { useWeb3Context } from 'web3-react'
+import { ConnectionContext } from '../utils/connectionContext'
 import { Erc20ApproveButton, TxButton, TxStatuses } from '../components/txButton'
 import { TxHashMessage } from '../components/txHashMessage'
 import { sleep } from 'mixer-utils'
@@ -26,6 +26,7 @@ import {
 
 import {
     isETH,
+    chainId,
     mixAmt,
     operatorFee,
     tokenSym,
@@ -91,12 +92,14 @@ export default () => {
           return <Redirect to='/countdown' />
     }
 
-    const context = useWeb3Context()
+    const context = ConnectionContext
+
+    const provider : any = null
 
     const handleTokenApproveBtnClick = async () => {
         setErc20ApproveTxStatus(TxStatuses.Pending)
 
-        const tx = await approveTokens(context, tokenAllowanceNeeded * (10 ** tokenDecimals))
+        const tx = await approveTokens(provider, tokenAllowanceNeeded * (10 ** tokenDecimals))
         await tx.wait()
         setErc20ApproveTxStatus(TxStatuses.Mined)
     }
@@ -119,13 +122,13 @@ export default () => {
             let tx
             if (isETH) {
                 tx = await depositEth(
-                    context,
+                    provider,
                     identityCommitment,
                     ethers.utils.parseEther(mixAmt.toString()),
                 )
             } else {
                 tx = await depositTokens(
-                    context,
+                    provider,
                     identityCommitment,
                 )
             }
@@ -160,8 +163,8 @@ export default () => {
     }
 
     const checkBalances = async () => {
-        if (mixAmt && context.connector && context.account) {
-            const balance = await getBalanceETH(context)
+        if (mixAmt && provider && provider.getSigner() && provider.getAccount()) {
+            const balance = await getBalanceETH(provider)
             const minAmt = isETH ? mixAmt + operatorFee : operatorFee
             let enoughEth
             if (balance) {
@@ -169,7 +172,7 @@ export default () => {
                 setEnoughEth(enoughEth)
             }
             if (!isETH) {
-                const tokenBalance = await getBalance(context)
+                const tokenBalance = await getBalance(provider)
                 const enoughToken = tokenBalance >= mixAmt
                 setenoughEthAndToken(enoughEth && enoughToken)
             }
@@ -177,9 +180,9 @@ export default () => {
     }
 
     const checkTokenAllowance = async () => {
-        if (mixAmt && context.connector) {
+        if (mixAmt && provider.getSigner()) {
             const mixAmtFull = mixAmt * 10 ** tokenDecimals
-            const allowance = await getTokenAllowance(context)
+            const allowance = await getTokenAllowance(provider)
 
             let x = mixAmtFull - allowance
             if (x < 0) {
@@ -202,7 +205,7 @@ export default () => {
         </div>
     )
 
-    const showMixForm = context.error == null &&
+    const showMixForm = provider && provider.getNetwork() && provider.getNetwork().chainId == chainId &&
         (
             (!isETH && tokenAllowanceNeeded === 0 && enoughEthAndToken) ||
             (isETH && enoughEth)
@@ -262,7 +265,7 @@ export default () => {
                         </div>
                     }
 
-                    { (context.error != null && context.error['code'] === 'UNSUPPORTED_NETWORK') ?
+                    { provider && provider.getNetwork() && provider.getNetwork().chainId != chainId ?
                         <p>
                             Please connect to
                             the {supportedNetworkName} Ethereum

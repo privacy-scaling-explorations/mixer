@@ -2,11 +2,11 @@ import React, { Component, useState } from 'react'
 import ReactDOM from 'react-dom'
 import { useTimer } from 'react-timer-hook'
 import * as ethers from 'ethers'
-import { useWeb3Context } from 'web3-react'
 import { Redirect } from 'react-router-dom'
 import { getMixerContract, getTokenContract } from '../web3/mixer'
 import { genMixParams, sleep } from 'mixer-utils'
 import { fetchWithoutCache } from '../utils/fetcher'
+import { ConnectionContext } from '../utils/connectionContext'
 import {
     genCircuit,
     genMixerWitness,
@@ -76,27 +76,24 @@ export default () => {
 
     const feeAmt = operatorFee * (10 ** tokenDecimals)
 
-    const context = useWeb3Context()
+    const context = ConnectionContext
 
-    const withdraw = async (context) => {
-        if (!context.connector) {
-            return
-        }
-        const provider = new ethers.providers.Web3Provider(
-            await context.connector.getProvider(chainId),
-        )
+    const provider : any = null
+
+    const withdraw = async (provider) => {
+        //TODO check chainId for provider
 
         let tokenContract
 
         if (isETH) {
             const recipientBalanceBefore = await provider.getBalance(recipientAddress)
         } else {
-            tokenContract = await getTokenContract(context)
+            tokenContract = await getTokenContract(provider)
             const recipientBalanceBefore = (await tokenContract.balanceOf(recipientAddress)) / (10 ** tokenDecimals)
         }
 
         try {
-            const mixerContract = await getMixerContract(context)
+            const mixerContract = await getMixerContract(provider)
 
             const externalNullifier = mixerContract.address
 
@@ -169,8 +166,8 @@ export default () => {
                 }
 
                 progress('Downloading proving key...')
-                const provingKey = new Uint8Array(
-                    await (await fetch(snarksPathsProvingKey)).arrayBuffer()
+                const provingKey = Buffer.from(new Uint8Array(
+                    await (await fetch(snarksPathsProvingKey)).arrayBuffer())
                 )
 
                 progress('Downloading verification key...')
@@ -280,24 +277,26 @@ export default () => {
         }
     }
 
-    let expiryTimestamp = new Date(identityStored.timestamp)
-    expiryTimestamp.setUTCHours(0, 0, 0, 0)
-    expiryTimestamp.setDate(expiryTimestamp.getDate() + 1)
+    let expiryDate = new Date(identityStored.timestamp)
+    expiryDate.setUTCHours(0, 0, 0, 0)
+    expiryDate.setDate(expiryDate.getDate() + 1)
 
     // Whether the current time is greater than the expiry timestamp (i.e.
     // UTC midnight
-    let midnightOver = firstLoadTime > expiryTimestamp
+    let midnightOver = firstLoadTime > expiryDate
 
     // Dev only
     if (!endsAtMidnight && !midnightOver) {
-        expiryTimestamp = new Date()
-        expiryTimestamp.setSeconds(
-            expiryTimestamp.getSeconds() + endsAfterSecs
+        expiryDate = new Date()
+        expiryDate.setSeconds(
+            expiryDate.getSeconds() + endsAfterSecs
         )
     }
 
-    const timeStr = `${expiryTimestamp.getDate()} ${months[expiryTimestamp.getMonth()]} ` +
-        `${expiryTimestamp.getFullYear()}, ${expiryTimestamp.toLocaleTimeString()}`
+    let expiryTimestamp =  expiryDate.getTime()
+
+    const timeStr = `${expiryDate.getDate()} ${months[expiryDate.getMonth()]} ` +
+        `${expiryDate.getFullYear()}, ${expiryDate.toLocaleTimeString()}`
 
     const timer = useTimer({
         expiryTimestamp,
@@ -310,7 +309,7 @@ export default () => {
 
     if (!withdrawStarted &&
         countdownDone &&
-        context &&
+        provider &&
         !midnightOver &&
         timer.days + timer.hours + timer.minutes + timer.seconds === 0
     ) {
@@ -326,7 +325,7 @@ export default () => {
                 }
 
                 setWithdrawStarted(true)
-                withdraw(context)
+                withdraw(provider)
             }}
             className='button is-warning'>
             Mix now
@@ -372,11 +371,11 @@ export default () => {
                             }
                         </h2>
 
-                        { context.error == null && txHash.length === 0 && (midnightOver || withdrawStarted) &&  !withdrawBtnClicked &&
+                        { provider.getSigner() && provider.getNetwork() && provider.getNetwork().chainId == chainId && txHash.length === 0 && (midnightOver || withdrawStarted) &&  !withdrawBtnClicked &&
                             withdrawBtn
                         }
 
-                        { (context.error != null && context.error['code'] === 'UNSUPPORTED_NETWORK') &&
+                        { (provider.getNetwork() && provider.getNetwork().chainId != chainId) &&
                             <p>
                                 To continue, please connect to the correct Ethereum network.
                             </p>
@@ -467,9 +466,9 @@ export default () => {
                                         </p>
                                     </div>
 
-                                    {context.error == null && withdrawBtn}
+                                    {provider.getSigner() && provider.getNetwork() && provider.getNetwork().chainId == chainId && withdrawBtn}
 
-                                    { (context.error != null && context.error['code'] === 'UNSUPPORTED_NETWORK') &&
+                                    { (provider.getNetwork() && provider.getNetwork().chainId != chainId) &&
                                         <p>
                                             To continue, please connect to the correct Ethereum network.
                                         </p>

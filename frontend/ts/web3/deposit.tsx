@@ -19,7 +19,7 @@ import{
 const depositEth = async (
     context: any,
     identityCommitment: string,
-    mixAmt: ethers.utils.BigNumber,
+    mixAmt: ethers.BigNumber,
 ) => {
 
     const library = context.library

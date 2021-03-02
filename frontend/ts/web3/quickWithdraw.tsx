@@ -1,5 +1,5 @@
 import * as ethers from 'ethers'
-import { getRelayerRegistryContract, getMixerContract } from './mixer'
+import { getRelayerRegistryContract, getMixerContract, Mixer } from './mixer'
 
 import{
     chainId,
@@ -59,8 +59,8 @@ const quickWithdrawEth = async (
             feeAmt,
         )
 
-        const iface = new ethers.utils.Interface(mixerContract.interface.abi)
-        const callData = iface.functions.mix.encode([
+        const iface = new ethers.utils.Interface(Mixer.abi)
+        const callData = iface.encodeFunctionData("mix", [
             depositProof.signal,
             depositProof.a,
             depositProof.b,
@@ -110,8 +110,8 @@ const quickWithdrawTokens = async (
             feeAmt,
         )
 
-        const iface = new ethers.utils.Interface(mixerContract.interface.abi)
-        const callData = iface.functions.mixERC20.encode([
+        const iface = new ethers.utils.Interface(Mixer.abi)
+        const callData = iface.encodeFunctionData("mix", [
             depositProof.signal,
             depositProof.a,
             depositProof.b,

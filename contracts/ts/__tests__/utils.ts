@@ -8,6 +8,8 @@ import {
 const fs = require('fs');
 const path = require('path');
 
+const Mixer = require('@mixer-contracts/compiled/Mixer.json')
+
 const mix = async (
     relayerRegistryContract,
     mixerContract,
@@ -25,7 +27,7 @@ const mix = async (
         recipientAddress,
         feeAmt,
     )
-    const iface = new ethers.utils.Interface(mixerContract.interface.abi)
+    const iface = new ethers.utils.Interface(Mixer.abi)
     const callData = iface.encodeFunctionData("mix", [
 	depositProof.signal,
 	depositProof.a,
@@ -37,7 +39,7 @@ const mix = async (
 	relayerAddress])
 
     return relayerRegistryContract.relayCall(
-        mixerContract.contractAddress,
+        mixerContract.address,
         callData,
         { gasLimit: 1000000 }
     )
@@ -66,7 +68,7 @@ const mixERC20 = async (
         recipientAddress,
         feeAmt,
     )
-    const iface = new ethers.utils.Interface(mixerContract.interface.abi)
+    const iface = new ethers.utils.Interface(Mixer.abi)
     const callData = iface.encodeFunctionData("mixERC20", [
 	depositProof.signal,
 	depositProof.a,
@@ -78,7 +80,7 @@ const mixERC20 = async (
 	relayerAddress])
 
     return relayerRegistryContract.relayCall(
-        mixerContract.contractAddress,
+        mixerContract.address,
         callData,
         { gasLimit: 1000000 },
     )
@@ -139,7 +141,16 @@ const getSnarks = () => {
     }
 }
 
+const checkErrorReason = (error, errorMsg) => {
+    if (error.reason){
+        expect(error.reason).toMatch('transaction failed')
+    }else{
+        expect(error.error.data[error.transactionHash].reason).toMatch(errorMsg)
+    }
+}
+
 export {
+    checkErrorReason,
     genDepositProof,
     areEqualAddresses,
     mix,
