@@ -349,9 +349,9 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
                       //Return boolen
                       expect(await verifySignature(msg, signature, identity.keypair.pubKey)).toBeTruthy()
                       expect(await circuit.checkWitness(witness)).toBeTruthy()
-
+                      
                       //Return SnarkPublicSignals
-                      const publicSignals = genPublicSignals(witness, circuit)
+                      const publicSignals = await genPublicSignals(witness, circuit)
                       expect(publicSignals).toBeTruthy()
 
                       //Return async + Promise
@@ -360,7 +360,7 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
                       expect(proof).toBeTruthy()
 
                       //Return boolen
-                      expect(verifyProof(verifyingKey, proof, publicSignals)).toBeTruthy()
+                      expect(await verifyProof(verifyingKey, proof, publicSignals)).toBeTruthy()
 
                       const mixInputs = await genDepositProof(
                           signal,
@@ -417,6 +417,7 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
                               relayerAddress,
                           )
                       }
+
                       const mixReceipt = await mixTx.wait()
                       console.log(mixReceipt.events)
                       if (isETH){
