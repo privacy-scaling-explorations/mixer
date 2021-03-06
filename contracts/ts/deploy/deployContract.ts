@@ -19,8 +19,11 @@ const deployContract = async (wallet, contract, ...args: any[]) => {
         contract.bytecode,
         wallet,
     )
+    console.time("Deploy contract");
     let contractToDeploy = await factory.deploy(...args)
+    console.timeLog("Deploy contract");
     await contractToDeploy.deployed()
+    console.timeEnd("Deploy contract");
     return contractToDeploy
 }
 
@@ -175,7 +178,8 @@ const deployAllContracts = async (
                 tokenContract = await deployToken(wallet)
 
                 console.log('Minting tokens')
-                await tokenContract.mint(adminAddress, '100000000000000000000')
+                let tx = await tokenContract.mint(adminAddress, '10000000000000000000000')
+                await tx.wait()
             }
         }
     }

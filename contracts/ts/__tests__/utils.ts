@@ -142,14 +142,43 @@ const getSnarks = () => {
 }
 
 const checkErrorReason = (error, errorMsg) => {
-    if (error.reason){
-        expect(error.reason).toMatch('transaction failed')
-    }else{
+    if (error.error && error.error.data){
         expect(error.error.data[error.transactionHash].reason).toMatch(errorMsg)
+    }else{
+        expect(error.reason).toMatch('transaction failed')
     }
 }
 
+const performeDeposit = async (isETH, identityCommitment, mixAmtToken, mixerContract, tokenContract) => {
+    let tx
+    if (isETH){
+        tx = await mixerContract.deposit(
+            '0x' + identityCommitment.toString(16),
+            {value: '0x' + BigInt(mixAmtToken).toString(16),
+             gasLimit: 1500000 })
+    } else {
+        const txApprove = await tokenContract.approve(
+            mixerContract.address,
+            mixAmtToken,
+        )
+        const receipt = await txApprove.wait()
+
+        tx = await mixerContract.depositERC20(
+            '0x' + identityCommitment.toString(16),
+            { gasLimit: 1500000 })
+    }
+
+    const receipt = await tx.wait()
+
+    // check that the leaf was added using the receipt
+    expect(receipt.events).toBeTruthy()
+    expect(receipt.events[receipt.events.length - 1].event).toMatch('Deposited')
+
+    return receipt
+}
+
 export {
+    performeDeposit,
     checkErrorReason,
     genDepositProof,
     areEqualAddresses,

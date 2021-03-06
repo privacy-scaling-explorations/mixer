@@ -6,6 +6,7 @@ import * as ethers from 'ethers'
 
 import { configMixer } from 'mixer-config'
 import {
+    performeDeposit,
     checkErrorReason,
     mix,
     mixERC20,
@@ -42,11 +43,11 @@ try{
     deployedAddresses = {}
 }
 
-for (let configNetworkName of Object.keys(configMixer.get('network-test'))) {
+for (let configNetworkName of Object.keys(configMixer.get('network'))) {
 
-  let configNetwork = configMixer.get('network-test.' + configNetworkName)
+  let configNetwork = configMixer.get('network.' + configNetworkName)
 
-  if (!(configNetwork.has('disable'))){
+  if (!(configNetwork.has('disable') && configNetwork.disable)){
 
       console.log("Test network:", configNetworkName);
 
@@ -155,6 +156,7 @@ for (let configNetworkName of Object.keys(configMixer.get('network-test'))) {
               })
 
 
+
               describe('Contract deployments', () => {
                   it('should not deploy Mixer if the Semaphore contract address is invalid', async () => {
                       try{
@@ -208,25 +210,9 @@ for (let configNetworkName of Object.keys(configMixer.get('network-test'))) {
                   })
               })
 
+
+
               describe('Deposits and withdrawals', () => {
-                  // get the circuit, verifying key, and proving key
-                  const { verifyingKey, provingKey, circuit } = getSnarks()
-
-                  expect(circuit).toBeTruthy();
-                  expect(verifyingKey).toBeTruthy();
-                  expect(provingKey).toBeTruthy();
-
-                  const identity = identities[users[0]]
-                  const identityCommitment = genIdentityCommitment(identity)
-                  let nextIndex
-
-                  let recipientBalanceBefore
-                  let recipientBalanceAfter
-                  let recipientBalanceDiff
-
-                  let relayerBalanceBefore
-                  let relayerBalanceAfter
-                  let relayerBalanceDiff
 
                   if (isETH){
                       /*
@@ -239,10 +225,12 @@ for (let configNetworkName of Object.keys(configMixer.get('network-test'))) {
                       */
 
                       it('should fail to call depositERC20() (which is not ETH)', async () => {
-                          let reason: string = ''
-                          let tx
+
+                          const identity = identities[users[0]]
+                          const identityCommitment = genIdentityCommitment(identity)
+
                           try {
-                              tx = await mixerContract.depositERC20('0x' + identityCommitment.toString(16), { gasLimit: 1500000 })
+                              const tx = await mixerContract.depositERC20('0x' + identityCommitment.toString(16), { gasLimit: 1500000 })
                               const receipt = await tx.wait()
                               expect(true).toBeFalsy()
                           } catch (error) {
@@ -251,10 +239,10 @@ for (let configNetworkName of Object.keys(configMixer.get('network-test'))) {
                       })
                   } else {
                       it('should fail to call deposit() (which is for ETH only)', async () => {
-                          let reason: string = ''
-                          let tx
+                          const identity = identities[users[0]]
+                          const identityCommitment = genIdentityCommitment(identity)
                           try {
-                              tx = await mixerContract.deposit('0x' + identityCommitment.toString(16), { gasLimit: 1500000 })
+                              const tx = await mixerContract.deposit('0x' + identityCommitment.toString(16), { gasLimit: 1500000 })
                               const receipt = await tx.wait()
                               expect(true).toBeFalsy()
                           } catch (error) {
@@ -274,6 +262,10 @@ for (let configNetworkName of Object.keys(configMixer.get('network-test'))) {
                   })
 
                   it('should perform a deposit', async () => {
+
+                      const identity = identities[users[0]]
+                      const identityCommitment = genIdentityCommitment(identity)
+
                       let balanceBefore
                       if (isETH){
                           balanceBefore = await wallet.provider.getBalance(depositorAddress)
@@ -283,31 +275,10 @@ for (let configNetworkName of Object.keys(configMixer.get('network-test'))) {
                       expect(balanceBefore.gte(mixAmtToken)).toBeTruthy()
 
                       // make a deposit
-                      let tx
-                      if (isETH){
-                          tx = await mixerContract.deposit(
-                              '0x' + identityCommitment.toString(16),
-                              {value: '0x' + BigInt(mixAmtToken).toString(16),
-                               gasLimit: 1500000 })
-                      } else {
-                          const txApprove = await tokenContract.approve(
-                              mixerContract.address,
-                              mixAmtToken,
-                          )
-                          const receipt = await txApprove.wait()
-
-                          tx = await mixerContract.depositERC20(
-                              '0x' + identityCommitment.toString(16),
-                              { gasLimit: 1500000 })
-                      }
-                      const receipt = await tx.wait()
+                      const receipt = await performeDeposit(isETH, identityCommitment, mixAmtToken, mixerContract, tokenContract)
 
                       const gasUsed = receipt.gasUsed
                       console.log('Gas used for this deposit:', gasUsed.toString())
-
-                      // check that the leaf was added using the receipt
-                      expect(receipt.events).toBeTruthy()
-                      expect(receipt.events[receipt.events.length - 1].event).toMatch('Deposited')
 
                       // check that the leaf was added to the leaf history array in the contract
                       const leaves = (await mixerContract.getLeaves()).map((x) => {
@@ -325,6 +296,28 @@ for (let configNetworkName of Object.keys(configMixer.get('network-test'))) {
                   })
 
                   it('should make a withdrawal', async () => {
+
+                      const identity = identities[users[0]]
+                      const identityCommitment = genIdentityCommitment(identity)
+
+                      // make a deposit
+                      await performeDeposit(isETH, identityCommitment, mixAmtToken, mixerContract, tokenContract)
+
+                      // get the circuit, verifying key, and proving key
+                      const { verifyingKey, provingKey, circuit } = await getSnarks()
+
+                      expect(circuit).toBeTruthy();
+                      expect(verifyingKey).toBeTruthy();
+                      expect(provingKey).toBeTruthy();
+
+                      let recipientBalanceBefore
+                      let recipientBalanceAfter
+                      let recipientBalanceDiff
+
+                      let relayerBalanceBefore
+                      let relayerBalanceAfter
+                      let relayerBalanceDiff
+
                       let leaves
 
                       leaves = await mixerContract.getLeaves()
@@ -353,15 +346,22 @@ for (let configNetworkName of Object.keys(configMixer.get('network-test'))) {
                           externalNullifier,
                       )
 
-                      expect(verifySignature(msg, signature, identity.keypair.pubKey)).toBeTruthy()
-                      expect(circuit.checkWitness(witness)).toBeTruthy()
+                      //Return boolen
+                      expect(await verifySignature(msg, signature, identity.keypair.pubKey)).toBeTruthy()
+                      expect(await circuit.checkWitness(witness)).toBeTruthy()
 
+                      //Return SnarkPublicSignals
                       const publicSignals = genPublicSignals(witness, circuit)
                       expect(publicSignals).toBeTruthy()
-                      const proof = await genProof(witness, provingKey)
+
+                      //Return async + Promise
+                      const proof = await await genProof(witness, provingKey)
+                      //console.log(proof)
                       expect(proof).toBeTruthy()
-                      const isVerified = verifyProof(verifyingKey, proof, publicSignals)
-                      expect(isVerified).toBeTruthy()
+
+                      //Return boolen
+                      expect(verifyProof(verifyingKey, proof, publicSignals)).toBeTruthy()
+
                       const mixInputs = await genDepositProof(
                           signal,
                           proof,
@@ -370,6 +370,7 @@ for (let configNetworkName of Object.keys(configMixer.get('network-test'))) {
                           feeAmt,
                       )
                       expect(mixInputs).toBeTruthy()
+
                       //console.log(mixInputs)
                       //console.log(signalHash.toString())
                       const preBroadcastChecked = await semaphoreContract.preBroadcastCheck(
@@ -379,7 +380,7 @@ for (let configNetworkName of Object.keys(configMixer.get('network-test'))) {
                           mixInputs.input,
                           signalHash.toString(),
                       )
-
+                      //console.log(preBroadcastChecked)
                       //todo fix
                       expect(preBroadcastChecked).toBeTruthy()
 
@@ -417,6 +418,7 @@ for (let configNetworkName of Object.keys(configMixer.get('network-test'))) {
                           )
                       }
                       const mixReceipt = await mixTx.wait()
+                      console.log(mixReceipt.events)
                       if (isETH){
                           recipientBalanceAfter = ethers.BigNumber.from(await wallet.provider.getBalance(recipientAddress))
                           relayerBalanceAfter = ethers.BigNumber.from(await wallet.provider.getBalance(relayerAddress))

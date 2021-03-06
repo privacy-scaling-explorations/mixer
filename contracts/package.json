@@ -6,10 +6,8 @@
   "scripts": {
     "build": "tsc && node ./build/buildContract/buildContract.js",
     "build-tsc": "tsc",
-    "test": "NODE_ENV=local-dev jest --testPathPattern=__tests__/",
-    "test-debug": "node --inspect-brk ./node_modules/.bin/etherlime test --path=build/__tests__ --skip-compilation --timeout 90000",
-    "test-mix-tokens": "etherlime test --path=build/__tests__/TokenMixer.test.js --skip-compilation --timeout 600000",
-    "test-mix-tokens-debug": "node --inspect-brk ./node_modules/.bin/etherlime test --path=build/__tests__/TokenMixer.test.js --skip-compilation --timeout 600000",
+    "test": "NODE_ENV=local-test npx jest --testPathPattern=__tests__/",
+    "test-withdraw": "NODE_ENV=local-test npx jest -t \"should make a withdrawal\"",
     "watch": "tsc --watch",
     "deploy": "tsc && node ./build/deploy/deployContract.js -o deployedAddresses.json",
     "compile": "tsc && node ./build/deploy/compile.js",
@@ -25,7 +23,7 @@
     "@types/node": "^14.14.31",
     "@types/lodash": "^4.14.168",
     "argparse": "^2.0.1",
-    "circomlib": "0.4.1",
+    "circomlib": "0.0.13",
     "module-alias": "^2.2.2",
     "ethers": "^5",
     "ganache-cli": "^6.12.2",
@@ -38,8 +36,8 @@
   "dependencies": {
     "config": "^3.3.3",
     "mixer-config": "1.0.0",
-    "libsemaphore": "^0.0.16",
     "mixer-utils": "1.0.0",
+    "libsemaphore": "^0.0.16",
     "openzeppelin-solidity": "^3.4.0"
   }
 }
