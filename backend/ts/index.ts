@@ -1,5 +1,5 @@
 require('module-alias/register')
-import * as Ajv from 'ajv'
+import Ajv, { ValidateFunction } from 'ajv'
 import * as Koa from 'koa';
 import * as bodyParser from 'koa-bodyparser'
 
@@ -17,7 +17,7 @@ import * as JsonRpc from './jsonRpc'
 const ajv = new Ajv()
 ajv.addMetaSchema(require('ajv/lib/refs/json-schema-draft-06.json'))
 const jsonRpcSchema = require('@mixer-backend/schemas/jsonRpc.json')
-const basicValidate: Ajv.ValidateFunction = ajv.compile(jsonRpcSchema)
+const basicValidate: ValidateFunction = ajv.compile(jsonRpcSchema)
 
 /*
  * Validate the request against the basic JSON-RPC 2.0 schema

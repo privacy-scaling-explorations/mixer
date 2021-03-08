@@ -19,12 +19,25 @@ const deployContract = async (wallet, contract, ...args: any[]) => {
         contract.bytecode,
         wallet,
     )
+    //calculate the estimate gas (not eeded, to check for error)
+    //let tx = factory.getDeployTransaction(...args)
+    //console.log("Deploy contract --> estimate gas : " , (await wallet.estimateGas(tx)).toString())
+
     console.time("Deploy contract");
     let contractToDeploy = await factory.deploy(...args)
     console.timeLog("Deploy contract");
     await contractToDeploy.deployed()
     console.timeEnd("Deploy contract");
     return contractToDeploy
+}
+
+const deployContractTryCatch = async (wallet, contract, ...args: any[]) => {
+    try{
+        return deployContract(wallet, contract, ...args)
+    }catch (err){
+        console.log(err.toString())
+    }
+    return null
 }
 
 const getWallet = (url, privateKey) => {
@@ -54,48 +67,24 @@ function linkLibrary(bytecode, linkReferences, libraries) {
 
 const deploySemaphore = async (wallet, Semaphore, libraries) => {
 
-    let bytecode = linkLibrary(Semaphore.bytecode, Semaphore.linkReferences, libraries)
+    const SemaphoreWithLib = {
+        abi : Semaphore.abi,
+        bytecode : linkLibrary(Semaphore.bytecode, Semaphore.linkReferences, libraries),
+    }
 
-    let mimcAddress = libraries.MiMC.toLowerCase().substr(2)
-
-    let factory = new ethers.ContractFactory(
-        Semaphore.abi,
-        bytecode,
+    return deployContractTryCatch(
         wallet,
-    )
-    let contract = await factory.deploy(
+        SemaphoreWithLib,
         20,
         0,
         12312,
     )
-    await contract.deployed()
-    return contract
-}
-
-const deployMixer = async (
-    wallet,
-    Mixer,
-    semaphoreContractAddress,
-    mixAmtToken,
-    tokenAddress,
-) => {
-    let factory = new ethers.ContractFactory(
-        Mixer.abi,
-        Mixer.bytecode,
-        wallet,
-    )
-    let contract = await factory.deploy(
-        semaphoreContractAddress,
-        mixAmtToken.toString(10),
-        tokenAddress,
-    )
-    await contract.deployed()
-    return contract
 }
 
 const deployToken = async (
     wallet: any,
 ) => {
+
     let factory = new ethers.ContractFactory(
         ERC20Mintable.abi,
         ERC20Mintable.bytecode,
@@ -132,7 +121,7 @@ const deployAllContracts = async (
             )
     } else {
         console.log('Deploying Relayer Registry')
-        relayerRegistryContract = await deployContract(wallet, RelayerRegistry)
+        relayerRegistryContract = await deployContractTryCatch(wallet, RelayerRegistry)
     }
 
     //mimc contract
@@ -146,7 +135,7 @@ const deployAllContracts = async (
         )
     }else{
         console.log('Deploying MiMC')
-        mimcContract = await deployContract(wallet, MiMC)
+        mimcContract = await deployContractTryCatch(wallet, MiMC)
     }
 
     //libraries for semaphore
@@ -175,7 +164,13 @@ const deployAllContracts = async (
                 )
             }else{
                 console.log('Deploying token')
-                tokenContract = await deployToken(wallet)
+                tokenContract = await deployContractTryCatch(
+                    wallet,
+                    ERC20Mintable,
+                    configToken.name,
+                    configToken.sym,
+                    configToken.decimals,
+                )
 
                 console.log('Minting tokens')
                 let tx = await tokenContract.mint(adminAddress, '10000000000000000000000')
@@ -227,11 +222,11 @@ const deployAllContracts = async (
             }
 
             console.log('Deploying the Token Mixer')
-            mixerContract = await deployMixer(
+            mixerContract = await deployContractTryCatch(
                 wallet,
                 Mixer,
                 semaphoreContract.address,
-                mixAmtToken,
+                mixAmtToken.toString(),
                 tokenAddress,
             )
 
@@ -361,7 +356,7 @@ const main = async () => {
     const addressJsonPath = path.join(__dirname, '../..', outputAddressFile)
     fs.writeFileSync(
         addressJsonPath,
-        JSON.stringify(deployedAddresses),
+        JSON.stringify(deployedAddresses, null, 2),
     )
 
     console.log(deployedAddresses)
@@ -379,6 +374,5 @@ if (require.main === module) {
 export {
     deployContract,
     getWallet,
-    deployToken,
     deployAllContracts,
 }

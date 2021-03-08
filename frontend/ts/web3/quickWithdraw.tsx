@@ -33,7 +33,7 @@ const genDepositProof = (
  * @param identityCommitment A hex string of the user's identity commitment
  */
 const quickWithdrawEth = async (
-    context: any,
+    provider: any,
     signal,
     proof,
     publicSignals,
@@ -41,41 +41,35 @@ const quickWithdrawEth = async (
     feeAmt,
     broadcasterAddress,
 ) => {
-    const library = context.library
-    const connector = context.connector
-    if (library && connector) {
-        const provider = new ethers.providers.Web3Provider(
-            await connector.getProvider(chainId),
-        )
-        const signer = provider.getSigner()
-        const mixerContract = await getMixerContract(context)
-        const relayerRegistryContract = await getRelayerRegistryContract(context)
 
-        const depositProof = genDepositProof(
-            signal,
-            proof,
-            publicSignals,
-            recipientAddress,
-            feeAmt,
-        )
+    const mixerContract = await getMixerContract(provider)
+    const relayerRegistryContract = await getRelayerRegistryContract(provider)
 
-        const iface = new ethers.utils.Interface(Mixer.abi)
-        const callData = iface.encodeFunctionData("mix", [
-            depositProof.signal,
-            depositProof.a,
-            depositProof.b,
-            depositProof.c,
-            depositProof.input,
-            depositProof.recipientAddress,
-            depositProof.fee,
-            broadcasterAddress])
+    const depositProof = genDepositProof(
+        signal,
+        proof,
+        publicSignals,
+        recipientAddress,
+        feeAmt,
+    )
 
-        return relayerRegistryContract.relayCall(
-            mixerAddress,
-            callData,
-            { gasLimit: 8000000 },
-        )
-    }
+    const iface = new ethers.utils.Interface(Mixer.abi)
+    const callData = iface.encodeFunctionData("mix", [
+        depositProof.signal,
+        depositProof.a,
+        depositProof.b,
+        depositProof.c,
+        depositProof.input,
+        depositProof.recipientAddress,
+        depositProof.fee,
+        broadcasterAddress])
+
+    return relayerRegistryContract.relayCall(
+        mixerAddress,
+        callData,
+        { gasLimit: 8000000 },
+    )
+
 }
 
 /*
@@ -84,7 +78,7 @@ const quickWithdrawEth = async (
  * @param identityCommitment A hex string of the user's identity commitment
  */
 const quickWithdrawTokens = async (
-    context: any,
+    provider: any,
     signal,
     proof,
     publicSignals,
@@ -92,41 +86,35 @@ const quickWithdrawTokens = async (
     feeAmt,
     broadcasterAddress,
 ) => {
-    const library = context.library
-    const connector = context.connector
-    if (library && connector) {
-        const provider = new ethers.providers.Web3Provider(
-            await connector.getProvider(chainId),
-        )
-        const signer = provider.getSigner()
-        const mixerContract = await getMixerContract(context)
-        const relayerRegistryContract = await getRelayerRegistryContract(context)
 
-        const depositProof = genDepositProof(
-            signal,
-            proof,
-            publicSignals,
-            recipientAddress,
-            feeAmt,
-        )
+    const mixerContract = await getMixerContract(provider)
+    const relayerRegistryContract = await getRelayerRegistryContract(provider)
 
-        const iface = new ethers.utils.Interface(Mixer.abi)
-        const callData = iface.encodeFunctionData("mix", [
-            depositProof.signal,
-            depositProof.a,
-            depositProof.b,
-            depositProof.c,
-            depositProof.input,
-            depositProof.recipientAddress,
-            depositProof.fee,
-            broadcasterAddress])
+    const depositProof = genDepositProof(
+        signal,
+        proof,
+        publicSignals,
+        recipientAddress,
+        feeAmt,
+    )
 
-        return relayerRegistryContract.relayCall(
-            mixerAddress,
-            callData,
-            { gasLimit: 8000000 },
-        )
-    }
+    const iface = new ethers.utils.Interface(Mixer.abi)
+    const callData = iface.encodeFunctionData("mix", [
+        depositProof.signal,
+        depositProof.a,
+        depositProof.b,
+        depositProof.c,
+        depositProof.input,
+        depositProof.recipientAddress,
+        depositProof.fee,
+        broadcasterAddress])
+
+    return relayerRegistryContract.relayCall(
+        mixerAddress,
+        callData,
+        { gasLimit: 8000000 },
+    )
+
 }
 
 export { quickWithdrawEth, quickWithdrawTokens }

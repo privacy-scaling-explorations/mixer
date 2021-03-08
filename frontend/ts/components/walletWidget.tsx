@@ -27,48 +27,23 @@ const WalletWidget = () => {
 
     connectionConnect(context)
 
-    const provider : any = context.provider
+    const [provider, setProvider] = useState(context.provider)
 
-
-
-    let signer
-
-    const [address, setAddress] = useState(null)
-    const [walletChainId, setWalletChainId] = useState(null)
-
+    const [networkChainId, setnetworkChainId] = useState(context.networkChainId)
+    const [address, setAddress] = useState(context.address)
 
     const connectWallet = () => {
-        if (provider){
-            try{
-                signer = provider.getSigner()
-            }catch (err){
-                console.log(err)
-            }
-            if (signer){
-                try{
-                    signer.getChainId().then(
-                        _chainId => {setWalletChainId(_chainId)
-                    })
-                }catch (err){
-                    console.log(err)
-                }
-                try{
-                    signer.getAddress().then(
-                        _address => {setAddress(_address)
-                    })
-                }catch (err){
-                    console.log(err)
-                }   
-            }
-        }
+        connectionConnect(context)
+        setnetworkChainId(context.networkChainId)
+        setAddress(context.address)
     }
 
-    connectWallet()
 
-    console.log(provider, signer, address)
+    const interval = setInterval(() => connectWallet(), 1000);
 
     const render = () => {
 
+        console.log("Wallet Render " , address, networkChainId)
 
 
         if (!window.hasOwnProperty('ethereum')) {
@@ -81,16 +56,16 @@ const WalletWidget = () => {
                     </a>
                 </p>
             )
-        } else if (provider && signer && address && walletChainId == chainId) {
+        } else if (context.networkChainId == chainId) {
             return (
                 <p>
                     <span className='is-family-monospace address'>
                         { circleIcon('ok') }
-                        { address }
+                        { context.address }
                     </span>
                 </p>
             )
-        } else if (provider && signer && walletChainId) {
+        } else if (context.networkChainId) {
             return (
                 <p>
                     { circleIcon('warn') }

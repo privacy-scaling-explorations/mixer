@@ -13,6 +13,7 @@ import {
     genDepositProof,
     areEqualAddresses,
     getSnarks,
+    addressInfo,
 } from './utils'
 
 import { sleep } from 'mixer-utils'
@@ -70,12 +71,19 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
               let deployedAddressesToken = deployedAddressesNetwork.token[configTokenName]
 
               const accounts = genAccounts(configNetwork)
+
               expect(accounts[0]).toBeTruthy();
               const depositorAddress = accounts[0].address
+
+
               expect(accounts[1]).toBeTruthy();
               const recipientAddress = accounts[1].address
+
+
               expect(accounts[2]).toBeTruthy();
               let relayerAddress = accounts[2].address
+
+
 
               let isETH = 0
               if (!configToken.has('decimals')){
@@ -167,7 +175,6 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
                               '0x0000000000000000000000000000000000000000',
                               { gasLimit: 500000 }
                           )
-                          tx.wait()
                           expect(true).toBeFalsy()
                       }catch (error){
                           checkErrorReason(error, 'Mixer: invalid Semaphore address')
@@ -184,7 +191,6 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
                               '0x0000000000000000000000000000000000000000',
                               { gasLimit: 500000 }
                           )
-                          tx.wait()
                           expect(true).toBeFalsy()
                       }catch (error){
                           checkErrorReason(error, 'Mixer: invalid mixAmt')
@@ -261,6 +267,12 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
                       expect(mixAmtBefore.eq(mixAmtToken)).toBeTruthy()
                   })
 
+                  it('address balance', async () => {
+                      await addressInfo("depositorAddress", depositorAddress, isETH, wallet, decimals, tokenContract)
+                      await addressInfo("recipientAddress", recipientAddress, isETH, wallet, decimals, tokenContract)
+                      await addressInfo("relayerAddress", relayerAddress, isETH, wallet, decimals, tokenContract)
+                  })
+
                   it('should perform a deposit', async () => {
 
                       const identity = identities[users[0]]
@@ -299,6 +311,8 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
 
                       const identity = identities[users[0]]
                       const identityCommitment = genIdentityCommitment(identity)
+
+
 
                       // make a deposit
                       await performeDeposit(isETH, identityCommitment, mixAmtToken, mixerContract, tokenContract)
@@ -349,7 +363,7 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
                       //Return boolen
                       expect(await verifySignature(msg, signature, identity.keypair.pubKey)).toBeTruthy()
                       expect(await circuit.checkWitness(witness)).toBeTruthy()
-                      
+
                       //Return SnarkPublicSignals
                       const publicSignals = await genPublicSignals(witness, circuit)
                       expect(publicSignals).toBeTruthy()
@@ -419,7 +433,8 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
                       }
 
                       const mixReceipt = await mixTx.wait()
-                      console.log(mixReceipt.events)
+                      expect(mixReceipt.events).toBeTruthy()
+
                       if (isETH){
                           recipientBalanceAfter = ethers.BigNumber.from(await wallet.provider.getBalance(recipientAddress))
                           relayerBalanceAfter = ethers.BigNumber.from(await wallet.provider.getBalance(relayerAddress))

@@ -177,6 +177,22 @@ const performeDeposit = async (isETH, identityCommitment, mixAmtToken, mixerCont
     return receipt
 }
 
+const addressInfo = async (name, addr, isETH, wallet, decimals, tokenContract) => {
+    let balance
+    if (isETH){
+        balance = await wallet.provider.getBalance(addr)
+    } else {
+        balance = await tokenContract.balanceOf(addr)
+    }
+    balance = parseFloat(ethers.utils.formatUnits(balance, decimals))
+    console.log("Address : ",
+        name,
+        " : ",
+        addr,
+        " balance : ",
+        balance.toString())
+}
+
 export {
     performeDeposit,
     checkErrorReason,
@@ -185,4 +201,5 @@ export {
     mix,
     mixERC20,
     getSnarks,
+    addressInfo,
 }

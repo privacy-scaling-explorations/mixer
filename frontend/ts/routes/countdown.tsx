@@ -1,4 +1,4 @@
-import React, { Component, useState } from 'react'
+import React, { Component, useState, useContext } from 'react'
 import ReactDOM from 'react-dom'
 import { useTimer } from 'react-timer-hook'
 import * as ethers from 'ethers'
@@ -76,12 +76,18 @@ export default () => {
 
     const feeAmt = operatorFee * (10 ** tokenDecimals)
 
-    const context = ConnectionContext
-
-    const provider : any = null
+    const context = useContext(ConnectionContext)
+    console.log("context", context)
+    const [networkChainId, setnetworkChainId] = useState(context.networkChainId)
+    const [address, setAddress] = useState(context.address)
+    const connectWallet = () => {
+        setnetworkChainId(context.networkChainId)
+        setAddress(context.address)
+    }
+    const interval = setInterval(() => connectWallet(), 1000);
 
     const withdraw = async (provider) => {
-        //TODO check chainId for provider
+        //TODO check chainId for context.provider
 
         let tokenContract
 
@@ -309,7 +315,7 @@ export default () => {
 
     if (!withdrawStarted &&
         countdownDone &&
-        provider &&
+        context.provider &&
         !midnightOver &&
         timer.days + timer.hours + timer.minutes + timer.seconds === 0
     ) {
@@ -325,7 +331,7 @@ export default () => {
                 }
 
                 setWithdrawStarted(true)
-                withdraw(provider)
+                withdraw(context.provider)
             }}
             className='button is-warning'>
             Mix now
@@ -371,11 +377,11 @@ export default () => {
                             }
                         </h2>
 
-                        { provider.getSigner() && provider.getNetwork() && provider.getNetwork().chainId == chainId && txHash.length === 0 && (midnightOver || withdrawStarted) &&  !withdrawBtnClicked &&
+                        { networkChainId == chainId && txHash.length === 0 && (midnightOver || withdrawStarted) &&  !withdrawBtnClicked &&
                             withdrawBtn
                         }
 
-                        { (provider.getNetwork() && provider.getNetwork().chainId != chainId) &&
+                        { (networkChainId && networkChainId != chainId) &&
                             <p>
                                 To continue, please connect to the correct Ethereum network.
                             </p>
@@ -466,9 +472,9 @@ export default () => {
                                         </p>
                                     </div>
 
-                                    {provider.getSigner() && provider.getNetwork() && provider.getNetwork().chainId == chainId && withdrawBtn}
+                                    {networkChainId == chainId && withdrawBtn}
 
-                                    { (provider.getNetwork() && provider.getNetwork().chainId != chainId) &&
+                                    { (networkChainId && networkChainId != chainId) &&
                                         <p>
                                             To continue, please connect to the correct Ethereum network.
                                         </p>

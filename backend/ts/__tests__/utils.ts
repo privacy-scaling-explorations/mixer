@@ -1,5 +1,4 @@
 import axios from 'axios'
-import * as snarkjs from 'snarkjs'
 import * as JsonRpc from '../jsonRpc'
 import { config } from 'mixer-config'
 

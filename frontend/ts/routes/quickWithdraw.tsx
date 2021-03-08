@@ -1,4 +1,4 @@
-import React, { Component, useState } from 'react'
+import React, { Component, useState, useContext } from 'react'
 import ReactDOM from 'react-dom'
 import * as ethers from 'ethers'
 import { utils } from 'mixer-contracts'
@@ -12,6 +12,7 @@ import { fetchWithoutCache } from '../utils/fetcher'
 import { ConnectionContext } from '../utils/connectionContext'
 
 import{
+    chainId,
     isETH,
     mixAmt,
     operatorFee,
@@ -75,10 +76,16 @@ export default () => {
     const [consentChecked, setConsentChecked] = useState(false)
     const [errorMsg, setErrorMsg] = useState('')
 
-    const context = ConnectionContext
+    const context = useContext(ConnectionContext)
+    console.log("context", context)
+    const [networkChainId, setnetworkChainId] = useState(context.networkChainId)
+    const [address, setAddress] = useState(context.address)
+    const connectWallet = () => {
+        setnetworkChainId(context.networkChainId)
+        setAddress(context.address)
+    }
+    const interval = setInterval(() => connectWallet(), 1000);
 
-    const provider : any = null
-    
     let withdrawBtnDisabled = !consentChecked
 
     const progress = (line: string) => {
@@ -97,22 +104,24 @@ export default () => {
 
     const handleWithdrawBtnClick = async () => {
 
-        if (!consentChecked) {
+        if (!consentChecked || ! context.provider || networkChainId != chainId) {
             return
         }
 
-        //TODO check provider
-
         try {
-            const mixerContract = await getMixerContract(provider)
+            const mixerContract = await getMixerContract(context.provider)
 
-            const relayerAddress = provider.getSigner().getAddress()
+            const relayerAddress = address
 
             const externalNullifier = mixerContract.address
 
             progress('Downloading leaves...')
 
+            console.log("mixerContract", mixerContract)
+
             const leaves = await mixerContract.getLeaves()
+
+            console.log("leaves", leaves)
 
             const pubKey = genPubKey(identityStored.privKey)
 
@@ -193,7 +202,7 @@ export default () => {
             let tx
             const quickWithdrawFunc = isETH ? quickWithdrawEth : quickWithdrawTokens
             tx = await quickWithdrawFunc(
-                provider,
+                context.provider,
                 result.signal,
                 proof,
                 publicSignals,

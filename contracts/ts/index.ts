@@ -29,4 +29,14 @@ const getContract = (
     return contract
 }
 
-export { getContract, deployedAddresses }
+const getAbi = (
+    abiName: string
+) => {
+
+    const abi = require(`../compiled/abis/${abiName}-abi.json`)
+
+    return abi
+}
+
+
+export { getContract, deployedAddresses, getAbi }

@@ -1,4 +1,4 @@
-import React, { useState, Component } from 'react'
+import React, { useState, Component, useContext } from 'react'
 import ReactDOM from 'react-dom'
 import { Redirect } from 'react-router-dom'
 import * as ethers from 'ethers'
@@ -65,6 +65,7 @@ if (!isETH)
 
 export default () => {
 
+
     const [storageHasBeenInit, setStorageHasBeenInit] = useState(false)
     const [txStatus, setTxStatus] = useState(TxStatuses.None)
     const [erc20ApproveTxStatus, setErc20ApproveTxStatus] = useState(TxStatuses.None)
@@ -75,6 +76,17 @@ export default () => {
     const [enoughEthAndToken, setenoughEthAndToken] = useState(false)
     const [tokenType, setTokenType] = useState(tokenSym)
     const [tokenAllowanceNeeded, setTokenAllowanceNeeded] = useState(-1)
+
+
+    const context = useContext(ConnectionContext)
+    console.log("context", context)
+    const [networkChainId, setnetworkChainId] = useState(context.networkChainId)
+    const [address, setAddress] = useState(context.address)
+    const connectWallet = () => {
+        setnetworkChainId(context.networkChainId)
+        setAddress(context.address)
+    }
+    const interval = setInterval(() => connectWallet(), 1000);
 
     if (!storageHasBeenInit) {
         initStorage()
@@ -92,14 +104,12 @@ export default () => {
           return <Redirect to='/countdown' />
     }
 
-    const context = ConnectionContext
 
-    const provider : any = null
 
     const handleTokenApproveBtnClick = async () => {
         setErc20ApproveTxStatus(TxStatuses.Pending)
 
-        const tx = await approveTokens(provider, tokenAllowanceNeeded * (10 ** tokenDecimals))
+        const tx = await approveTokens(context.provider, tokenAllowanceNeeded * (10 ** tokenDecimals))
         await tx.wait()
         setErc20ApproveTxStatus(TxStatuses.Mined)
     }
@@ -122,13 +132,13 @@ export default () => {
             let tx
             if (isETH) {
                 tx = await depositEth(
-                    provider,
+                    context.provider,
                     identityCommitment,
                     ethers.utils.parseEther(mixAmt.toString()),
                 )
             } else {
                 tx = await depositTokens(
-                    provider,
+                    context.provider,
                     identityCommitment,
                 )
             }
@@ -137,13 +147,10 @@ export default () => {
 
             storeDeposit(identity, recipientAddress, tokenType)
 
-            if (configEnv === 'local-dev') {
-                await sleep(3000)
-            }
-
             const receipt = await tx.wait()
 
             updateDepositTxStatus(identity, tx.hash)
+            
             setTxStatus(TxStatuses.Mined)
 
         } catch (err) {
@@ -163,8 +170,8 @@ export default () => {
     }
 
     const checkBalances = async () => {
-        if (mixAmt && provider && provider.getSigner() && provider.getAccount()) {
-            const balance = await getBalanceETH(provider)
+        if (mixAmt && context.address ) {
+            const balance = await getBalanceETH(context.provider)
             const minAmt = isETH ? mixAmt + operatorFee : operatorFee
             let enoughEth
             if (balance) {
@@ -172,7 +179,7 @@ export default () => {
                 setEnoughEth(enoughEth)
             }
             if (!isETH) {
-                const tokenBalance = await getBalance(provider)
+                const tokenBalance = await getBalance(context.provider)
                 const enoughToken = tokenBalance >= mixAmt
                 setenoughEthAndToken(enoughEth && enoughToken)
             }
@@ -180,9 +187,9 @@ export default () => {
     }
 
     const checkTokenAllowance = async () => {
-        if (mixAmt && provider.getSigner()) {
+        if (mixAmt && context.signer) {
             const mixAmtFull = mixAmt * 10 ** tokenDecimals
-            const allowance = await getTokenAllowance(provider)
+            const allowance = await getTokenAllowance(context.provider)
 
             let x = mixAmtFull - allowance
             if (x < 0) {
@@ -205,7 +212,7 @@ export default () => {
         </div>
     )
 
-    const showMixForm = provider && provider.getNetwork() && provider.getNetwork().chainId == chainId &&
+    const showMixForm = context.networkChainId == chainId &&
         (
             (!isETH && tokenAllowanceNeeded === 0 && enoughEthAndToken) ||
             (isETH && enoughEth)
@@ -265,7 +272,7 @@ export default () => {
                         </div>
                     }
 
-                    { provider && provider.getNetwork() && provider.getNetwork().chainId != chainId ?
+                    { context.networkChainId && context.networkChainId != chainId ?
                         <p>
                             Please connect to
                             the {supportedNetworkName} Ethereum

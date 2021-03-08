@@ -8,6 +8,7 @@
     "build-tsc": "tsc",
     "test": "NODE_ENV=local-test npx jest --testPathPattern=__tests__/",
     "test-withdraw": "NODE_ENV=local-test npx jest -t \"should make a withdrawal\"",
+    "test-balance": "NODE_ENV=local-test npx jest -t \"address balance\"",
     "test-debug": "NODE_ENV=local-test node --inspect-brk node_modules/.bin/jest --runInBand --testPathPattern=__tests__/",
     "watch": "tsc --watch",
     "deploy": "tsc && node ./build/deploy/deployContract.js -o deployedAddresses.json",

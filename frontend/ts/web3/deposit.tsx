@@ -3,6 +3,7 @@ import * as ethers from 'ethers'
 import {
     getMixerContract,
     getTokenContract,
+    Mixer,
 } from './mixer'
 
 import{
@@ -17,47 +18,31 @@ import{
  * @param mixAmt The amount to mix
  */
 const depositEth = async (
-    context: any,
+    provider: any,
     identityCommitment: string,
     mixAmt: ethers.BigNumber,
 ) => {
 
-    const library = context.library
-    const connector = context.connector
-    if (library && connector) {
-        const provider = new ethers.providers.Web3Provider(
-            await connector.getProvider(chainId),
-        )
-        const signer = provider.getSigner()
+    const mixerContract = await getMixerContract(provider)
 
-        const mixerContract = await getMixerContract(context)
-
-        console.log("deposit:",mixAmt)
-        const tx = await mixerContract.deposit(identityCommitment, { value: mixAmt, gasLimit: 8000000 })
-        console.log("deposit ok")
-        return tx
-    }
+    console.log("deposit:",mixAmt)
+    const tx = await mixerContract.deposit(identityCommitment, { value: mixAmt, gasLimit: 8000000 })
+    console.log("deposit ok")
+    return tx
 }
 
 const depositTokens = async(
-    context: any,
+    provider: any,
     identityCommitment: string,
 ) => {
 
-    const library = context.library
-    const connector = context.connector
-    if (library && connector) {
-        const provider = new ethers.providers.Web3Provider(
-            await connector.getProvider(chainId),
-        )
-        const signer = provider.getSigner()
+    const mixerContract = await getMixerContract(provider)
 
-        const mixerContract = await getMixerContract(context)
+    const tx = await mixerContract.depositERC20(identityCommitment, { gasLimit: 8000000 })
 
-        const tx = await mixerContract.depositERC20(identityCommitment, { gasLimit: 8000000 })
+    return tx
 
-        return tx
-    }
+
 }
 
 const getTokenAllowance = async (

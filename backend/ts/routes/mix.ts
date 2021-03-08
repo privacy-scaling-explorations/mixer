@@ -22,7 +22,7 @@ import {
     relayerRegistryAddress,
 } from '../utils/configBackendNetwork'
 
-import { getContract } from 'mixer-contracts'
+import { getContract, getAbi } from 'mixer-contracts'
 import {
     verifyProof,
     unstringifyBigInts,
@@ -66,7 +66,7 @@ const _mixRoute = (forTokens: boolean) => async (
     // verify the fee
     let enoughFees
     if (forTokens) {
-        const fee = ethers.utils.bigNumberify(depositProof.fee)
+        const fee = ethers.BigNumber.from(depositProof.fee)
         enoughFees = fee.gte(operatorFeeTokens)
     } else {
         const fee = ethers.utils.parseUnits(BigInt(depositProof.fee).toString(), 'wei')
@@ -196,7 +196,7 @@ const _mixRoute = (forTokens: boolean) => async (
         chainId,
     )
 
-    const signer = new ethers.Wallet(
+    const wallet = new ethers.Wallet(
         hotWalletPrivKey,
         provider,
     )
@@ -206,22 +206,30 @@ const _mixRoute = (forTokens: boolean) => async (
 
     const mixerContract = getContract(
         'Mixer',
-        signer,
+        wallet,
         mixerAddress,
+    )
+
+    const mixerAbi = getAbi(
+        'Mixer',
     )
 
     let semaphoreContractName = forTokens ? 'TokenSemaphore' : 'Semaphore'
     const semaphoreContract = getContract(
         semaphoreContractName,
-        signer,
+        wallet,
         semaphoreAddress,
         'Semaphore',
     )
 
     const relayerRegistryContract = getContract(
         'RelayerRegistry',
-        signer,
+        wallet,
         relayerRegistryAddress,
+    )
+
+    const relayerRegistryAbi = getAbi(
+        'RelayerRegistry',
     )
 
     const etcdAddress = etcdHost + ':' + etcdPort
@@ -233,7 +241,7 @@ const _mixRoute = (forTokens: boolean) => async (
 
     // Acquire a lock on the hot wallet address
     const lock = await locker.lock(
-        signer.address,
+        wallet.address,
         etcdLockTime,
     )
 
@@ -263,13 +271,12 @@ const _mixRoute = (forTokens: boolean) => async (
     }
 
     // Get the latest nonce
-    const nonce = await provider.getTransactionCount(signer.address, 'pending')
+    const nonce = await provider.getTransactionCount(wallet.address, 'pending')
 
-    const mixerIface = new ethers.utils.Interface(mixerContract.interface.abi)
     let mixCallData
-
+    const iface = new ethers.utils.Interface(mixerAbi)
     if (forTokens) {
-        mixCallData = mixerIface.functions.mixERC20.encode([
+        mixCallData = iface.encodeFunctionData("mix",[
             depositProof.signal,
             depositProof.a,
             depositProof.b,
@@ -279,7 +286,7 @@ const _mixRoute = (forTokens: boolean) => async (
             depositProof.fee,
             relayerAddress])
     } else {
-        mixCallData = mixerIface.functions.mix.encode([
+        mixCallData = iface.encodeFunctionData("mix",[
             depositProof.signal,
             depositProof.a,
             depositProof.b,
@@ -290,8 +297,8 @@ const _mixRoute = (forTokens: boolean) => async (
             relayerAddress])
     }
 
-    const relayerRegistryIface = new ethers.utils.Interface(relayerRegistryContract.interface.abi)
-    const relayCallData = relayerRegistryIface.functions.relayCall.encode(
+    const relayerRegistryIface = new ethers.utils.Interface(relayerRegistryAbi)
+    const relayCallData = iface.encodeFunctionData("relayCall",
         [
             mixerContractAddress,
             mixCallData
@@ -316,7 +323,7 @@ const _mixRoute = (forTokens: boolean) => async (
     //}
 
     // Sign the transaction
-    const signedData = await signer.sign(unsignedTx)
+    const signedData = await wallet.signTransaction(unsignedTx)
 
     // Send the transaction but don't wait for it to be mined
     const tx = provider.sendTransaction(signedData)
