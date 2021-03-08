@@ -50,7 +50,7 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
 
   if (!(configNetwork.has('disable') && configNetwork.disable)){
 
-      console.log("Test network:", configNetworkName);
+      console.log("Test network:", configNetworkName, configNetwork);
 
       if (!deployedAddresses[configNetworkName]){
           deployedAddresses[configNetworkName] = { token : {} }
@@ -337,6 +337,8 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
                       leaves = await mixerContract.getLeaves()
                       expect(leaves).toBeTruthy()
 
+                      console.log(leaves)
+
                       externalNullifier = mixerContract.address
 
                       const {
@@ -385,15 +387,27 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
                       )
                       expect(mixInputs).toBeTruthy()
 
-                      //console.log(mixInputs)
-                      //console.log(signalHash.toString())
+
+
+                      console.log(mixInputs)
+                      console.log(ethers.BigNumber.from(signalHash))
                       const preBroadcastChecked = await semaphoreContract.preBroadcastCheck(
                           mixInputs.a,
                           mixInputs.b,
                           mixInputs.c,
                           mixInputs.input,
-                          signalHash.toString(),
+                          ethers.BigNumber.from(signalHash),
                       )
+                      if (!preBroadcastChecked){
+                          const preBroadcastCheckedDetect = await semaphoreContract.preBroadcastCheckDetect(
+                              mixInputs.a,
+                              mixInputs.b,
+                              mixInputs.c,
+                              mixInputs.input,
+                              ethers.BigNumber.from(signalHash),
+                          )
+                          console.log("preBroadcastCheckedDetect", preBroadcastCheckedDetect)
+                      }
                       //console.log(preBroadcastChecked)
                       //todo fix
                       expect(preBroadcastChecked).toBeTruthy()
