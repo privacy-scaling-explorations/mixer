@@ -83,8 +83,6 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
               expect(accounts[2]).toBeTruthy();
               let relayerAddress = accounts[2].address
 
-
-
               let isETH = 0
               if (!configToken.has('decimals')){
                   isETH = 1
@@ -127,9 +125,12 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
 
               let wallet
 
-              wallet = getWallet(configNetwork.get('url'), accounts[0].privateKey)
-              expect(wallet).toBeTruthy()
+
               beforeAll( done =>  {
+
+                  wallet = getWallet(configNetwork.get('url'), accounts[0].privateKey)
+                  expect(wallet).toBeTruthy()
+
                   const func_async = (async () => {
 
                       const contracts = await deployAllContracts(
@@ -337,7 +338,7 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
                       leaves = await mixerContract.getLeaves()
                       expect(leaves).toBeTruthy()
 
-                      console.log(leaves)
+                      //console.log(leaves)
 
                       externalNullifier = mixerContract.address
 
@@ -387,10 +388,8 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
                       )
                       expect(mixInputs).toBeTruthy()
 
-
-
-                      console.log(mixInputs)
-                      console.log(ethers.BigNumber.from(signalHash))
+                      //console.log(mixInputs)
+                      //console.log(ethers.BigNumber.from(signalHash))
                       const preBroadcastChecked = await semaphoreContract.preBroadcastCheck(
                           mixInputs.a,
                           mixInputs.b,
@@ -398,6 +397,7 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
                           mixInputs.input,
                           ethers.BigNumber.from(signalHash),
                       )
+                      /* debug for invalid proof
                       if (!preBroadcastChecked){
                           const preBroadcastCheckedDetect = await semaphoreContract.preBroadcastCheckDetect(
                               mixInputs.a,
@@ -408,6 +408,7 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
                           )
                           console.log("preBroadcastCheckedDetect", preBroadcastCheckedDetect)
                       }
+                      */
                       //console.log(preBroadcastChecked)
                       //todo fix
                       expect(preBroadcastChecked).toBeTruthy()

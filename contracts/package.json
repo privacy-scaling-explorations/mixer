@@ -39,7 +39,7 @@
     "config": "^3.3.3",
     "mixer-config": "1.0.0",
     "mixer-utils": "1.0.0",
-    "libsemaphore": "0.0.16",
+    "libsemaphore": "^0.0.16",
     "openzeppelin-solidity": "^3.4.0"
   }
 }

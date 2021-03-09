@@ -49,7 +49,6 @@ network:
                 name: 'Token'
 
     kovan:
-        disable: true
         url: "https://kovan.infura.io/v3/5d37c494621a43558d77c90e368d4022"
         chainId: 42
         supportedNetwork: 42
