@@ -1,4 +1,4 @@
-import React, { useState, Component, useContext } from 'react'
+import React, { useState, Component, useContext, useEffect } from 'react'
 import ReactDOM from 'react-dom'
 import { Redirect } from 'react-router-dom'
 import * as ethers from 'ethers'
@@ -17,7 +17,6 @@ import {
     getNumUnwithdrawn,
 } from '../storage'
 
-import { getBalance, getBalanceETH } from '../web3/balance'
 import { depositEth, depositTokens, getTokenAllowance, approveTokens } from '../web3/deposit'
 import {
     genIdentity,
@@ -65,33 +64,46 @@ if (!isETH)
 
 export default () => {
 
-
-    const [storageHasBeenInit, setStorageHasBeenInit] = useState(false)
     const [txStatus, setTxStatus] = useState(TxStatuses.None)
     const [erc20ApproveTxStatus, setErc20ApproveTxStatus] = useState(TxStatuses.None)
     const [txHash, setTxHash] = useState('')
     const [recipientAddress, setRecipientAddress] = useState('')
     const [errorMsg, setErrorMsg] = useState('')
-    const [enoughEth, setEnoughEth] = useState(true)
-    const [enoughEthAndToken, setenoughEthAndToken] = useState(false)
     const [tokenType, setTokenType] = useState(tokenSym)
-    const [tokenAllowanceNeeded, setTokenAllowanceNeeded] = useState(-1)
+
+    let tokenAllowanceNeeded = -1
+    let enoughEth = false
+    let enoughEthAndToken = false
 
 
     const context = useContext(ConnectionContext)
-    console.log("context", context)
-    const [networkChainId, setnetworkChainId] = useState(context.networkChainId)
-    const [address, setAddress] = useState(context.address)
+    const [networkInfo, setnetworkInfo] = useState(
+        {
+            chainId : context.networkChainId,
+            address : context.address,
+            balance : context.balance,
+            tokenBalance : context.tokenBalance,
+            allowance : context.allowance,
+        })
     const connectWallet = () => {
-        setnetworkChainId(context.networkChainId)
-        setAddress(context.address)
+        //console.log("connectWallet deposit", context.networkChainId, networkInfo.chainId, context.address, networkInfo.address)
+        const networkInfoNew = {
+            chainId : context.networkChainId,
+            address : context.address,
+            balance : context.balance,
+            tokenBalance : context.tokenBalance,
+            allowance : context.allowance,
+        }
+        if (JSON.stringify(networkInfo) !== JSON.stringify(networkInfoNew) )
+            setnetworkInfo(networkInfoNew)
     }
-    const interval = setInterval(() => connectWallet(), 1000);
 
-    if (!storageHasBeenInit) {
+    useEffect(() => {
         initStorage()
-        setStorageHasBeenInit(true)
-    }
+        const interval = setInterval(() => connectWallet(), 1000)
+        return () => clearInterval(interval)
+        //connectWallet()
+    })
 
     const validRecipientAddress= recipientAddress.match(/^0x[a-fA-F0-9]{40}$/)
     const depositBtnDisabled = !validRecipientAddress
@@ -109,9 +121,9 @@ export default () => {
     const handleTokenApproveBtnClick = async () => {
         setErc20ApproveTxStatus(TxStatuses.Pending)
 
-        const tx = await approveTokens(context.provider, tokenAllowanceNeeded * (10 ** tokenDecimals))
-        await tx.wait()
-        setErc20ApproveTxStatus(TxStatuses.Mined)
+        approveTokens(context.provider, tokenAllowanceNeeded * (10 ** tokenDecimals))
+            .then(async (tx) => {await tx; setErc20ApproveTxStatus(TxStatuses.Mined)})
+            .catch((err) => {console.log(err); setErc20ApproveTxStatus(TxStatuses.Err)})
     }
 
     const handleDepositBtnClick = async () => {
@@ -150,7 +162,7 @@ export default () => {
             const receipt = await tx.wait()
 
             updateDepositTxStatus(identity, tx.hash)
-            
+
             setTxStatus(TxStatuses.Mined)
 
         } catch (err) {
@@ -169,35 +181,26 @@ export default () => {
         }
     }
 
-    const checkBalances = async () => {
-        if (mixAmt && context.address ) {
-            const balance = await getBalanceETH(context.provider)
+    const checkBalances = () => {
+        console.log("mixAmt", mixAmt)
+        if (mixAmt && networkInfo.address ) {
             const minAmt = isETH ? mixAmt + operatorFee : operatorFee
-            let enoughEth
-            if (balance) {
-                enoughEth = balance.gte(ethers.utils.parseEther(minAmt.toString()))
-                setEnoughEth(enoughEth)
+            if (networkInfo.balance) {
+                console.log("minAmt", minAmt)
+                enoughEth = networkInfo.balance >= minAmt
             }
             if (!isETH) {
-                const tokenBalance = await getBalance(context.provider)
-                const enoughToken = tokenBalance >= mixAmt
-                setenoughEthAndToken(enoughEth && enoughToken)
+                const enoughToken = networkInfo.tokenBalance >= mixAmt
+                enoughEthAndToken = enoughEth && enoughToken
+            }
+            tokenAllowanceNeeded = mixAmt - networkInfo.allowance
+            if (tokenAllowanceNeeded < 0) {
+                tokenAllowanceNeeded = 0
             }
         }
     }
 
-    const checkTokenAllowance = async () => {
-        if (mixAmt && context.signer) {
-            const mixAmtFull = mixAmt * 10 ** tokenDecimals
-            const allowance = await getTokenAllowance(context.provider)
-
-            let x = mixAmtFull - allowance
-            if (x < 0) {
-                x = 0
-            }
-            setTokenAllowanceNeeded(x / (10 ** tokenDecimals))
-        }
-    }
+    checkBalances()
 
     const tokenAllowanceBtn = (
         <div>
@@ -212,21 +215,30 @@ export default () => {
         </div>
     )
 
-    const showMixForm = context.networkChainId == chainId &&
+
+
+    const showMixForm = ((networkInfo.chainId == chainId) &&
         (
             (!isETH && tokenAllowanceNeeded === 0 && enoughEthAndToken) ||
             (isETH && enoughEth)
-        )
+        ))
 
     const handleTokenTypeSelect = (e) => {
         const t = e.target.value
         setTokenType(t)
     }
 
-    checkBalances()
-    if (!isETH){
-        checkTokenAllowance()
-    }
+
+
+    console.log("deposit redraw ",
+        "ETH : ", networkInfo.balance,
+        "TOKEN : ", networkInfo.tokenBalance,
+        "Allowance : ", networkInfo.allowance
+    )
+
+
+
+    //return (<div>{networkInfo.balance} ETH, {networkInfo.tokenBalance} TOKEN, Allowance {tokenAllowanceNeeded} TOKEN</div>)
 
     return (
         <div className='columns has-text-centered'>
@@ -272,7 +284,7 @@ export default () => {
                         </div>
                     }
 
-                    { context.networkChainId && context.networkChainId != chainId ?
+                    { (context.networkChainId && context.networkChainId !== chainId) === true ?
                         <p>
                             Please connect to
                             the {supportedNetworkName} Ethereum

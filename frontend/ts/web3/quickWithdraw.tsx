@@ -99,7 +99,7 @@ const quickWithdrawTokens = async (
     )
 
     const iface = new ethers.utils.Interface(Mixer.abi)
-    const callData = iface.encodeFunctionData("mix", [
+    const callData = iface.encodeFunctionData("mixERC20", [
         depositProof.signal,
         depositProof.a,
         depositProof.b,

@@ -95,17 +95,17 @@ const genDepositProof = (
 ) => {
     return {
         signal,
-        a: [ proof.pi_a[0].toString(), proof.pi_a[1].toString() ],
+        a: [ ethers.BigNumber.from(proof.pi_a[0]), ethers.BigNumber.from(proof.pi_a[1]) ],
         b: [
-            [ proof.pi_b[0][1].toString(), proof.pi_b[0][0].toString() ],
-            [ proof.pi_b[1][1].toString(), proof.pi_b[1][0].toString() ],
+            [ ethers.BigNumber.from(proof.pi_b[0][1]), ethers.BigNumber.from(proof.pi_b[0][0]) ],
+            [ ethers.BigNumber.from(proof.pi_b[1][1]), ethers.BigNumber.from(proof.pi_b[1][0]) ],
         ],
-        c: [ proof.pi_c[0].toString(), proof.pi_c[1].toString() ],
+        c: [ ethers.BigNumber.from(proof.pi_c[0]), ethers.BigNumber.from(proof.pi_c[1]) ],
         input: [
-            publicSignals[0].toString(),
-            publicSignals[1].toString(),
-            publicSignals[2].toString(),
-            publicSignals[3].toString(),
+            ethers.BigNumber.from(publicSignals[0]),
+            ethers.BigNumber.from(publicSignals[1]),
+            ethers.BigNumber.from(publicSignals[2]),
+            ethers.BigNumber.from(publicSignals[3]),
         ],
         recipientAddress,
         fee: feeAmt,
