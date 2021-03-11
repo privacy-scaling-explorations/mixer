@@ -79,6 +79,5 @@ const approveTokens = async (
 
         return tx
     }
-}
 
 export { depositEth, depositTokens, getTokenAllowance, approveTokens }
