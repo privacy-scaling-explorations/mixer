@@ -58,10 +58,35 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
 
       let deployedAddressesNetwork = deployedAddresses[configNetworkName]
 
+      const accounts = genAccounts(configNetwork)
+
+      expect(accounts[0]).toBeTruthy();
+      const depositorAddress = accounts[0].address
+
+
+      expect(accounts[1]).toBeTruthy();
+      const recipientAddress = accounts[1].address
+
+
+      expect(accounts[2]).toBeTruthy();
+      let relayerAddress = accounts[2].address
+
+      let isETH = 1
+      let wallet = getWallet(configNetwork.get('url'), accounts[0].privateKey)
+      expect(wallet).toBeTruthy()
+
+
+      it('address balance', async () => {
+          await addressInfo(configNetworkName + " depositorAddress", depositorAddress, isETH, wallet, 18, null)
+          await addressInfo(configNetworkName + " recipientAddress", recipientAddress, isETH, wallet, 18, null)
+          await addressInfo(configNetworkName + " relayerAddress", relayerAddress, isETH, wallet, 18, null)
+      })
+
 
       for (let configTokenName of Object.keys(configNetwork.get('token'))) {
           console.log("Test token:", configTokenName);
           let configToken = configNetwork.get('token.' + configTokenName)
+
 
           describe(configNetworkName + '.' + configTokenName + ' Mixer', () => {
 
@@ -70,18 +95,6 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
               }
               let deployedAddressesToken = deployedAddressesNetwork.token[configTokenName]
 
-              const accounts = genAccounts(configNetwork)
-
-              expect(accounts[0]).toBeTruthy();
-              const depositorAddress = accounts[0].address
-
-
-              expect(accounts[1]).toBeTruthy();
-              const recipientAddress = accounts[1].address
-
-
-              expect(accounts[2]).toBeTruthy();
-              let relayerAddress = accounts[2].address
 
               let isETH = 0
               if (!configToken.has('decimals')){
@@ -123,13 +136,12 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
               let tokenContract
               let externalNullifier : string
 
-              let wallet
+
 
 
               beforeAll( done =>  {
 
-                  wallet = getWallet(configNetwork.get('url'), accounts[0].privateKey)
-                  expect(wallet).toBeTruthy()
+
 
                   const func_async = (async () => {
 
@@ -268,11 +280,7 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
                       expect(mixAmtBefore.eq(mixAmtToken)).toBeTruthy()
                   })
 
-                  it('address balance', async () => {
-                      await addressInfo("depositorAddress", depositorAddress, isETH, wallet, decimals, tokenContract)
-                      await addressInfo("recipientAddress", recipientAddress, isETH, wallet, decimals, tokenContract)
-                      await addressInfo("relayerAddress", relayerAddress, isETH, wallet, decimals, tokenContract)
-                  })
+
 
                   it('should perform a deposit', async () => {
 

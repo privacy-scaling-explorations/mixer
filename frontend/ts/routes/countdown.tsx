@@ -1,4 +1,4 @@
-import React, { Component, useState, useContext } from 'react'
+import React, { Component, useState, useContext, useEffect } from 'react'
 import ReactDOM from 'react-dom'
 import { useTimer } from 'react-timer-hook'
 import * as ethers from 'ethers'
@@ -84,7 +84,11 @@ export default () => {
         setnetworkChainId(context.networkChainId)
         setAddress(context.address)
     }
-    const interval = setInterval(() => connectWallet(), 1000);
+
+    useEffect(() => {
+        const interval = setInterval(() => connectWallet(), 1000)
+        return () => clearInterval(interval)
+    })
 
     const withdraw = async (provider) => {
         //TODO check chainId for context.provider

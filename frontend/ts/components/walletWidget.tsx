@@ -38,8 +38,11 @@ const WalletWidget = () => {
         setAddress(context.address)
     }
 
-
-    const interval = setInterval(() => connectWallet(), 1000);
+    useEffect(() => {
+        const interval = setInterval(() => connectWallet(), 1000)
+        return () => clearInterval(interval)
+        //connectWallet()
+    })
 
     const render = () => {
 

@@ -70,18 +70,10 @@ const getTokenAllowance = async (
  *                  token.decimals before passing it to this function.
  */
 const approveTokens = async (
-    context: any,
+    provider: any,
     numTokens: number,
 ) => {
-    const library = context.library
-    const connector = context.connector
-    if (library && connector) {
-        const provider = new ethers.providers.Web3Provider(
-            await connector.getProvider(chainId),
-        )
-        const signer = provider.getSigner()
-
-        const tokenContract = await getTokenContract(context)
+        const tokenContract = await getTokenContract(provider)
 
         const tx = await tokenContract.approve(mixerAddress, numTokens.toString())
 

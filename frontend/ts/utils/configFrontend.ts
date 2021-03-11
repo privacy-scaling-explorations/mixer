@@ -81,9 +81,9 @@ if (configToken){
     mixAmt = configToken.mixAmt
     operatorFee = configToken.feeAmt
 }
-let isETH = 1
+let isETH = true
 if (tokenDecimals){
-    isETH = 0
+    isETH = false
 }else{
     tokenDecimals = 18
 }
