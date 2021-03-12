@@ -51,3 +51,4 @@ backend/exported_config.json
 frontend/exported_config.json
 frontend/compiled/
 config/local-test.yaml
+contracts/test.log

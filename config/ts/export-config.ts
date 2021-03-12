@@ -8,5 +8,5 @@ if (require.main === module) {
     if (c.backend.hotWalletPrivKey) {
         delete c.backend.hotWalletPrivKey
     }
-    console.log(JSON.stringify(configMixer))
+    console.log(JSON.stringify(configMixer, null, 2))
 }

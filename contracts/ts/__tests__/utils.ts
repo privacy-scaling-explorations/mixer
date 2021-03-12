@@ -143,7 +143,12 @@ const getSnarks = () => {
 
 const checkErrorReason = (error, errorMsg) => {
     if (error.error && error.error.data){
-        expect(error.error.data[error.transactionHash].reason).toMatch(errorMsg)
+        if (error.error.data[error.transactionHash]){
+            expect(error.error.data[error.transactionHash].reason).toMatch(errorMsg)
+        }else{
+            //console.log(error.error.stack, errorMsg)
+            expect(error.error.stack).toMatch(errorMsg)
+        }
     }else{
         expect(error.reason).toMatch('transaction failed')
     }

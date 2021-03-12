@@ -29,6 +29,7 @@ const compileInput = (input, outputPath : string) => {
                 bytecode : output.contracts[contract][contractName].evm.bytecode.object,
                 linkReferences : output.contracts[contract][contractName].evm.bytecode.linkReferences,
                 }
+            console.log(contractName + " compiled, size : " + ((outputfile.bytecode.length / 2) - 1))
             fs.writeFileSync(outputPath + contractName + '.json', JSON.stringify(outputfile))
         }
     }
@@ -67,6 +68,34 @@ const inputMiMC = {
         outputSelection: {
             '*': {
                 'MiMC': [ 'evm.bytecode.object', 'abi']
+            }
+        }
+    }
+}
+
+const inputSemaphoreLibrary = {
+    language: 'Solidity',
+    sources: {
+        'verifier.sol': {
+            content: loadContract(semaphorePath + 'verifier.sol'),
+        },
+        'Semaphore.sol': {
+            content: loadContract(semaphorePath + 'Semaphore.sol'),
+        },
+        'MerkleTreeLib.sol' : {
+            content: loadContract(semaphorePath + 'MerkleTreeLib.sol'),
+        },
+        'Ownable.sol' : {
+            content: loadContract(semaphorePath + 'Ownable.sol'),
+        },
+        'SemaphoreLibrary.sol': {
+            content: loadContract(solidityPath + 'SemaphoreLibrary.sol'),
+        },
+    },
+    settings: {
+        outputSelection: {
+            '*': {
+                'SemaphoreLibrary': [ 'evm.bytecode.object', 'abi', 'linkReferences' ]
             }
         }
     }
@@ -131,6 +160,45 @@ const inputMixer = {
     }
 }
 
+const inputMixerRegistry = {
+    language: 'Solidity',
+    sources: {
+        'verifier.sol': {
+            content: loadContract(semaphorePath + 'verifier.sol'),
+        },
+        'Semaphore.sol': {
+            content: loadContract(semaphorePath + 'Semaphore.sol'),
+        },
+        'MerkleTreeLib.sol' : {
+            content: loadContract(semaphorePath + 'MerkleTreeLib.sol'),
+        },
+        'Ownable.sol' : {
+            content: loadContract(semaphorePath + 'Ownable.sol'),
+        },
+        'Mixer.sol' : {
+            content: loadContract(solidityPath + 'Mixer.sol'),
+        },
+        'MixerRegistry.sol' : {
+            content: loadContract(solidityPath + 'MixerRegistry.sol'),
+        },
+        'SemaphoreLibrary.sol': {
+            content: loadContract(solidityPath + 'SemaphoreLibrary.sol'),
+        },
+        'openzeppelin/SafeMath.sol' : {
+            content: loadContract(solidityPath + 'openzeppelin/SafeMath.sol'),
+        },
+        'token/IERC20.sol' : {
+            content: loadContract(solidityPath + 'token/IERC20.sol'),
+        },
+    },
+    settings: {
+        outputSelection: {
+            '*': {
+                'MixerRegistry': [ 'evm.bytecode.object', 'abi']
+            }
+        }
+    }
+}
 
 
 const inputToken = {
@@ -200,6 +268,8 @@ const main = async () => {
 
     buildMiMC(outputPath)
     //compileInput(inputMiMC, outputPath)
+    compileInput(inputSemaphoreLibrary, outputPath)
+    compileInput(inputMixerRegistry, outputPath)
     compileInput(inputSemaphore, outputPath)
     compileInput(inputMixer, outputPath)
     compileInput(inputToken, outputPath)
