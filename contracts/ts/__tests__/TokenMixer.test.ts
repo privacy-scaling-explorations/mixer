@@ -58,6 +58,49 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
 
       let deployedAddressesNetwork = deployedAddresses[configNetworkName]
 
+      const accounts = genAccounts(configNetwork)
+
+      expect(accounts[0]).toBeTruthy();
+      const depositorAddress = accounts[0].address
+
+
+      expect(accounts[1]).toBeTruthy();
+      const recipientAddress = accounts[1].address
+
+
+      expect(accounts[2]).toBeTruthy();
+      let relayerAddress = accounts[2].address
+
+      let wallet
+
+      wallet = getWallet(configNetwork.get('url'), accounts[0].privateKey)
+      expect(wallet).toBeTruthy()
+
+      describe(configNetworkName + ' Pre test', () => {
+          describe('Contract deployments', () => {
+              it('should not deploy Mixer if the Semaphore contract address is invalid', async () => {
+                  const mixAmtToken = ethers.BigNumber.from((1 * (10 ** 18)).toString())
+                  try{
+                      const tx = await deployContract(wallet,
+                          Mixer,
+                          '0x0000000000000000000000000000000000000000',
+                          mixAmtToken,
+                          '0x0000000000000000000000000000000000000000',
+                          { gasLimit: 500000 }
+                      )
+                      expect(true).toBeFalsy()
+                  }catch (error){
+                      checkErrorReason(error, 'Mixer: invalid Semaphore address')
+                  }
+
+              })
+          })
+          it('Network address balance', async () => {
+              await addressInfo("depositorAddress", depositorAddress, true, wallet, 18, null)
+              await addressInfo("recipientAddress", recipientAddress, true, wallet, 18, null)
+              await addressInfo("relayerAddress", relayerAddress, true, wallet, 18, null)
+          })
+      })
 
       for (let configTokenName of Object.keys(configNetwork.get('token'))) {
           console.log("Test token:", configTokenName);
@@ -69,21 +112,6 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
                   deployedAddressesNetwork.token[configTokenName] = {}
               }
               let deployedAddressesToken = deployedAddressesNetwork.token[configTokenName]
-
-              const accounts = genAccounts(configNetwork)
-
-              expect(accounts[0]).toBeTruthy();
-              const depositorAddress = accounts[0].address
-
-
-              expect(accounts[1]).toBeTruthy();
-              const recipientAddress = accounts[1].address
-
-
-              expect(accounts[2]).toBeTruthy();
-              let relayerAddress = accounts[2].address
-
-
 
               let isETH = 0
               if (!configToken.has('decimals')){
@@ -125,13 +153,10 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
               let tokenContract
               let externalNullifier : string
 
-              let wallet
 
-              wallet = getWallet(configNetwork.get('url'), accounts[0].privateKey)
-              expect(wallet).toBeTruthy()
               beforeAll( done =>  {
                   const func_async = (async () => {
-
+                      console.log("Network:", configNetworkName, " Token ", configTokenName);
                       const contracts = await deployAllContracts(
                           wallet,
                           configNetwork,
@@ -167,21 +192,6 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
 
 
               describe('Contract deployments', () => {
-                  it('should not deploy Mixer if the Semaphore contract address is invalid', async () => {
-                      try{
-                          const tx = await deployContract(wallet,
-                              Mixer,
-                              '0x0000000000000000000000000000000000000000',
-                              mixAmtToken,
-                              '0x0000000000000000000000000000000000000000',
-                              { gasLimit: 500000 }
-                          )
-                          expect(true).toBeFalsy()
-                      }catch (error){
-                          checkErrorReason(error, 'Mixer: invalid Semaphore address')
-                      }
-
-                  })
 
                   it('should not deploy mixer if the mixAmt is invalid', async () => {
                       try{

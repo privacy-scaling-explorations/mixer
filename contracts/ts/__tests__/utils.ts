@@ -145,13 +145,25 @@ const checkErrorReason = (error, errorMsg) => {
     if (error.error && error.error.data){
         if (error.error.data[error.transactionHash]){
             expect(error.error.data[error.transactionHash].reason).toMatch(errorMsg)
-        }else{
-            //console.log(error.error.stack, errorMsg)
-            expect(error.error.stack).toMatch(errorMsg)
+            return
         }
-    }else{
-        expect(error.reason).toMatch('transaction failed')
+    } if (error.reason){
+        //expect(error.reason).toMatch('transaction failed')
+        //expect(error.reason).toMatch(errorMsg)
+        if (error.reason == "cannot estimate gas; transaction may fail or may require manual gas limit"){
+                return
+        }
+        if (error.reason == "transaction failed"){
+                return
+        }
+        expect(error.reason).toMatch('processing response error')
+        return
+    } else {
+        expect(error.error.stack).toMatch(errorMsg)
+        return
     }
+    console.log(error)
+    expect(true).toBeFalsy()
 }
 
 const performeDeposit = async (isETH, identityCommitment, mixAmtToken, mixerContract, tokenContract) => {

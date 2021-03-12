@@ -440,7 +440,7 @@ const main = async () => {
 
     for (let configNetworkName of Object.keys(configMixer.get('network'))) {
         let configNetwork = configMixer.get('network.' + configNetworkName)
-        if (!(configNetwork.has('disable'))){
+        if (!configNetwork.disable){
             console.log("Network:", configNetworkName);
 
 
@@ -511,15 +511,14 @@ const main = async () => {
                         deployedAddressesToken.Token = tokenContract.address
                     }
                 }
+                const addressJsonPath = path.join(__dirname, '../..', outputAddressFile)
+                fs.writeFileSync(
+                    addressJsonPath,
+                    JSON.stringify(deployedAddresses, null, 2),
+                )
             }
         }
     }
-    const addressJsonPath = path.join(__dirname, '../..', outputAddressFile)
-    fs.writeFileSync(
-        addressJsonPath,
-        JSON.stringify(deployedAddresses, null, 2),
-    )
-
     console.log(deployedAddresses)
 }
 
