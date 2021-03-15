@@ -10,7 +10,7 @@ import {
 } from '../utils/configBackend'
 
 import {
-    hotWalletPrivKeyPath,
+    privateKeysPath,
     feeAmt,
     chainId,
     chainUrl,
@@ -32,11 +32,9 @@ import {
 import * as Locker from 'node-etcd-lock'
 import { genValidator } from './utils'
 
-console.log("mix hotWalletPrivKeyPath", hotWalletPrivKeyPath)
+console.log("mix privKeyPath", privateKeysPath)
 
-const hotWalletPrivKey = JSON.parse(
-    fs.readFileSync(hotWalletPrivKeyPath, 'utf-8')
-).privateKey
+const hotWalletPrivKey = require("../" + privateKeysPath)
 
 const verificationKey = require('@mixer-backend/verification_key.json')
 
@@ -197,7 +195,7 @@ const _mixRoute = (forTokens: boolean) => async (
     )
 
     const wallet = new ethers.Wallet(
-        hotWalletPrivKey,
+        hotWalletPrivKey[0],
         provider,
     )
 
@@ -221,7 +219,7 @@ const _mixRoute = (forTokens: boolean) => async (
         semaphoreAddress,
         'Semaphore',
     )
-
+    /*
     const relayerRegistryContract = getContract(
         'RelayerRegistry',
         wallet,
@@ -231,7 +229,7 @@ const _mixRoute = (forTokens: boolean) => async (
     const relayerRegistryAbi = getAbi(
         'RelayerRegistry',
     )
-
+    */
     const etcdAddress = etcdHost + ':' + etcdPort
 
     // TODO: handle the case if etcd isn't working
@@ -276,7 +274,7 @@ const _mixRoute = (forTokens: boolean) => async (
     let mixCallData
     const iface = new ethers.utils.Interface(mixerAbi)
     if (forTokens) {
-        mixCallData = iface.encodeFunctionData("mix",[
+        mixCallData = iface.encodeFunctionData("mixERC20",[
             depositProof.signal,
             depositProof.a,
             depositProof.b,
@@ -296,7 +294,7 @@ const _mixRoute = (forTokens: boolean) => async (
             depositProof.fee,
             relayerAddress])
     }
-
+    /*
     const relayerRegistryIface = new ethers.utils.Interface(relayerRegistryAbi)
     const relayCallData = iface.encodeFunctionData("relayCall",
         [
@@ -304,7 +302,7 @@ const _mixRoute = (forTokens: boolean) => async (
             mixCallData
         ],
     )
-
+    */
     const unsignedTx = {
         to: mixerContractAddress,
         value: 0,

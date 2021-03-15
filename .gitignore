@@ -52,3 +52,4 @@ frontend/exported_config.json
 frontend/compiled/
 config/local-test.yaml
 contracts/test.log
+backend/ganachePrivateKeys.json

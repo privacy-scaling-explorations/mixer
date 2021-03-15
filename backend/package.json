@@ -11,6 +11,7 @@
     "test-debug": "NODE_ENV=local-dev node --inspect-brk ./node_modules/.bin/jest --testPathPattern=__tests__/",
     "test-mix": "NODE_ENV=local-dev jest --testPathPattern=__tests__/Mix.test.ts",
     "test-mix-debug": "NODE_ENV=local-dev node --inspect-brk ./node_modules/.bin/jest --testPathPattern=__tests__/Mix.test.ts",
+    "test-one": "NODE_ENV=local-dev jest --testPathPattern=__tests__/Mix.test.ts -t \"accepts a valid proof to mix ETH and credits the recipient\"",
     "build": "./scripts/copyVerifyingKey.sh && tsc"
   },
   "author": "Koh Wei Jie",

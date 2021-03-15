@@ -34,7 +34,7 @@ import {
     chainId,
     chainUrl,
     relayerAddress,
-    testingPrivKeys,
+    privateKeysPath,
     mixerAddress,
     tokenAddress,
 } from '../utils/configBackendNetwork'
@@ -54,6 +54,8 @@ const provider = new ethers.providers.JsonRpcProvider(
     chainUrl,
     chainId,
 )
+
+const testingPrivKeys = require("../" + privateKeysPath)
 
 const signer = new ethers.Wallet(
     testingPrivKeys[0],
@@ -128,9 +130,12 @@ describe('the mixer_mix_eth API call', () => {
             const identity = genIdentity()
             const identityCommitment = genIdentityCommitment(identity)
 
-            const tx = await mixerContract.deposit(identityCommitment.toString(), { value: depositAmtEth, gasLimit: 1500000 })
+            const tx = await mixerContract.deposit('0x' + identityCommitment.toString(16), { value: depositAmtEth, gasLimit: 1500000 })
             const receipt = await tx.wait()
             expect(receipt.status).toEqual(1)
+            expect(receipt.events).toBeTruthy()
+            expect(receipt.events[receipt.events.length - 1].event).toMatch('Deposited')
+
 
             // generate withdrawal proof
 
@@ -154,7 +159,7 @@ describe('the mixer_mix_eth API call', () => {
                 20,
                 recipientAddress,
                 relayerAddress,
-                feeAmt,
+                feeAmtWei,
                 externalNullifier,
             )
 
@@ -169,7 +174,7 @@ describe('the mixer_mix_eth API call', () => {
                 signal,
                 proof,
                 recipientAddress,
-                BigInt(feeAmt.toString()),
+                BigInt(feeAmtWei.toString()),
                 publicSignals,
             )
 
@@ -346,26 +351,30 @@ describe('the mixer_mix_eth API call', () => {
 
         expect(resp.data.error.code).toEqual(errors.errorCodes.BACKEND_MIX_EXTERNAL_NULLIFIER_INVALID)
     })
+    if (!isETH){
+        test('rejects a proof where the token fee is too low', async () => {
+            // deep copy and make the fee too low
+            const lowFeeProof = JSON.parse(JSON.stringify(validParamsForTokens))
+            lowFeeProof.fee = '0x0'
 
-    test('rejects a proof where the token fee is too low', async () => {
-        // deep copy and make the fee too low
-        const lowFeeProof = JSON.parse(JSON.stringify(validParamsForTokens))
-        lowFeeProof.fee = '0x0'
+            const resp = await post(1, 'mixer_mix_tokens', lowFeeProof)
 
-        const resp = await post(1, 'mixer_mix_tokens', lowFeeProof)
+            expect(resp.data.error.code).toEqual(errors.errorCodes.BACKEND_MIX_INSUFFICIENT_TOKEN_FEE)
+        })
+    }else{
+        test('rejects a proof where the ETH fee is too low', async () => {
+            // deep copy and make the fee too low
+            const lowFeeProof = JSON.parse(JSON.stringify(validParamsForEth))
+            lowFeeProof.fee = '0x0001'
 
-        expect(resp.data.error.code).toEqual(errors.errorCodes.BACKEND_MIX_INSUFFICIENT_TOKEN_FEE)
-    })
+            const resp = await post(1, 'mixer_mix_eth', lowFeeProof)
 
-    test('rejects a proof where the ETH fee is too low', async () => {
-        // deep copy and make the fee too low
-        const lowFeeProof = JSON.parse(JSON.stringify(validParamsForEth))
-        lowFeeProof.fee = '0x0001'
+            expect(resp.data.error.code).toEqual(errors.errorCodes.BACKEND_MIX_INSUFFICIENT_ETH_FEE)
+        })
+    }
 
-        const resp = await post(1, 'mixer_mix_eth', lowFeeProof)
 
-        expect(resp.data.error.code).toEqual(errors.errorCodes.BACKEND_MIX_INSUFFICIENT_ETH_FEE)
-    })
+
 
     afterAll(async () => {
         server.close()

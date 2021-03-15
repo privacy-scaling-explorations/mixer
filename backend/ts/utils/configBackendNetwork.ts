@@ -3,7 +3,7 @@ import * as ethers from 'ethers'
 import { deployedAddresses } from 'mixer-contracts'
 const configMixer =  require('../../exported_config')
 
-const network = 'ganache'
+const network = 'kovan'
 const token = 'eth'
 
 const configNetwork = configMixer.network[network]
@@ -16,8 +16,8 @@ const chainUrl = configNetwork.url
 const gasPrice = configNetwork.gasPrice
 const relayerAddress = configNetwork.relayerAddress
 const hotWalletPrivKeyPath = configNetwork.hotWalletPrivKeyPath
-console.log("hotWalletPrivKeyPath", hotWalletPrivKeyPath)
-const testingPrivKeys = configNetwork.testing.privKeys
+const privateKeysPath = configNetwork.privateKeysPath
+
 
 const mixAmt = configToken.mixAmt
 const feeAmt = configToken.feeAmt
@@ -53,6 +53,6 @@ export {
     tokenAddress,
     semaphoreAddress,
     //TODO to fix
-    testingPrivKeys,
+    privateKeysPath,
     hotWalletPrivKeyPath,
 }
