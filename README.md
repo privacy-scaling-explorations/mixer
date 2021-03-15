@@ -81,6 +81,7 @@ These instructions have been tested with Ubuntu 18.0.4 and Node 11.14.0. (! It m
 
 ### Requirements
 
+<!--
 - Node v11.14.0.
       - We recommend [`nvm`](https://github.com/nvm-sh/nvm) to manage your Node
         installation.
@@ -88,6 +89,10 @@ These instructions have been tested with Ubuntu 18.0.4 and Node 11.14.0. (! It m
 - [`etcd`](https://github.com/etcd-io/etcd) v3.3.13
     - The relayer server requires an `etcd` server to lock the account nonce of
       its hot wallet.
+
+-->
+
+<!--
 
 ### (Optional) Install Node 11.14.0 for local user
 
@@ -135,6 +140,7 @@ npm -v
 node -v
 #v11.15.0
 ```
+-->
 
 ### Local development
 
@@ -177,6 +183,7 @@ it as such:
 - Change `backend.hotWalletPrivKeyPath` to the absolute path to the
   `hotWalletPrivKey.json` file you just created.
 
+<!--
 Install dependencies for the Semaphore submodule and compile its contracts:
 
 ```bash
@@ -184,13 +191,13 @@ cd semaphore/semaphorejs && \
 npm i && \
 npx truffle compile
 ```
-
+-->
 Install dependencies and build the source code:
-
+<!--
 ```bash
 cd ../../
 # if you are still in semaphore/semaphorejs/
-
+-->
 npm i && \
 npm run bootstrap && \
 npm run build
@@ -202,7 +209,7 @@ In a new terminal, run Ganche:
 # Assuming you are in mixer/
 
 cd contracts && \
-./scripts/runGanache.sh
+npm run ganache
 ```
 
 In another terminal, deploy the contracts:
@@ -213,7 +220,7 @@ In another terminal, deploy the contracts:
 cd contracts && \
 npm run deploy
 ```
-
+<!--
 In another terminal, run `etcd`:
 
 ```bash
@@ -228,23 +235,8 @@ In another terminal, run the relayer server:
 cd backend && \
 npm run server
 ```
-
-In another terminal, launch the frontend:
-
-<!--
-```bash
-# Assuming you are in mixer/
 -->
-<!--
-cd frontend && \
-npm run watch
-```
--->
-```bash
-node server.js
-```
-
-Finally, launch a HTTP server to serve the zk-SNARK content:
+In annother terminal launch a HTTP server to serve the zk-SNARK content:
 
 ```bash
 # Assuming you are in mixer/
@@ -255,7 +247,11 @@ npx http-server -p 8000 --cors
 
 You can now run the frontend at http://localhost:1234.
 
-
+```bash
+# Assuming you are in mixer/
+cd frontend && \
+npm run server
+```
 
 To automatically compile the TypeScript source code whenever you change it,
 first make sure that you have `npm run watch` running in a terminal. For
@@ -283,8 +279,7 @@ Clockwise from top right:
 In the `mixer/contracts/` directory:
 
 1. Run `npm run build` if you haven't built the source already
-2. Run `npm run testnet`
-3. In a separate terminal: `npm run test`
+2. Run `npm run test`
 
 #### Backend
 
