@@ -1,4 +1,4 @@
 [submodule "semaphore"]
 	path = semaphore
-	url = https://github.com/weijiekoh/semaphore.git
-    branch= master
+	url = https://github.com/jrastit/semaphore.git
+    branch=mixer-1 
