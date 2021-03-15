@@ -18,7 +18,7 @@ const getContract = (
         abiName = name
     }
 
-    const abi = require(`../compiled/abis/${abiName}-abi.json`)
+    const abi = require(`../compiled/${abiName}.json`).abi
 
     const contract = new ethers.Contract(
         deployedAddresses,
@@ -33,7 +33,7 @@ const getAbi = (
     abiName: string
 ) => {
 
-    const abi = require(`../compiled/abis/${abiName}-abi.json`)
+    const abi = require(`../compiled/${abiName}.json`).abi
 
     return abi
 }

@@ -66,12 +66,16 @@ const mixerContract = getContract(
     mixerAddress,
 )
 
-const tokenContract = getContract(
-    'Token',
-    signer,
-    tokenAddress,
-    'ERC20Mintable',
-)
+let tokenContract
+
+if (!isETH){
+    tokenContract = getContract(
+        'Token',
+        signer,
+        tokenAddress,
+        'ERC20Mintable',
+    )
+}
 
 const provingKey = fs.readFileSync(
     path.join(__dirname, '../../../semaphore/semaphorejs/build/proving_key.bin'),

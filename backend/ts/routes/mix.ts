@@ -32,7 +32,7 @@ import {
 import * as Locker from 'node-etcd-lock'
 import { genValidator } from './utils'
 
-console.log("hotWalletPrivKeyPath", hotWalletPrivKeyPath)
+console.log("mix hotWalletPrivKeyPath", hotWalletPrivKeyPath)
 
 const hotWalletPrivKey = JSON.parse(
     fs.readFileSync(hotWalletPrivKeyPath, 'utf-8')

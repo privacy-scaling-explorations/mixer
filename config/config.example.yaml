@@ -44,6 +44,7 @@ network:
         chainId: 1337
         supportedNetwork: 1337
         privateKeysPath: "../ganachePrivateKeys.json"
+        hotWalletPrivKeyPath: "/home/mixer/key/hotWalletPrivKey.json"
         supportedNetworkName: "Ganache"
         gasPrice: 20000000000
         token:

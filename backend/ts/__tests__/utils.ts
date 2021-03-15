@@ -1,6 +1,5 @@
 import axios from 'axios'
 import * as JsonRpc from '../jsonRpc'
-import { config } from 'mixer-config'
 
 import {
     backendPort,

@@ -5,11 +5,17 @@ import Ajv, { ValidateFunction } from 'ajv'
 const genValidator = (
     name: string,
 ) => {
-    const ajv = new Ajv()
+    const ajv = new Ajv({strict:"log"})
     const schema = require(`@mixer-backend/schemas/${name}.json`)
-    const validate: ValidateFunction = ajv.compile(schema)
+    try{
+        const validate: ValidateFunction = ajv.compile(schema)
+        return validate
+    }catch(err){
+        console.log(schema)
+        console.log(err)
+        throw err
+    }
 
-    return validate
 }
 
 export { genValidator }
