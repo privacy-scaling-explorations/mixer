@@ -18,7 +18,7 @@ interface Route {
 const routes = {
     mixer_mix_eth: mixEthRoute,
     mixer_mix_tokens: mixTokensRoute,
-    //mixer_status: backendStatusRoute,
+    status: backendStatusRoute,
 }
 
 // Dev-only routes for testing
@@ -44,6 +44,8 @@ const handle = async (reqData: JsonRpc.Request) => {
             )
         }
     } catch (err) {
+
+        console.log(err)
 
         return JsonRpc.genErrorResponse(
             reqData.id,

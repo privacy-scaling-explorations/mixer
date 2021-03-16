@@ -91,6 +91,14 @@ describe('Backend API', () => {
         expect(resp.data.result.message).toEqual(message)
     })
 
+    test('handles the status method', async () => {
+        const resp = await await post(1, 'status', { networkName: "ganache" })
+
+        expect(resp.status).toEqual(200)
+        console.log(resp.data)
+        expect(resp.data.result.networkName).toEqual("ganache")
+    })
+
     test('handles the echo method in batch', async () => {
         let data: JsonRpc.Request[] = []
         for (let i=0; i<5; i++) {

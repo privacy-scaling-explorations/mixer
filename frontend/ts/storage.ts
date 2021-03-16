@@ -28,7 +28,13 @@ import{
 const localStorage = window.localStorage
 
 // The storage key depends on the mixer contracts to prevent conflicts
-const mixerPrefix = mixerAddress.slice(4).toLowerCase()
+let mixerPrefix
+if (mixerAddress){
+    mixerPrefix = mixerAddress.slice(4).toLowerCase()
+}else{
+    mixerPrefix = "0000"
+}
+
 const key = `MIXER_${network}_${mixerPrefix}`
 
 const initStorage = () => {

@@ -1,0 +1,13 @@
+{
+    "title": "mix",
+    "decription": "Parameters for backend status for JSON-RPC method",
+    "required": [
+        "networkName"
+    ],
+    "additionalProperties": false,
+    "properties": {
+        "networkName": {
+            "type": "string"
+        }
+    }
+}

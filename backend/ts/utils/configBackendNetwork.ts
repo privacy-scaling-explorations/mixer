@@ -3,7 +3,7 @@ import * as ethers from 'ethers'
 import { deployedAddresses } from 'mixer-contracts'
 const configMixer =  require('../../exported_config')
 
-const network = 'kovan'
+const network = 'ganache'
 const token = 'eth'
 
 const configNetwork = configMixer.network[network]
@@ -14,7 +14,6 @@ const gasLimitMix = configMixer.chain.gasLimit.mix
 const chainId = configNetwork.chainId
 const chainUrl = configNetwork.url
 const gasPrice = configNetwork.gasPrice
-const relayerAddress = configNetwork.relayerAddress
 const hotWalletPrivKeyPath = configNetwork.hotWalletPrivKeyPath
 const privateKeysPath = configNetwork.privateKeysPath
 
@@ -38,6 +37,16 @@ const tokenAddress = deployedAddressesToken.Token
 const mixerAddress = deployedAddressesToken.Mixer
 const semaphoreAddress = deployedAddressesToken.Semaphore
 
+const getRelayerAddress = async () => {
+    const hotWalletPrivKey = require("../" + privateKeysPath)
+
+    const wallet = new ethers.Wallet(
+        hotWalletPrivKey[1],
+    )
+
+    return await wallet.getAddress()
+}
+
 export {
     isETH,
     mixAmt,
@@ -47,7 +56,7 @@ export {
     tokenDecimals,
     gasLimitMix,
     gasPrice,
-    relayerAddress,
+    getRelayerAddress,
     relayerRegistryAddress,
     mixerAddress,
     tokenAddress,

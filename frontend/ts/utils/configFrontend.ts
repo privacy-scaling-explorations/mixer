@@ -100,18 +100,21 @@ const configEnv = configMixer.env
 
 //config of deployed address contract network
 const deployedAddressesNetwork = deployedAddresses[network]
-
-const relayerRegistryAddress = deployedAddressesNetwork.RelayerRegistry
-
-//config of deployed address contract token
-const deployedAddressesToken = deployedAddressesNetwork.token[token]
+let relayerRegistryAddress
+let deployedAddressesToken
 let mixerAddress
 let tokenAddress
 let semaphoreAddress
-if (deployedAddressesToken){
-    mixerAddress = deployedAddressesToken.Mixer
-    tokenAddress = deployedAddressesToken.Token
-    semaphoreAddress = deployedAddressesToken.Semaphore
+
+if (deployedAddressesNetwork){
+    relayerRegistryAddress = deployedAddressesNetwork.RelayerRegistry
+    deployedAddressesToken = deployedAddressesNetwork.token[token]
+    //config of deployed address contract token
+    if (deployedAddressesToken){
+        mixerAddress = deployedAddressesToken.Mixer
+        tokenAddress = deployedAddressesToken.Token
+        semaphoreAddress = deployedAddressesToken.Semaphore
+    }
 }
 
 export {

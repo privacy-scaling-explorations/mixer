@@ -33,10 +33,10 @@ import {
     feeAmt,
     chainId,
     chainUrl,
-    relayerAddress,
     privateKeysPath,
     mixerAddress,
     tokenAddress,
+    getRelayerAddress,
 } from '../utils/configBackendNetwork'
 
 import { post } from './utils'
@@ -124,9 +124,12 @@ describe('the mixer_mix_eth API call', () => {
         server = app.listen(PORT)
     })
 
+
+
     if (isETH){
         test('accepts a valid proof to mix ETH and credits the recipient', async () => {
             // generate an identityCommitment
+            const relayerAddress = await getRelayerAddress()
             const identity = genIdentity()
             const identityCommitment = genIdentityCommitment(identity)
 
@@ -208,6 +211,7 @@ describe('the mixer_mix_eth API call', () => {
         })
     }else{
         test('accepts a valid proof to mix tokens and credits the recipient', async () => {
+            const relayerAddress = await getRelayerAddress()
             const expectedTokenAmtToReceive = mixAmt - feeAmt
             // mint tokens for the sender
             await tokenContract.mint(

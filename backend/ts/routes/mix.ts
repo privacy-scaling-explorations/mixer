@@ -18,8 +18,8 @@ import {
     gasLimitMix,
     mixerAddress,
     semaphoreAddress,
-    relayerAddress,
     relayerRegistryAddress,
+    getRelayerAddress,
 } from '../utils/configBackendNetwork'
 
 import { getContract, getAbi } from 'mixer-contracts'
@@ -59,6 +59,9 @@ const operatorFeeTokens = feeAmt
 const _mixRoute = (forTokens: boolean) => async (
     depositProof: DepositProof,
 ) => {
+
+    const relayerAddress = await getRelayerAddress()
+
     const publicInputs = depositProof.input.map(BigInt)
 
     // verify the fee
@@ -109,6 +112,8 @@ const _mixRoute = (forTokens: boolean) => async (
         relayerAddress,
         depositProof.fee,
     )
+
+    console.log("Signal", signal, depositProof.recipientAddress, relayerAddress, depositProof.fee)
 
     const signalHash = keccak256HexToBigInt(signal)
 
@@ -195,7 +200,7 @@ const _mixRoute = (forTokens: boolean) => async (
     )
 
     const wallet = new ethers.Wallet(
-        hotWalletPrivKey[0],
+        hotWalletPrivKey[1],
         provider,
     )
 

@@ -5,7 +5,12 @@
     "bootstrap": "lerna bootstrap",
     "build": "lerna run build",
     "buildBaseImage": "./scripts/buildBaseImage.sh",
-    "buildImages": "./scripts/buildImages.sh"
+    "buildImages": "./scripts/buildImages.sh",
+    "deploy": "cd contracts && npm run deploy",
+    "screen-ganache": "screen -S Ganache -d -m bash -c \"cd contracts && npm run ganache\"",
+    "screen-backend": "screen -S MixerBackend -d -m bash -c \"cd backend && npm run server\"",
+    "screen-semaphore": "screen -S MixerSemaphore -d -m bash -c \"cd semaphore/semaphorejs && npx http-server -p 8000 --cors\"",
+    "screen-frontend": "screen -S MixerFrontend -d -m bash -c \"cd frontend && npm run server\""
   },
   "devDependencies": {
     "lerna": "3.22.1",

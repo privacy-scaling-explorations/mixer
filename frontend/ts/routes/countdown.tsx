@@ -35,7 +35,6 @@ import {
     mixAmt,
     operatorFee,
     tokenDecimals,
-    relayerAddress,
     blockExplorerTxPrefix,
     endsAtMidnight,
     endsAfterSecs,
@@ -45,6 +44,10 @@ import {
     snarksPathsProvingKey,
     snarksPathsVerificationKey,
 } from '../utils/configFrontend'
+
+import {
+    getBackendStatus
+} from '../utils/backend'
 
 const months = [
     'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
@@ -77,7 +80,6 @@ export default () => {
     const feeAmt = operatorFee * (10 ** tokenDecimals)
 
     const context = useContext(ConnectionContext)
-    console.log("context", context)
     const [networkChainId, setnetworkChainId] = useState(context.networkChainId)
     const [address, setAddress] = useState(context.address)
     const connectWallet = () => {
@@ -102,7 +104,10 @@ export default () => {
             const recipientBalanceBefore = (await tokenContract.balanceOf(recipientAddress)) / (10 ** tokenDecimals)
         }
 
+        const relayerAddress = (await getBackendStatus(network)).address
+
         try {
+
             const mixerContract = await getMixerContract(provider)
 
             const externalNullifier = mixerContract.address
@@ -144,6 +149,7 @@ export default () => {
                 progress('Generating witness...')
                 let result
                 try {
+                    console.log("signal", recipientAddress, relayerAddress, feeAmt)
                     result = await genMixerWitness(
                         circuit,
                         identity,
@@ -162,6 +168,7 @@ export default () => {
                     }
                 }
 
+                progress('Verify Signature...')
                 const validSig = verifySignature(result.msg, result.signature, pubKey)
                 if (!validSig) {
                     throw {
@@ -169,6 +176,7 @@ export default () => {
                     }
                 }
 
+                progress('Verify Witness...')
                 if (!circuit.checkWitness(result.witness)) {
                     throw {
                         code: ErrorCodes.INVALID_WITNESS,
@@ -189,8 +197,10 @@ export default () => {
                 progress('Generating proof...')
                 const proof = await genProof(result.witness, provingKey)
 
+                progress('Generating public signal...')
                 const publicSignals = genPublicSignals(result.witness, circuit)
 
+                progress('Verify proof...')
                 const isVerified = verifyProof(verifyingKey, proof, publicSignals)
 
                 if (!isVerified) {
