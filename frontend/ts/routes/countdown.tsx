@@ -121,9 +121,11 @@ export default () => {
 
             let params
 
+            /*
             if (paramsStr){
                 params = JSON.parse(paramsStr)
             }
+            */
 
             if (!params){
                 progress('Downloading leaves...')

@@ -27,7 +27,16 @@ import {
 } from '../utils/configBackend'
 
 import {
-    network,
+    getTestParam,
+    getRelayerAddress,
+} from '../utils/configBackendNetwork'
+
+import { post } from './utils'
+
+const network = 'Ganache'
+const token = 'eth'
+
+const {
     isETH,
     mixAmt,
     tokenDecimals,
@@ -37,10 +46,7 @@ import {
     privateKeysPath,
     mixerAddress,
     tokenAddress,
-    getRelayerAddress,
-} from '../utils/configBackendNetwork'
-
-import { post } from './utils'
+} = getTestParam(network, token)
 
 jest.setTimeout(90000)
 
