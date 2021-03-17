@@ -41,6 +41,9 @@ const Errors = {
     internalError: {
         code: -32603, message: 'Internal error'
     },
+    invalidRoute: {
+        code: -32604, message: 'Invalid route'
+    },
 }
 
 type Response = (ResponseSuccess | ResponseError)

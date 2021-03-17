@@ -31,6 +31,14 @@ const handle = async (reqData: JsonRpc.Request) => {
     try {
         const route = routes[reqData.method]
 
+        if (!route){
+            return JsonRpc.genErrorResponse(
+                reqData.id,
+                JsonRpc.Errors.invalidRoute.code,
+                JsonRpc.Errors.invalidRoute.message,
+            )
+        }
+
         if (route.reqValidator(reqData.params)) {
             const result = await route.route(reqData.params)
 

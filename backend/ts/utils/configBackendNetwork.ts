@@ -19,8 +19,7 @@ const getTestParam = (network : string, token : string) => {
 
     const mixAmt = configToken.mixAmt
     const feeAmt = configToken.feeAmt
-    let tokenDecimals = configToken.tokenDecimals
-
+    let tokenDecimals = configToken.decimals
     let isETH = 1
     if (tokenDecimals){
         isETH = 0
@@ -103,10 +102,17 @@ const getMixerInfo = async (network, mixer) => {
             const feeAmt = configToken.feeAmt
             const gasPrice = configNetwork.gasPrice
             const gasLimitMix = configMixer.chain.gasLimit.mix
+            let tokenDecimals = configToken.decimals
+
+            if (!tokenDecimals){
+                tokenDecimals = 18
+            }
+
             return {
                 feeAmt: feeAmt,
                 gasPrice: gasPrice,
                 gasLimitMix: gasLimitMix,
+                tokenDecimals: tokenDecimals,
                 mixerAddress: mixerAddress,
                 semaphoreAddress: semaphoreAddress,
             }

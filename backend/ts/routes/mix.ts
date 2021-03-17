@@ -60,6 +60,7 @@ const _mixRoute = (forTokens: boolean) => async (
         feeAmt,
         gasPrice,
         gasLimitMix,
+        tokenDecimals,
         mixerAddress,
         semaphoreAddress,
     } = await getMixerInfo(
@@ -69,7 +70,7 @@ const _mixRoute = (forTokens: boolean) => async (
 
     // This operator accepts a fee that is large enough
     const operatorFeeWei = ethers.utils.parseUnits(feeAmt.toString(), 'ether')
-    const operatorFeeTokens = feeAmt
+    const operatorFeeTokens = ethers.BigNumber.from((feeAmt * (10 ** tokenDecimals)).toString())
 
     const publicInputs = depositProof.input.map(BigInt)
 

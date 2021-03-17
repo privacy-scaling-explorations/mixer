@@ -33,8 +33,8 @@ import {
 
 import { post } from './utils'
 
-const network = 'Ganache'
-const token = 'eth'
+const network = 'ganache'
+const token = 'tkn'
 
 const {
     isETH,
@@ -107,6 +107,8 @@ let validParamsForEth
 let validParamsForTokens
 
 const schemaInvalidParamsForEth = {
+    networkName: network,
+    mixer: '0x2bD9aAa2953F988153c8629926D22A6a5F69b14E',
     signal: 'INVALID<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
     a: ['0x0', '0x0'],
     b: [
@@ -191,6 +193,8 @@ describe('the mixer_mix_eth API call', () => {
             )
 
             validParamsForEth = params
+
+            console.log("validParamsForEth", validParamsForEth)
 
             recipientBalanceBefore = await provider.getBalance(recipientAddress)
 
@@ -319,53 +323,96 @@ describe('the mixer_mix_eth API call', () => {
 
 
 
+    if (isETH){
+        test('rejects a request where the JSON-RPC schema is invalid', async () => {
+            const resp = await post(1, 'mixer_mix_eth', schemaInvalidParamsForEth)
 
-    test('rejects a request where the JSON-RPC schema is invalid', async () => {
-        const resp = await post(1, 'mixer_mix_eth', schemaInvalidParamsForEth)
+            expect(resp.data.error.code).toEqual(JsonRpc.Errors.invalidParams.code)
+        })
 
-        expect(resp.data.error.code).toEqual(JsonRpc.Errors.invalidParams.code)
-    })
+        test('rejects a proof where the signal is invalid', async () => {
+            // deep copy and make the signal invalid
+            const signalInvalidParamsForEth = JSON.parse(JSON.stringify(validParamsForEth))
+            signalInvalidParamsForEth.signal = '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
 
-    test('rejects a proof where the signal is invalid', async () => {
-        // deep copy and make the signal invalid
-        const signalInvalidParamsForEth = JSON.parse(JSON.stringify(validParamsForEth))
-        signalInvalidParamsForEth.signal = '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+            const resp = await post(1, 'mixer_mix_eth', signalInvalidParamsForEth)
 
-        const resp = await post(1, 'mixer_mix_eth', signalInvalidParamsForEth)
+            expect(resp.data.error.code).toEqual(errors.errorCodes.BACKEND_MIX_SIGNAL_INVALID)
+        })
+        test('rejects a proof where the signal hash is invalid', async () => {
+            // deep copy and make the signal hash invalid
+            const signalHashInvalidParamsForEth = JSON.parse(JSON.stringify(validParamsForEth))
+            signalHashInvalidParamsForEth.input[2] = '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
 
-        expect(resp.data.error.code).toEqual(errors.errorCodes.BACKEND_MIX_SIGNAL_INVALID)
-    })
+            const resp = await post(1, 'mixer_mix_eth', signalHashInvalidParamsForEth)
 
-    test('rejects a proof where the signal hash is invalid', async () => {
-        // deep copy and make the signal hash invalid
-        const signalHashInvalidParamsForEth = JSON.parse(JSON.stringify(validParamsForEth))
-        signalHashInvalidParamsForEth.input[2] = '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+            expect(resp.data.error.code).toEqual(errors.errorCodes.BACKEND_MIX_SIGNAL_HASH_INVALID)
+        })
 
-        const resp = await post(1, 'mixer_mix_eth', signalHashInvalidParamsForEth)
+        test('rejects a proof where both the signal and the signal hash are invalid', async () => {
+            // deep copy and make both the signal and the signal hash invalid
+            const signalAndSignalHashInvalidParamsForEth = JSON.parse(JSON.stringify(validParamsForEth))
+            signalAndSignalHashInvalidParamsForEth.signal = '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+            signalAndSignalHashInvalidParamsForEth.input[2] = '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
 
-        expect(resp.data.error.code).toEqual(errors.errorCodes.BACKEND_MIX_SIGNAL_HASH_INVALID)
-    })
+            const resp = await post(1, 'mixer_mix_eth', signalAndSignalHashInvalidParamsForEth)
 
-    test('rejects a proof where both the signal and the signal hash are invalid', async () => {
-        // deep copy and make both the signal and the signal hash invalid
-        const signalAndSignalHashInvalidParamsForEth = JSON.parse(JSON.stringify(validParamsForEth))
-        signalAndSignalHashInvalidParamsForEth.signal = '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
-        signalAndSignalHashInvalidParamsForEth.input[2] = '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+            expect(resp.data.error.code).toEqual(errors.errorCodes.BACKEND_MIX_SIGNAL_AND_SIGNAL_HASH_INVALID)
+        })
 
-        const resp = await post(1, 'mixer_mix_eth', signalAndSignalHashInvalidParamsForEth)
+        test('rejects a proof where the external nullifier is invalid', async () => {
+            // deep copy and make the external nullifier invalid
+            const externalNullifierInvalidParamsForEth = JSON.parse(JSON.stringify(validParamsForEth))
+            externalNullifierInvalidParamsForEth.input[3] = '0x0000000000000000000000000000000000000000'
 
-        expect(resp.data.error.code).toEqual(errors.errorCodes.BACKEND_MIX_SIGNAL_AND_SIGNAL_HASH_INVALID)
-    })
+            const resp = await post(1, 'mixer_mix_eth', externalNullifierInvalidParamsForEth)
 
-    test('rejects a proof where the external nullifier is invalid', async () => {
-        // deep copy and make the external nullifier invalid
-        const externalNullifierInvalidParamsForEth = JSON.parse(JSON.stringify(validParamsForEth))
-        externalNullifierInvalidParamsForEth.input[3] = '0x0000000000000000000000000000000000000000'
+            expect(resp.data.error.code).toEqual(errors.errorCodes.BACKEND_MIX_EXTERNAL_NULLIFIER_INVALID)
+        })
+    } else {
 
-        const resp = await post(1, 'mixer_mix_eth', externalNullifierInvalidParamsForEth)
 
-        expect(resp.data.error.code).toEqual(errors.errorCodes.BACKEND_MIX_EXTERNAL_NULLIFIER_INVALID)
-    })
+        test('rejects a proof where the signal is invalid', async () => {
+            // deep copy and make the signal invalid
+            const signalInvalidParamsForTokens = JSON.parse(JSON.stringify(validParamsForTokens))
+            signalInvalidParamsForTokens.signal = '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+
+            const resp = await post(1, 'mixer_mix_tokens', signalInvalidParamsForTokens)
+
+            expect(resp.data.error.code).toEqual(errors.errorCodes.BACKEND_MIX_SIGNAL_INVALID)
+        })
+        test('rejects a proof where the signal hash is invalid', async () => {
+            // deep copy and make the signal hash invalid
+            const signalHashInvalidParamsForTokens = JSON.parse(JSON.stringify(validParamsForTokens))
+            signalHashInvalidParamsForTokens.input[2] = '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+
+            const resp = await post(1, 'mixer_mix_tokens', signalHashInvalidParamsForTokens)
+
+            expect(resp.data.error.code).toEqual(errors.errorCodes.BACKEND_MIX_SIGNAL_HASH_INVALID)
+        })
+
+        test('rejects a proof where both the signal and the signal hash are invalid', async () => {
+            // deep copy and make both the signal and the signal hash invalid
+            const signalAndSignalHashInvalidParamsForTokens = JSON.parse(JSON.stringify(validParamsForTokens))
+            signalAndSignalHashInvalidParamsForTokens.signal = '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+            signalAndSignalHashInvalidParamsForTokens.input[2] = '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+
+            const resp = await post(1, 'mixer_mix_tokens', signalAndSignalHashInvalidParamsForTokens)
+
+            expect(resp.data.error.code).toEqual(errors.errorCodes.BACKEND_MIX_SIGNAL_AND_SIGNAL_HASH_INVALID)
+        })
+
+        test('rejects a proof where the external nullifier is invalid', async () => {
+            // deep copy and make the external nullifier invalid
+            const externalNullifierInvalidParamsForTokens = JSON.parse(JSON.stringify(validParamsForTokens))
+            externalNullifierInvalidParamsForTokens.input[3] = '0x0000000000000000000000000000000000000000'
+
+            const resp = await post(1, 'mixer_mix_tokens', externalNullifierInvalidParamsForTokens)
+
+            expect(resp.data.error.code).toEqual(errors.errorCodes.BACKEND_MIX_EXTERNAL_NULLIFIER_INVALID)
+        })
+    }
+
     if (!isETH){
         test('rejects a proof where the token fee is too low', async () => {
             // deep copy and make the fee too low
