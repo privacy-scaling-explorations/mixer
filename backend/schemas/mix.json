@@ -2,6 +2,8 @@
     "title": "mix",
     "decription": "Parameters for a request to the test mixer_mix JSON-RPC method",
     "required": [
+        "networkName",
+        "mixer",
         "signal",
         "a",
         "b",
@@ -12,6 +14,12 @@
     ],
     "additionalProperties": false,
     "properties": {
+        "networkName": {
+            "type": "string"
+        },
+        "mixer": {
+            "$ref": "#/definitions/address"
+        },
         "signal": {
             "$ref": "#/definitions/bytes32"
         },
@@ -64,4 +72,3 @@
         }
     }
 }
-

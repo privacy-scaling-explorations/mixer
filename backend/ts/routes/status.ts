@@ -6,7 +6,7 @@ import {ethers} from 'ethers'
 
 const _backendStatus = async (info) => {
 
-    const relayerAddress = await getRelayerAddress()
+    const relayerAddress = await getRelayerAddress(info.networkName)
 
     return {
         networkName: info.networkName,

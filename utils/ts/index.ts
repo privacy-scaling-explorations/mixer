@@ -7,6 +7,8 @@ const hexify = (n: BigInt) => {
 }
 
 const genMixParams = (
+    networkName: string,
+    mixerAddress: string,
     signal: string,
     proof: any,
     recipientAddress: string,
@@ -14,6 +16,8 @@ const genMixParams = (
     publicSignals: BigInt[],
 ) => {
     return {
+        networkName: networkName,
+        mixer: mixerAddress,
         signal,
         a: proof.pi_a.slice(0, 2).map(hexify),
         b: [

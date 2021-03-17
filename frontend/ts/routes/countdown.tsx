@@ -210,6 +210,8 @@ export default () => {
                 }
 
                 params = genMixParams(
+                    network,
+                    mixerAddress,
                     result.signal,
                     proof,
                     recipientAddress,

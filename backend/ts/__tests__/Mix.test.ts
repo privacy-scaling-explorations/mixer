@@ -27,6 +27,7 @@ import {
 } from '../utils/configBackend'
 
 import {
+    network,
     isETH,
     mixAmt,
     tokenDecimals,
@@ -129,7 +130,7 @@ describe('the mixer_mix_eth API call', () => {
     if (isETH){
         test('accepts a valid proof to mix ETH and credits the recipient', async () => {
             // generate an identityCommitment
-            const relayerAddress = await getRelayerAddress()
+            const relayerAddress = await getRelayerAddress(network)
             const identity = genIdentity()
             const identityCommitment = genIdentityCommitment(identity)
 
@@ -174,6 +175,8 @@ describe('the mixer_mix_eth API call', () => {
             expect(isVerified).toBeTruthy()
 
             const params = genMixParams(
+                network,
+                mixerAddress,
                 signal,
                 proof,
                 recipientAddress,
@@ -211,7 +214,7 @@ describe('the mixer_mix_eth API call', () => {
         })
     }else{
         test('accepts a valid proof to mix tokens and credits the recipient', async () => {
-            const relayerAddress = await getRelayerAddress()
+            const relayerAddress = await getRelayerAddress(network)
             const expectedTokenAmtToReceive = mixAmt - feeAmt
             // mint tokens for the sender
             await tokenContract.mint(
@@ -268,6 +271,8 @@ describe('the mixer_mix_eth API call', () => {
             const isVerified = verifyProof(verifyingKey, proof, publicSignals)
             expect(isVerified).toBeTruthy()
             const params = genMixParams(
+                network,
+                mixerAddress,
                 signal,
                 proof,
                 recipientAddress,

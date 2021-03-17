@@ -37,7 +37,11 @@ const tokenAddress = deployedAddressesToken.Token
 const mixerAddress = deployedAddressesToken.Mixer
 const semaphoreAddress = deployedAddressesToken.Semaphore
 
-const getRelayerAddress = async () => {
+const getRelayerAddress = async (network) => {
+
+    const configNetwork = configMixer.network[network]
+    const privateKeysPath = configNetwork.privateKeysPath
+
     const hotWalletPrivKey = require("../" + privateKeysPath)
 
     const wallet = new ethers.Wallet(
@@ -45,6 +49,65 @@ const getRelayerAddress = async () => {
     )
 
     return await wallet.getAddress()
+}
+
+const getRelayerWallet = async (network) => {
+
+    const configNetwork = configMixer.network[network]
+    const privateKeysPath = configNetwork.privateKeysPath
+    const chainId = configNetwork.chainId
+    const chainUrl = configNetwork.url
+
+    const hotWalletPrivKey = require("../" + privateKeysPath)
+
+    const provider = new ethers.providers.JsonRpcProvider(
+        chainUrl,
+        chainId,
+    )
+
+    const wallet = new ethers.Wallet(
+        hotWalletPrivKey[1],
+        provider,
+    )
+
+    return await wallet
+}
+
+const getMixerInfo = async (network, mixer) => {
+
+    const configNetwork = configMixer.network[network]
+
+    const deployedAddressesNetwork = deployedAddresses[network]
+
+    for (let configTokenName of Object.keys(configNetwork.token)) {
+
+        const deployedAddressesToken = deployedAddressesNetwork.token[token]
+
+        const mixerAddress = deployedAddressesToken.Mixer
+
+        if (mixerAddress == mixer){
+            const configToken = configNetwork.token[token]
+            const semaphoreAddress = deployedAddressesToken.Semaphore
+            const feeAmt = configToken.feeAmt
+            const gasPrice = configNetwork.gasPrice
+            const gasLimitMix = configMixer.chain.gasLimit.mix
+            return {
+                feeAmt: feeAmt,
+                gasPrice: gasPrice,
+                gasLimitMix: gasLimitMix,
+                mixerAddress: mixerAddress,
+                semaphoreAddress: semaphoreAddress,
+            }
+        }
+
+    }
+    return {
+        feeAmt: null,
+        gasPrice: null,
+        gasLimitMix: null,
+        mixerAddress: null,
+        semaphoreAddress: null,
+    }
 }
 
 export {
@@ -57,6 +120,7 @@ export {
     gasLimitMix,
     gasPrice,
     getRelayerAddress,
+    getRelayerWallet,
     relayerRegistryAddress,
     mixerAddress,
     tokenAddress,
@@ -64,4 +128,6 @@ export {
     //TODO to fix
     privateKeysPath,
     hotWalletPrivKeyPath,
+    network,
+    getMixerInfo,
 }

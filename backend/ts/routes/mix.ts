@@ -10,16 +10,8 @@ import {
 } from '../utils/configBackend'
 
 import {
-    privateKeysPath,
-    feeAmt,
-    chainId,
-    chainUrl,
-    gasPrice,
-    gasLimitMix,
-    mixerAddress,
-    semaphoreAddress,
-    relayerRegistryAddress,
-    getRelayerAddress,
+    getMixerInfo,
+    getRelayerWallet,
 } from '../utils/configBackendNetwork'
 
 import { getContract, getAbi } from 'mixer-contracts'
@@ -32,13 +24,12 @@ import {
 import * as Locker from 'node-etcd-lock'
 import { genValidator } from './utils'
 
-console.log("mix privKeyPath", privateKeysPath)
-
-const hotWalletPrivKey = require("../" + privateKeysPath)
 
 const verificationKey = require('@mixer-backend/verification_key.json')
 
 interface DepositProof {
+    networkName: string
+    mixer: string
     signal: string
     a: string[]
     b: string[][]
@@ -52,15 +43,33 @@ const areEqualAddresses = (a: string, b: string) => {
     return BigInt(a) === BigInt(b)
 }
 
-// This operator accepts a fee that is large enough
-const operatorFeeWei = ethers.utils.parseUnits(feeAmt.toString(), 'ether')
-const operatorFeeTokens = feeAmt
-
 const _mixRoute = (forTokens: boolean) => async (
     depositProof: DepositProof,
 ) => {
 
-    const relayerAddress = await getRelayerAddress()
+
+    //const relayerAddress = await getRelayerAddress(depositProof.networkName)
+
+    const wallet = await getRelayerWallet(depositProof.networkName)
+
+    const relayerAddress = await wallet.getAddress()
+
+    const provider = wallet.provider
+
+    const {
+        feeAmt,
+        gasPrice,
+        gasLimitMix,
+        mixerAddress,
+        semaphoreAddress,
+    } = await getMixerInfo(
+        depositProof.networkName,
+        depositProof.mixer,
+    )
+
+    // This operator accepts a fee that is large enough
+    const operatorFeeWei = ethers.utils.parseUnits(feeAmt.toString(), 'ether')
+    const operatorFeeTokens = feeAmt
 
     const publicInputs = depositProof.input.map(BigInt)
 
@@ -194,23 +203,13 @@ const _mixRoute = (forTokens: boolean) => async (
         }
     }
 
-    const provider = new ethers.providers.JsonRpcProvider(
-        chainUrl,
-        chainId,
-    )
-
-    const wallet = new ethers.Wallet(
-        hotWalletPrivKey[1],
-        provider,
-    )
-
     // TODO: check whether the contract has been deployed
     // Best to do this on server startup
 
     const mixerContract = getContract(
         'Mixer',
         wallet,
-        mixerAddress,
+        depositProof.mixer,
     )
 
     const mixerAbi = getAbi(
