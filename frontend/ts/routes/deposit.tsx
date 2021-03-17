@@ -122,7 +122,7 @@ export default () => {
         setErc20ApproveTxStatus(TxStatuses.Pending)
 
         approveTokens(context.provider, tokenAllowanceNeeded * (10 ** tokenDecimals))
-            .then(async (tx) => {await tx; setErc20ApproveTxStatus(TxStatuses.Mined)})
+            .then(async (tx) => {await tx.wait(); setErc20ApproveTxStatus(TxStatuses.Mined)})
             .catch((err) => {console.log(err); setErc20ApproveTxStatus(TxStatuses.Err)})
     }
 
@@ -182,11 +182,9 @@ export default () => {
     }
 
     const checkBalances = () => {
-        console.log("mixAmt", mixAmt)
         if (mixAmt && networkInfo.address ) {
             const minAmt = isETH ? mixAmt + operatorFee : operatorFee
             if (networkInfo.balance) {
-                console.log("minAmt", minAmt)
                 enoughEth = networkInfo.balance >= minAmt
             }
             if (!isETH) {
@@ -228,16 +226,13 @@ export default () => {
         setTokenType(t)
     }
 
-
-
+    /*
     console.log("deposit redraw ",
         "ETH : ", networkInfo.balance,
         "TOKEN : ", networkInfo.tokenBalance,
         "Allowance : ", networkInfo.allowance
     )
-
-
-
+    */
     //return (<div>{networkInfo.balance} ETH, {networkInfo.tokenBalance} TOKEN, Allowance {tokenAllowanceNeeded} TOKEN</div>)
 
     return (

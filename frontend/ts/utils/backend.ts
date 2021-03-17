@@ -12,7 +12,7 @@ const getBackendStatus = async (networkName) => {
         params,
     }
 
-    console.log("request:", request.toString(), request)
+    //console.log("request:", request.toString(), request)
 
     const response = await fetch(
         '/api',
@@ -28,7 +28,7 @@ const getBackendStatus = async (networkName) => {
     try{
         const responseJson = await response.json()
         if (responseJson.result) {
-            console.log("Serveur Relayer Address", responseJson.result.address)
+            //console.log("Serveur Relayer Address", responseJson.result.address)
             result = responseJson.result
         } else if (responseJson.error && responseJson.error.code && responseJson.error.message){
             console.log(responseJson.error)

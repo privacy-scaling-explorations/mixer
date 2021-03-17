@@ -123,8 +123,6 @@ const _mixRoute = (forTokens: boolean) => async (
         depositProof.fee,
     )
 
-    console.log("Signal", signal, depositProof.recipientAddress, relayerAddress, depositProof.fee)
-
     const signalHash = keccak256HexToBigInt(signal)
 
     const signalHashInvalid = '0x' + signalHash.toString(16) !== depositProof.input[2]
