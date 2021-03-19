@@ -149,7 +149,7 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
               let mimcContract
               let mixerContract
               let semaphoreContract
-              let relayerRegistryContract
+              let forwarderContract
               let tokenContract
               let externalNullifier : string
 
@@ -167,7 +167,7 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
                       )
 
                       expect(contracts).toBeTruthy()
-                      relayerRegistryContract = contracts.relayerRegistryContract
+                      forwarderContract = contracts.forwarderContract
                       mimcContract = contracts.mimcContract
                       tokenContract = contracts.tokenContract
                       semaphoreContract = contracts.semaphoreContract
@@ -175,7 +175,7 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
                       expect(mimcContract).toBeTruthy()
                       //expect(semaphoreContract).toBeTruthy()
                       expect(mixerContract).toBeTruthy()
-                      expect(relayerRegistryContract).toBeTruthy()
+                      expect(forwarderContract).toBeTruthy()
                       if (isETH){
                           expect(tokenContract).not.toBeTruthy()
                       }else{
@@ -212,7 +212,7 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
                       expect(ethers.utils.isAddress(mimcContract.address)).toBeTruthy()
                       //expect(ethers.utils.isAddress(semaphoreContract.address)).toBeTruthy()
                       expect(ethers.utils.isAddress(mixerContract.address)).toBeTruthy()
-                      expect(ethers.utils.isAddress(relayerRegistryContract.address)).toBeTruthy()
+                      expect(ethers.utils.isAddress(forwarderContract.address)).toBeTruthy()
 
                   })
 
@@ -417,7 +417,7 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
                           relayerBalanceBefore = ethers.BigNumber.from(await wallet.provider.getBalance(relayerAddress))
 
                           mixTx = await mix(
-                              relayerRegistryContract,
+                              forwarderContract,
                               mixerContract,
                               signal,
                               proof,
@@ -432,7 +432,7 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
                           relayerBalanceBefore = ethers.BigNumber.from(await tokenContract.balanceOf(relayerAddress))
 
                           mixTx = await mixERC20(
-                              relayerRegistryContract,
+                              forwarderContract,
                               mixerContract,
                               signal,
                               proof,

@@ -14,6 +14,8 @@ const Mixer = require('@mixer-contracts/compiled/Mixer.json')
 const MixerRegistry = require('@mixer-contracts/compiled/MixerRegistry.json')
 const RelayerRegistry = require('@mixer-contracts/compiled/RelayerRegistry.json')
 const SemaphoreLibrary = require('@mixer-contracts/compiled/SemaphoreLibrary.json')
+const Forwarder = require('@mixer-contracts/compiled/Forwarder.json')
+const Registry = require('@mixer-contracts/compiled/Registry.json')
 
 const deployContract = async (wallet, contract, ...args: any[]) => {
     let factory = new ethers.ContractFactory(
@@ -157,6 +159,38 @@ const deployAllContracts = async (
     } else {
         console.log('Deploying Relayer Registry')
         relayerRegistryContract = await deployContractTryCatch(wallet, RelayerRegistry)
+    }
+
+    //forwarder contract
+    let forwarderContract
+    if (deployedAddressesNetwork && deployedAddressesNetwork.hasOwnProperty('Forwarder')){
+        console.log('Forwarder already deployed')
+        forwarderContract = new ethers.Contract(
+                deployedAddressesNetwork.Forwarder,
+                Forwarder.abi,
+                wallet,
+            )
+    } else {
+        console.log('Deploying Forwarder')
+        forwarderContract = await deployContractTryCatch(wallet, Forwarder)
+    }
+
+    //forwarder contract
+    let registryContract
+    if (deployedAddressesNetwork && deployedAddressesNetwork.hasOwnProperty('Registry')){
+        console.log('Registry already deployed')
+        registryContract = new ethers.Contract(
+                deployedAddressesNetwork.Registry,
+                Registry.abi,
+                wallet,
+            )
+    } else {
+        console.log('Deploying Registry')
+        registryContract = await deployContractTryCatch(
+            wallet,
+            Registry,
+            forwarderContract.address,
+        )
     }
 
     //mimc contract
@@ -306,7 +340,6 @@ const deployAllContracts = async (
 
             }
             if (mixerAddress){
-                console.log(mixerAddress)
                 mixerContract = new ethers.Contract(
                     mixerAddress,
                     Mixer.abi,
@@ -396,6 +429,8 @@ const deployAllContracts = async (
         mixerContract,
         mixerRegistryContract,
         semaphoreLibraryContract,
+        forwarderContract,
+        registryContract,
     }
 }
 
@@ -483,6 +518,8 @@ const main = async () => {
                     mixerContract,
                     mixerRegistryContract,
                     semaphoreLibraryContract,
+                    forwarderContract,
+                    registryContract,
                 } = await deployAllContracts(
                     wallet,
                     configNetwork,
@@ -499,6 +536,13 @@ const main = async () => {
 
                 if (semaphoreLibraryContract)
                     deployedAddressesNetwork.SemaphoreLibrary = semaphoreLibraryContract.address
+
+                if (forwarderContract)
+                    deployedAddressesNetwork.Forwarder = forwarderContract.address
+
+                if (registryContract)
+                    deployedAddressesNetwork.Registry = registryContract.address
+
 
                 if (configTokenName){
                     if (semaphoreContract){

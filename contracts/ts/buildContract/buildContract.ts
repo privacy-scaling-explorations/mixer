@@ -277,7 +277,7 @@ const inputSurrogethForwarder = {
     settings: {
         outputSelection: {
             '*': {
-                'Registry': [ 'evm.bytecode.object', 'abi']
+                'Forwarder': [ 'evm.bytecode.object', 'abi']
             }
         }
     }

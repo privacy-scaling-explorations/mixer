@@ -63,6 +63,7 @@ const _mixRoute = (forTokens: boolean) => async (
         tokenDecimals,
         mixerAddress,
         semaphoreAddress,
+        forwarderAddress,
     } = await getMixerInfo(
         depositProof.networkName,
         depositProof.mixer,
@@ -222,17 +223,17 @@ const _mixRoute = (forTokens: boolean) => async (
         semaphoreAddress,
         'Semaphore',
     )
-    /*
-    const relayerRegistryContract = getContract(
-        'RelayerRegistry',
+
+    const forwarderContract = getContract(
+        'Forwarder',
         wallet,
-        relayerRegistryAddress,
+        forwarderAddress,
     )
 
-    const relayerRegistryAbi = getAbi(
-        'RelayerRegistry',
+    const forwarderAbi = getAbi(
+        'Forwarder',
     )
-    */
+
     const etcdAddress = etcdHost + ':' + etcdPort
 
     // TODO: handle the case if etcd isn't working
@@ -297,15 +298,16 @@ const _mixRoute = (forTokens: boolean) => async (
             depositProof.fee,
             relayerAddress])
     }
-    /*
-    const relayerRegistryIface = new ethers.utils.Interface(relayerRegistryAbi)
-    const relayCallData = iface.encodeFunctionData("relayCall",
+
+    const forwarderIface = new ethers.utils.Interface(forwarderAbi)
+    const relayCallData = forwarderIface.encodeFunctionData("relayCall",
         [
             mixerContractAddress,
             mixCallData
         ],
     )
-    */
+
+    /*
     const unsignedTx = {
         to: mixerContractAddress,
         value: 0,
@@ -314,14 +316,16 @@ const _mixRoute = (forTokens: boolean) => async (
         gasPrice: gasPrice,
         gasLimit: gasLimitMix,
     }
-    //const unsignedTx = {
-        //to: relayerRegistryContract.address,
-        //value: 0,
-        //data: relayCallData,
-        //nonce,
-        //gasPrice: gasPrice,
-        //gasLimit: gasLimitMix,
-    //}
+    */
+
+    const unsignedTx = {
+        to: forwarderAddress,
+        value: 0,
+        data: relayCallData,
+        nonce,
+        gasPrice: gasPrice,
+        gasLimit: gasLimitMix,
+    }
 
     // Sign the transaction
     const signedData = await wallet.signTransaction(unsignedTx)

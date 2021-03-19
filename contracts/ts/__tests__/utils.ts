@@ -11,7 +11,7 @@ const path = require('path');
 const Mixer = require('@mixer-contracts/compiled/Mixer.json')
 
 const mix = async (
-    relayerRegistryContract,
+    forwarderContract,
     mixerContract,
     signal,
     proof,
@@ -38,7 +38,7 @@ const mix = async (
 	depositProof.fee,
 	relayerAddress])
 
-    return relayerRegistryContract.relayCall(
+    return forwarderContract.relayCall(
         mixerContract.address,
         callData,
         { gasLimit: 1000000 }
@@ -52,7 +52,7 @@ const mix = async (
 }
 
 const mixERC20 = async (
-    relayerRegistryContract,
+    forwarderContract,
     mixerContract,
     signal,
     proof,
@@ -79,7 +79,7 @@ const mixERC20 = async (
 	depositProof.fee,
 	relayerAddress])
 
-    return relayerRegistryContract.relayCall(
+    return forwarderContract.relayCall(
         mixerContract.address,
         callData,
         { gasLimit: 1000000 },

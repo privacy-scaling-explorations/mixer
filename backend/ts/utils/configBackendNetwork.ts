@@ -97,6 +97,7 @@ const getMixerInfo = async (network, mixer) => {
         const mixerAddress = deployedAddressesToken.Mixer
 
         if (mixerAddress == mixer){
+            const forwarderAddress = deployedAddressesNetwork.Forwarder
             const configToken = configNetwork.token[configTokenName]
             const semaphoreAddress = deployedAddressesToken.Semaphore
             const feeAmt = configToken.feeAmt
@@ -115,6 +116,7 @@ const getMixerInfo = async (network, mixer) => {
                 tokenDecimals: tokenDecimals,
                 mixerAddress: mixerAddress,
                 semaphoreAddress: semaphoreAddress,
+                forwarderAddress: forwarderAddress,
             }
         }
 

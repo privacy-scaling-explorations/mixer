@@ -34,7 +34,7 @@ import {
 import { post } from './utils'
 
 const network = 'ganache'
-const token = 'tkn'
+const token = 'eth'
 
 const {
     isETH,
@@ -194,7 +194,7 @@ describe('the mixer_mix_eth API call', () => {
 
             validParamsForEth = params
 
-            console.log("validParamsForEth", validParamsForEth)
+            //console.log("validParamsForEth", validParamsForEth)
 
             recipientBalanceBefore = await provider.getBalance(recipientAddress)
 
