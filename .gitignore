@@ -53,3 +53,4 @@ frontend/compiled/
 config/local-test.yaml
 contracts/test.log
 backend/ganachePrivateKeys.json
+surrogeth/surrogethd/.env

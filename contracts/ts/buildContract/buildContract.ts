@@ -6,6 +6,8 @@ const fse = require('fs-extra');
 import buildMiMC from './buildMiMC'
 
 const semaphorePath = '../semaphore/semaphorejs/contracts/'
+const surrogethPath = '../surrogeth/registry/contracts/'
+const surrogethOpenzeppelinPath = '../surrogeth/registry/node_modules/openzeppelin-solidity/contracts/'
 const solidityPath = 'solidity/'
 
 const compileInput = (input, outputPath : string) => {
@@ -236,6 +238,51 @@ const inputToken = {
 }
 
 
+const inputSurrogethRegistry = {
+    language: 'Solidity',
+    sources: {
+        'Registry.sol': {
+            content: loadContract(surrogethPath + 'Registry.sol'),
+        },
+    },
+    settings: {
+        outputSelection: {
+            '*': {
+                'Registry': [ 'evm.bytecode.object', 'abi']
+            }
+        }
+    }
+}
+
+const inputSurrogethForwarder = {
+    language: 'Solidity',
+    sources: {
+        'Registry.sol': {
+            content: loadContract(surrogethPath + 'Registry.sol'),
+        },
+        'Forwarder.sol': {
+            content: loadContract(surrogethPath + 'Forwarder.sol'),
+        },
+        'openzeppelin-solidity/contracts/math/SafeMath.sol': {
+            //content: loadContract(surrogethOpenzeppelinPath + 'math/SafeMath.sol'),
+            content: loadContract(solidityPath + 'openzeppelin/SafeMath.sol'),
+        },
+        'openzeppelin-solidity/contracts/ownership/Ownable.sol': {
+            //content: loadContract(surrogethOpenzeppelinPath + 'access/Ownable.sol'),
+            content: loadContract(semaphorePath + 'Ownable.sol'),
+        },
+
+
+    },
+    settings: {
+        outputSelection: {
+            '*': {
+                'Registry': [ 'evm.bytecode.object', 'abi']
+            }
+        }
+    }
+}
+
 
 const inputRelayerRegistry = {
     language: 'Solidity',
@@ -268,6 +315,8 @@ const main = async () => {
 
     buildMiMC(outputPath)
     //compileInput(inputMiMC, outputPath)
+    compileInput(inputSurrogethRegistry, outputPath)
+    compileInput(inputSurrogethForwarder, outputPath)
     compileInput(inputSemaphoreLibrary, outputPath)
     compileInput(inputMixerRegistry, outputPath)
     compileInput(inputSemaphore, outputPath)
