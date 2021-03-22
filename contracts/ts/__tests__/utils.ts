@@ -5,6 +5,7 @@ import {
     genCircuit,
     parseVerifyingKeyJson,
 } from 'libsemaphore'
+import { SurrogethClient } from "surrogeth-client"
 const fs = require('fs');
 const path = require('path');
 
@@ -19,6 +20,7 @@ const mix = async (
     recipientAddress,
     feeAmt,
     relayerAddress,
+    functionName,
 ) => {
     const depositProof = genDepositProof(
         signal,
@@ -28,7 +30,7 @@ const mix = async (
         feeAmt,
     )
     const iface = new ethers.utils.Interface(Mixer.abi)
-    const callData = iface.encodeFunctionData("mix", [
+    const callData = iface.encodeFunctionData(functionName, [
 	depositProof.signal,
 	depositProof.a,
 	depositProof.b,
@@ -51,16 +53,137 @@ const mix = async (
     //)
 }
 
-const mixERC20 = async (
-    forwarderContract,
-    mixerContract,
+const buildRawTx = async (
+    to,
+    wallet,
+    value,
+    chainId,
+) => {
+    const gasLimit = ethers.utils.hexlify(21000)
+    const gasPrice = await wallet.provider.getGasPrice()
+    const txCount = await wallet.provider.getTransactionCount(wallet.address)
+    // build the transaction
+    const txRequest = {
+        to: to,
+        from: wallet.address,
+        nonce: ethers.utils.hexlify(txCount),
+        gasLimit: gasLimit,
+        gasPrice: gasPrice,
+        data: null,
+        value: value,
+        //Just for testing
+        chainId: chainId,
+    }
+
+    return await wallet.signTransaction(txRequest)
+}
+
+const surrogetSubmitTx = async (
+    wallet,
+    registryContractAddress,
+    to,
+    data,
+    value : ethers.BigNumber,
+    relayer,
+) => {
+    const network = "LOCAL"
+    const protocol = "http"
+
+    const Registry = require('@mixer-contracts/compiled/Registry.json')
+
+    const client = new SurrogethClient(
+        wallet,
+        network, // "KOVAN" || "MAINNET"
+        registryContractAddress, // defaults to current deployment on specified network
+        Registry.abi,
+        protocol // "https" || "http"
+    )
+
+    const valueStr = value.toString()
+
+    const tx = { to, data, value: valueStr }
+
+    try {
+        const result = await client.submitTx(tx, relayer)
+        console.log(result)
+    } catch (error) {
+        console.log(error)
+        throw error
+    }
+
+}
+
+const surrogetGetBroadcaster = async (
+    wallet,
+    registryContractAddress,
+) => {
+    const network = "LOCAL"
+    const protocol = "http"
+
+    const Registry = require('@mixer-contracts/compiled/Registry.json')
+
+
+    const client = new SurrogethClient(
+        wallet,
+        network, // "KOVAN" || "MAINNET"
+        registryContractAddress, // defaults to current deployment on specified network
+        Registry.abi,
+        protocol // "https" || "http"
+    )
+
+    //console.log("client", client)
+
+    //console.log(JSON.stringify(Registry.abi, null, 2))
+
+    let relayers = await client.getBroadcasters(
+        1,
+        //new Set([]), // don't ignore any addresses
+        new Set(["ip"]) // only return relayers with an IP address
+    )
+
+    console.log("relayers", relayers)
+
+    if (!relayers.length){
+
+        console.log("Set default relayer locator")
+
+        await client.setIPRelayerLocator("127.0.0.1:8080")
+
+        relayers = await client.getBroadcasters(
+            1,
+            //new Set([]), // don't ignore any addresses
+            new Set(["ip"]) // only return relayers with an IP address
+        )
+    }
+
+    if (relayers.length > 0) {
+        const fee = await client.getAvgFee(relayers[0])
+
+        console.log("fee", fee)
+
+        // ... construct transaction using fee -> tx: {to, data, value}. If this tx is to be used in the burn
+        // registry, it *must* be sent to the deployed RelayerForwarder contract
+
+        //const txHash = await client.submitTx(tx, relayers[0]);
+        return relayers[0]
+    }
+
+    return null;
+
+}
+
+const surrogethMix = async (
+    wallet,
+    registryContractAddress,
     signal,
     proof,
     publicSignals,
     recipientAddress,
     feeAmt,
     relayerAddress,
+    functionName,
 ) => {
+
     const depositProof = genDepositProof(
         signal,
         proof,
@@ -68,8 +191,9 @@ const mixERC20 = async (
         recipientAddress,
         feeAmt,
     )
+
     const iface = new ethers.utils.Interface(Mixer.abi)
-    const callData = iface.encodeFunctionData("mixERC20", [
+    const callData = iface.encodeFunctionData(functionName, [
 	depositProof.signal,
 	depositProof.a,
 	depositProof.b,
@@ -79,12 +203,13 @@ const mixERC20 = async (
 	depositProof.fee,
 	relayerAddress])
 
-    return forwarderContract.relayCall(
-        mixerContract.address,
-        callData,
-        { gasLimit: 1000000 },
+    await surrogetGetBroadcaster(
+        wallet,
+        registryContractAddress,
     )
+
 }
+
 
 const genDepositProof = (
     signal,
@@ -216,7 +341,10 @@ export {
     genDepositProof,
     areEqualAddresses,
     mix,
-    mixERC20,
+    surrogethMix,
+    surrogetGetBroadcaster,
     getSnarks,
     addressInfo,
+    buildRawTx,
+    surrogetSubmitTx,
 }

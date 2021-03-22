@@ -145,8 +145,6 @@ const deployAllContracts = async (
     deployedAddressesToken,
 ) => {
 
-
-
     //relay registry contract
     let relayerRegistryContract
     if (deployedAddressesNetwork && deployedAddressesNetwork.hasOwnProperty('RelayerRegistry')){

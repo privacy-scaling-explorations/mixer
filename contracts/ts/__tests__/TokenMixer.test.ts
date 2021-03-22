@@ -9,11 +9,15 @@ import {
     performeDeposit,
     checkErrorReason,
     mix,
-    mixERC20,
+    surrogethMix,
+    surrogetGetBroadcaster,
     genDepositProof,
     areEqualAddresses,
     getSnarks,
     addressInfo,
+    buildRawTx,
+    surrogetSubmitTx,
+
 } from './utils'
 
 import { sleep } from 'mixer-utils'
@@ -151,6 +155,7 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
               let semaphoreContract
               let forwarderContract
               let tokenContract
+              let registryContract
               let externalNullifier : string
 
 
@@ -172,7 +177,9 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
                       tokenContract = contracts.tokenContract
                       semaphoreContract = contracts.semaphoreContract
                       mixerContract = contracts.mixerContract
+                      registryContract = contracts.registryContract
                       expect(mimcContract).toBeTruthy()
+                      expect(registryContract).toBeTruthy()
                       //expect(semaphoreContract).toBeTruthy()
                       expect(mixerContract).toBeTruthy()
                       expect(forwarderContract).toBeTruthy()
@@ -407,7 +414,7 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
                       )
                       //console.log(preBroadcastChecked)
                       //todo fix
-		      //expect(preBroadcastChecked).toBeTruthy()
+                      expect(preBroadcastChecked).toBeTruthy()
 
                       let mixTx
 
@@ -425,13 +432,14 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
                               recipientAddress,
                               feeAmt,
                               relayerAddress,
+                              "mix",
                           )
                       } else {
 
                           recipientBalanceBefore = ethers.BigNumber.from(await tokenContract.balanceOf(recipientAddress))
                           relayerBalanceBefore = ethers.BigNumber.from(await tokenContract.balanceOf(relayerAddress))
 
-                          mixTx = await mixERC20(
+                          mixTx = await mix(
                               forwarderContract,
                               mixerContract,
                               signal,
@@ -440,6 +448,7 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
                               recipientAddress,
                               feeAmt,
                               relayerAddress,
+                              "mixERC20",
                           )
                       }
 
@@ -461,6 +470,34 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
                       recipientBalanceDiff = recipientBalanceAfter.sub(recipientBalanceBefore)
                       expect(recipientBalanceDiff.add(feeAmt).eq(mixAmtToken)).toBeTruthy()
                   })
+
+                  it('should get surrogeth broadcaster', async () => {
+                      const broadcaster = await surrogetGetBroadcaster(
+                          wallet,
+                          registryContract.address)
+                      console.log("broadcaster", broadcaster)
+                      expect(broadcaster).toBeTruthy()
+
+                      const to = recipientAddress
+                      const value = ethers.utils.parseEther("0.01").toHexString()
+                      const value2 = ethers.utils.parseEther("0.02")
+                      const data = await buildRawTx(
+                          to,
+                          wallet,
+                          value,
+                          configNetwork.chainId,
+
+                      )
+                      await surrogetSubmitTx(
+                          wallet,
+                          registryContract.address,
+                          to,
+                          data,
+                          value2,
+                          broadcaster,
+                      )
+                  })
+
               })
           })
       }
