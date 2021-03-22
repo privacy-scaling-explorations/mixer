@@ -20,7 +20,7 @@ const AboutRoute = () => {
 
     useEffect(() => {
         getBackendStatus(network).then((result) => {
-            console.log(result)
+            //console.log(result)
             setRelayerAddress(result.address)
         })
     })

@@ -151,7 +151,6 @@ export default () => {
                 progress('Generating witness...')
                 let result
                 try {
-                    console.log("signal", recipientAddress, relayerAddress, feeAmt)
                     result = await genMixerWitness(
                         circuit,
                         identity,
@@ -235,7 +234,7 @@ export default () => {
             }
 
             progress('Sending JSON-RPC call to the relayer...')
-            console.log("request:", request.toString(), request)
+            //console.log("request:", request.toString(), request)
 
             const response = await fetch(
                 '/api',
@@ -248,14 +247,19 @@ export default () => {
                 },
             )
 
-            const responseJson = await response.json()
-            if (responseJson.result) {
+            let responseJson
+            try{
+                responseJson = await response.json()
+            }catch(err){
+                console.error(err)
+            }
+            if (responseJson && responseJson.result) {
                 progress('')
                 setTxHash(responseJson.result.txHash)
                 console.log("json to serveur", responseJson.result.txHash)
                 updateWithdrawTxHash(identityStored, responseJson.result.txHash)
 
-                await sleep(4000)
+                //await sleep(4000)
 
                 if (isETH) {
                     const recipientBalanceAfter = await provider.getBalance(recipientAddress)
@@ -265,11 +269,11 @@ export default () => {
                     console.log('The recipient now has', recipientBalanceAfter.toString(), 'tokens')
                 }
 
-            } else if (responseJson.error && responseJson.error.data && responseJson.error.data.name === 'BACKEND_MIX_PROOF_PRE_BROADCAST_INVALID') {
+            } else if (responseJson && responseJson.error && responseJson.error.data && responseJson.error.data.name === 'BACKEND_MIX_PROOF_PRE_BROADCAST_INVALID') {
                 throw {
                     code: ErrorCodes.PRE_BROADCAST_CHECK_FAILED
                 }
-            } else if (responseJson.error && responseJson.error.code && responseJson.error.message){
+            } else if (responseJson && responseJson.error && responseJson.error.code && responseJson.error.message){
                 console.log(responseJson.error)
                 setErrorMsg('Server error : ' + responseJson.error.code + ' : ' + responseJson.error.message)
             } else {

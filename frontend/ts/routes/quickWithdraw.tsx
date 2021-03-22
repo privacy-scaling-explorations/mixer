@@ -120,11 +120,7 @@ export default () => {
 
             progress('Downloading leaves...')
 
-            console.log("mixerContract", mixerContract)
-
             const leaves = await mixerContract.getLeaves()
-
-            console.log("leaves", leaves)
 
             const pubKey = genPubKey(identityStored.privKey)
 

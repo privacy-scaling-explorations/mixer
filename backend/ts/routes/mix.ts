@@ -331,12 +331,14 @@ const _mixRoute = (forTokens: boolean) => async (
     const signedData = await wallet.signTransaction(unsignedTx)
 
     // Send the transaction but don't wait for it to be mined
-    const tx = provider.sendTransaction(signedData)
+    const tx = await provider.sendTransaction(signedData)
 
     // Release the lock so other running instances of this function can
     // get the nonce and send their own tx
     await lock.unlock()
 
+
+    /*
     tx.then((_) => {
         // TODO: figure out what to do for successful txes - if even necessary
     })
@@ -344,8 +346,11 @@ const _mixRoute = (forTokens: boolean) => async (
     tx.catch((_) => {
         // TODO: figure out what to do for failed txes - if even necessary
     })
+    */
 
     const txHash = ethers.utils.keccak256(signedData)
+
+    await provider.waitForTransaction(txHash)
 
     return {
         txHash,

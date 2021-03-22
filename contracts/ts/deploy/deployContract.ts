@@ -191,6 +191,9 @@ const deployAllContracts = async (
             Registry,
             forwarderContract.address,
         )
+        console.log('Set forwarder registery')
+        let tx = await forwarderContract.setReputation(registryContract.address)
+        await tx.wait()
     }
 
     //mimc contract

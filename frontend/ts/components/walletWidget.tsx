@@ -46,7 +46,7 @@ const WalletWidget = () => {
 
     const render = () => {
 
-        console.log("Wallet Render " , address, networkChainId)
+        //console.log("Wallet Render " , address, networkChainId)
 
 
         if (!window.hasOwnProperty('ethereum')) {
