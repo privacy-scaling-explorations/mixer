@@ -175,8 +175,12 @@ const surrogetGetBroadcaster = async (
 }
 
 const surrogethMix = async (
+    network,
     wallet,
     registryContractAddress,
+    relayer,
+    forwarderContract,
+    mixerContract,
     signal,
     proof,
     publicSignals,
@@ -185,6 +189,8 @@ const surrogethMix = async (
     relayerAddress,
     functionName,
 ) => {
+
+    const Forwarder = require('@mixer-contracts/compiled/Forwarder.json')
 
     const depositProof = genDepositProof(
         signal,
@@ -195,7 +201,7 @@ const surrogethMix = async (
     )
 
     const iface = new ethers.utils.Interface(Mixer.abi)
-    const callData = iface.encodeFunctionData(functionName, [
+    const mixCallData = iface.encodeFunctionData(functionName, [
 	depositProof.signal,
 	depositProof.a,
 	depositProof.b,
@@ -205,11 +211,28 @@ const surrogethMix = async (
 	depositProof.fee,
 	relayerAddress])
 
+    const forwarderIface = new ethers.utils.Interface(Forwarder.abi)
+    const relayCallData = forwarderIface.encodeFunctionData("relayCall",
+        [
+            mixerContract.address,
+            mixCallData
+        ],
+    )
+
     await surrogetGetBroadcaster(
         wallet,
         registryContractAddress,
     )
 
+    return await surrogetSubmitTx(
+        network,
+        wallet,
+        registryContractAddress,
+        forwarderContract.address,
+        relayCallData,
+        ethers.BigNumber.from(0),
+        relayer,
+    )
 }
 
 

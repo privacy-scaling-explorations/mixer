@@ -471,6 +471,163 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
                       expect(recipientBalanceDiff.add(feeAmt).eq(mixAmtToken)).toBeTruthy()
                   })
 
+                  it('should make a withdrawal with surrogeth', async () => {
+
+                      const identity = identities[users[0]]
+                      const identityCommitment = genIdentityCommitment(identity)
+
+                      // make a deposit
+                      await performeDeposit(isETH, identityCommitment, mixAmtToken, mixerContract, tokenContract)
+
+                      // get the circuit, verifying key, and proving key
+                      const { verifyingKey, provingKey, circuit } = await getSnarks()
+
+                      expect(circuit).toBeTruthy();
+                      expect(verifyingKey).toBeTruthy();
+                      expect(provingKey).toBeTruthy();
+
+                      let recipientBalanceBefore
+                      let recipientBalanceAfter
+                      let recipientBalanceDiff
+
+                      let relayerBalanceBefore
+                      let relayerBalanceAfter
+                      let relayerBalanceDiff
+
+                      let leaves
+
+                      leaves = await mixerContract.getLeaves()
+                      expect(leaves).toBeTruthy()
+
+                      externalNullifier = mixerContract.address
+
+                      const {
+                          witness,
+                          signal,
+                          signalHash,
+                          signature,
+                          msg,
+                          tree,
+                          identityPath,
+                          identityPathIndex,
+                          identityPathElements,
+                      } = await genMixerWitness(
+                          circuit,
+                          identity,
+                          leaves,
+                          20,
+                          recipientAddress,
+                          relayerAddress,
+                          feeAmt,
+                          externalNullifier,
+                      )
+
+                      //Return boolen
+                      expect(await verifySignature(msg, signature, identity.keypair.pubKey)).toBeTruthy()
+                      expect(await circuit.checkWitness(witness)).toBeTruthy()
+
+                      //Return SnarkPublicSignals
+                      const publicSignals = await genPublicSignals(witness, circuit)
+                      expect(publicSignals).toBeTruthy()
+
+                      //Return async + Promise
+                      const proof = await await genProof(witness, provingKey)
+                      //console.log(proof)
+                      expect(proof).toBeTruthy()
+
+                      //Return boolen
+                      expect(await verifyProof(verifyingKey, proof, publicSignals)).toBeTruthy()
+
+                      const mixInputs = await genDepositProof(
+                          signal,
+                          proof,
+                          publicSignals,
+                          recipientAddress,
+                          feeAmt,
+                      )
+                      expect(mixInputs).toBeTruthy()
+
+                      //console.log(mixInputs)
+                      //console.log(signalHash.toString())
+                      const preBroadcastChecked = await semaphoreContract.preBroadcastCheck(
+                          mixInputs.a,
+                          mixInputs.b,
+                          mixInputs.c,
+                          mixInputs.input,
+                          signalHash.toString(),
+                      )
+                      //console.log(preBroadcastChecked)
+                      //todo fix
+                      expect(preBroadcastChecked).toBeTruthy()
+
+                      let mixTx
+
+                      const broadcaster = await surrogetGetBroadcaster(
+                          wallet,
+                          registryContract.address)
+                      expect(broadcaster).toBeTruthy()
+
+                      if (isETH){
+
+                          recipientBalanceBefore = ethers.BigNumber.from(await wallet.provider.getBalance(recipientAddress))
+                          relayerBalanceBefore = ethers.BigNumber.from(await wallet.provider.getBalance(relayerAddress))
+
+                          mixTx = await surrogethMix(
+                              configNetworkName,
+                              wallet,
+                              registryContract.address,
+                              broadcaster,
+                              forwarderContract,
+                              mixerContract,
+                              signal,
+                              proof,
+                              publicSignals,
+                              recipientAddress,
+                              feeAmt,
+                              relayerAddress,
+                              "mix",
+                          )
+                      } else {
+
+                          recipientBalanceBefore = ethers.BigNumber.from(await tokenContract.balanceOf(recipientAddress))
+                          relayerBalanceBefore = ethers.BigNumber.from(await tokenContract.balanceOf(relayerAddress))
+
+                          mixTx = await surrogethMix(
+                              configNetworkName,
+                              wallet,
+                              registryContract.address,
+                              broadcaster,
+                              forwarderContract,
+                              mixerContract,
+                              signal,
+                              proof,
+                              publicSignals,
+                              recipientAddress,
+                              feeAmt,
+                              relayerAddress,
+                              "mixERC20",
+                          )
+                      }
+
+                      //const mixReceipt = await mixTx.wait()
+                      //expect(mixReceipt.events).toBeTruthy()
+
+                      if (isETH){
+                          recipientBalanceAfter = ethers.BigNumber.from(await wallet.provider.getBalance(recipientAddress))
+                          relayerBalanceAfter = ethers.BigNumber.from(await wallet.provider.getBalance(relayerAddress))
+                      } else {
+                          recipientBalanceAfter = ethers.BigNumber.from(await tokenContract.balanceOf(recipientAddress))
+                          relayerBalanceAfter = ethers.BigNumber.from(await tokenContract.balanceOf(relayerAddress))
+                      }
+                      //const gasUsed = mixReceipt.gasUsed.toString()
+                      //console.log('Gas used for this withdrawal:', gasUsed)
+
+                      relayerBalanceDiff = relayerBalanceAfter.sub(relayerBalanceBefore)
+                      //expect(relayerBalanceDiff.eq(feeAmt)).toBeTruthy()
+                      recipientBalanceDiff = recipientBalanceAfter.sub(recipientBalanceBefore)
+                      expect(recipientBalanceDiff.add(feeAmt).eq(mixAmtToken)).toBeTruthy()
+                  })
+
                   it('should get surrogeth broadcaster', async () => {
                       const broadcaster = await surrogetGetBroadcaster(
                           wallet,
