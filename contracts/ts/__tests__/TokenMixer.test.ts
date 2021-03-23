@@ -489,6 +489,7 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
 
                       )
                       await surrogetSubmitTx(
+                          configNetworkName,
                           wallet,
                           registryContract.address,
                           to,

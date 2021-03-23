@@ -79,6 +79,7 @@ const buildRawTx = async (
 }
 
 const surrogetSubmitTx = async (
+    network,
     wallet,
     registryContractAddress,
     to,
@@ -86,7 +87,6 @@ const surrogetSubmitTx = async (
     value : ethers.BigNumber,
     relayer,
 ) => {
-    const network = "LOCAL"
     const protocol = "http"
 
     const Registry = require('@mixer-contracts/compiled/Registry.json')
@@ -107,7 +107,7 @@ const surrogetSubmitTx = async (
         const result = await client.submitTx(tx, relayer)
         console.log(result)
     } catch (error) {
-        console.log(error)
+        console.log(error.response.data)
         throw error
     }
 
@@ -147,7 +147,9 @@ const surrogetGetBroadcaster = async (
 
         console.log("Set default relayer locator")
 
-        await client.setIPRelayerLocator("127.0.0.1:8080")
+        const tx = await client.setIPRelayerLocator("127.0.0.1:8123")
+
+        await tx.wait()
 
         relayers = await client.getBroadcasters(
             1,
