@@ -12,6 +12,7 @@ const surrogetSubmitTx = async (
     network,
     wallet,
     forwarderRegistryERC20Contract,
+    tokenContractAddress,
     to,
     data,
     value : ethers.BigNumber,
@@ -32,7 +33,12 @@ const surrogetSubmitTx = async (
     const tx = { to, data, value: valueStr }
 
     try {
-        const result = await client.submitTx(tx, relayer)
+        if (tokenContractAddress){
+            const result = await client.submitTxERC20(tx, relayer, tokenContractAddress)
+        }else{
+            const result = await client.submitTx(tx, relayer)
+        }
+
         //console.log(result)
     } catch (error) {
         if (error.response){
@@ -110,6 +116,7 @@ const surrogethMix = async (
     relayer,
     forwarderRegistryERC20Contract,
     mixerContract,
+    tokenContractAddress,
     signal,
     proof,
     publicSignals,
@@ -141,12 +148,24 @@ const surrogethMix = async (
     ])
 
     const forwarderIface = new ethers.utils.Interface(ForwarderRegistryERC20.abi)
-    const relayCallData = forwarderIface.encodeFunctionData("relayCall",
-        [
-            mixerContract.address,
-            mixCallData
-        ],
-    )
+    let relayCallData
+    if (tokenContractAddress){
+        relayCallData = forwarderIface.encodeFunctionData("relayCallERC20",
+            [
+                mixerContract.address,
+                mixCallData,
+                tokenContractAddress,
+            ],
+        )
+    }else{
+        relayCallData = forwarderIface.encodeFunctionData("relayCall",
+            [
+                mixerContract.address,
+                mixCallData
+            ],
+        )
+    }
+
 
     await surrogetGetBroadcaster(
         network,
@@ -158,6 +177,7 @@ const surrogethMix = async (
         network,
         wallet,
         forwarderRegistryERC20Contract,
+        tokenContractAddress,
         forwarderRegistryERC20Contract.address,
         relayCallData,
         ethers.BigNumber.from(0),

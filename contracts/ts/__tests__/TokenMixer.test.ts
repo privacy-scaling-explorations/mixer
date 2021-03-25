@@ -157,6 +157,7 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
               let semaphoreContract
               let forwarderRegistryERC20Contract
               let tokenContract
+              let tokenContractAddress
               let externalNullifier : string
 
 
@@ -176,6 +177,9 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
                       forwarderRegistryERC20Contract = contracts.forwarderRegistryERC20Contract
                       mimcContract = contracts.mimcContract
                       tokenContract = contracts.tokenContract
+                      if (tokenContract){
+                          tokenContractAddress = tokenContract.address
+                      }
                       semaphoreContract = contracts.semaphoreContract
                       mixerContract = contracts.mixerContract
                       expect(mimcContract).toBeTruthy()
@@ -429,6 +433,7 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
                           mixTx = await mix(
                               forwarderRegistryERC20Contract,
                               mixerContract,
+                              tokenContractAddress,
                               signal,
                               proof,
                               publicSignals,
@@ -445,6 +450,7 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
                           mixTx = await mix(
                               forwarderRegistryERC20Contract,
                               mixerContract,
+                              tokenContractAddress,
                               signal,
                               proof,
                               publicSignals,
@@ -582,6 +588,7 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
                               broadcaster,
                               forwarderRegistryERC20Contract,
                               mixerContract,
+                              tokenContractAddress,
                               signal,
                               proof,
                               publicSignals,
@@ -600,6 +607,7 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
                               broadcaster,
                               forwarderRegistryERC20Contract,
                               mixerContract,
+                              tokenContractAddress,
                               signal,
                               proof,
                               publicSignals,
@@ -658,6 +666,7 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
                               configNetworkName,
                               wallet,
                               forwarderRegistryERC20Contract.address,
+                              tokenContractAddress,
                               to,
                               relayCallData,
                               value2,
@@ -665,6 +674,7 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
                           )
                           expect(false).toBeTruthy()
                       }catch (error){
+                          console.log(error.response.data)
                           expect(error.response.data.msg).toMatch("Fee too low!")
                       }
                   })

@@ -14,6 +14,7 @@ const Mixer = require('@mixer-contracts/compiled/Mixer.json')
 const mix = async (
     forwarderRegistryERC20Contract,
     mixerContract,
+    tokenContractAddress,
     signal,
     proof,
     publicSignals,
@@ -41,11 +42,21 @@ const mix = async (
 	    relayerAddresse,
     ])
 
-    return forwarderRegistryERC20Contract.relayCall(
-        mixerContract.address,
-        callData,
-        //{ gasLimit: 1000000 }
-    )
+    if (tokenContractAddress){
+        return forwarderRegistryERC20Contract.relayCallERC20(
+            mixerContract.address,
+            callData,
+            tokenContractAddress,
+            //{ gasLimit: 1000000 }
+        )
+    }else{
+        return forwarderRegistryERC20Contract.relayCall(
+            mixerContract.address,
+            callData,
+            //{ gasLimit: 1000000 }
+        )
+    }
+
 
     //return await mixerContract.mix(
         //depositProof,
