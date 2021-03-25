@@ -1,18 +1,15 @@
 import * as ethers from 'ethers'
 
 import { deployedAddresses } from 'mixer-contracts'
-const configMixer =  require('../../exported_config')
+import { configMixer } from 'mixer-config'
 
 
 const getTestParam = (network : string, token : string) => {
     const configNetwork = configMixer.network[network]
     const configToken = configNetwork.token[token]
 
-    const gasLimitMix = configMixer.chain.gasLimit.mix
-
     const chainId = configNetwork.chainId
     const chainUrl = configNetwork.url
-    const gasPrice = configNetwork.gasPrice
     const hotWalletPrivKeyPath = configNetwork.hotWalletPrivKeyPath
     const privateKeysPath = configNetwork.privateKeysPath
 
@@ -97,12 +94,10 @@ const getMixerInfo = async (network, mixer) => {
         const mixerAddress = deployedAddressesToken.Mixer
 
         if (mixerAddress == mixer){
-            const forwarderAddress = deployedAddressesNetwork.Forwarder
+            const forwarderRegistryERC20Address = deployedAddressesNetwork.ForwarderRegistryERC20
             const configToken = configNetwork.token[configTokenName]
             const semaphoreAddress = deployedAddressesToken.Semaphore
             const feeAmt = configToken.feeAmt
-            const gasPrice = configNetwork.gasPrice
-            const gasLimitMix = configMixer.chain.gasLimit.mix
             let tokenDecimals = configToken.decimals
 
             if (!tokenDecimals){
@@ -111,20 +106,16 @@ const getMixerInfo = async (network, mixer) => {
 
             return {
                 feeAmt: feeAmt,
-                gasPrice: gasPrice,
-                gasLimitMix: gasLimitMix,
                 tokenDecimals: tokenDecimals,
                 mixerAddress: mixerAddress,
                 semaphoreAddress: semaphoreAddress,
-                forwarderAddress: forwarderAddress,
+                forwarderRegistryERC20Address: forwarderRegistryERC20Address,
             }
         }
 
     }
     return {
         feeAmt: null,
-        gasPrice: null,
-        gasLimitMix: null,
         mixerAddress: null,
         semaphoreAddress: null,
     }

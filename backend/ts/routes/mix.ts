@@ -58,32 +58,23 @@ const _mixRoute = (forTokens: boolean) => async (
 
     const {
         feeAmt,
-        gasPrice,
-        gasLimitMix,
         tokenDecimals,
         mixerAddress,
         semaphoreAddress,
-        forwarderAddress,
+        forwarderRegistryERC20Address,
     } = await getMixerInfo(
         depositProof.networkName,
         depositProof.mixer,
     )
 
     // This operator accepts a fee that is large enough
-    const operatorFeeWei = ethers.utils.parseUnits(feeAmt.toString(), 'ether')
-    const operatorFeeTokens = ethers.BigNumber.from((feeAmt * (10 ** tokenDecimals)).toString())
+    const operatorFeeWei = ethers.utils.parseUnits(feeAmt.toString(), tokenDecimals)
 
     const publicInputs = depositProof.input.map(BigInt)
 
     // verify the fee
-    let enoughFees
-    if (forTokens) {
-        const fee = ethers.BigNumber.from(depositProof.fee)
-        enoughFees = fee.gte(operatorFeeTokens)
-    } else {
-        const fee = ethers.utils.parseUnits(BigInt(depositProof.fee).toString(), 'wei')
-        enoughFees = fee.gte(operatorFeeWei)
-    }
+    const fee = ethers.BigNumber.from(depositProof.fee)
+    const enoughFees = fee.gte(operatorFeeWei)
 
     const insufficientFeeError = forTokens ?
         'BACKEND_MIX_INSUFFICIENT_TOKEN_FEE'
@@ -121,7 +112,7 @@ const _mixRoute = (forTokens: boolean) => async (
     const signal = genMixerSignal(
         depositProof.recipientAddress,
         relayerAddress,
-        depositProof.fee,
+        BigInt(depositProof.fee),
     )
 
     const signalHash = keccak256HexToBigInt(signal)
@@ -224,14 +215,14 @@ const _mixRoute = (forTokens: boolean) => async (
         'Semaphore',
     )
 
-    const forwarderContract = getContract(
-        'Forwarder',
+    const forwarderRegistryERC20Contract = getContract(
+        'ForwarderRegistryERC20',
         wallet,
-        forwarderAddress,
+        forwarderRegistryERC20Address,
     )
 
-    const forwarderAbi = getAbi(
-        'Forwarder',
+    const forwarderRegistryERC20Abi = getAbi(
+        'ForwarderRegistryERC20',
     )
 
     const etcdAddress = etcdHost + ':' + etcdPort
@@ -299,8 +290,8 @@ const _mixRoute = (forTokens: boolean) => async (
             relayerAddress])
     }
 
-    const forwarderIface = new ethers.utils.Interface(forwarderAbi)
-    const relayCallData = forwarderIface.encodeFunctionData("relayCall",
+    const forwarderRegistryERC20Iface = new ethers.utils.Interface(forwarderRegistryERC20Abi)
+    const relayCallData = forwarderRegistryERC20Iface.encodeFunctionData("relayCall",
         [
             mixerContractAddress,
             mixCallData
@@ -313,25 +304,21 @@ const _mixRoute = (forTokens: boolean) => async (
         value: 0,
         data: mixCallData,
         nonce,
-        gasPrice: gasPrice,
-        gasLimit: gasLimitMix,
     }
     */
 
     const unsignedTx = {
-        to: forwarderAddress,
+        to: forwarderRegistryERC20Address,
         value: 0,
         data: relayCallData,
         nonce,
-        gasPrice: gasPrice,
-        gasLimit: gasLimitMix,
     }
 
     // Sign the transaction
-    const signedData = await wallet.signTransaction(unsignedTx)
+    //const signedData = await wallet.signTransaction(unsignedTx)
 
     // Send the transaction but don't wait for it to be mined
-    const tx = await provider.sendTransaction(signedData)
+    const tx = await wallet.sendTransaction(unsignedTx)
 
     // Release the lock so other running instances of this function can
     // get the nonce and send their own tx
@@ -348,12 +335,14 @@ const _mixRoute = (forTokens: boolean) => async (
     })
     */
 
-    const txHash = ethers.utils.keccak256(signedData)
+    //const txHash = ethers.utils.keccak256(signedData)
 
-    await provider.waitForTransaction(txHash)
+    //await provider.waitForTransaction(txHash)
+
+    const receipt = await tx.wait()
 
     return {
-        txHash,
+        txHash: receipt.transactionHash,
     }
 }
 

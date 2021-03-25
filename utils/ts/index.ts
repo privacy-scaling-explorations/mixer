@@ -1,3 +1,5 @@
+import * as ethers from 'ethers'
+
 const sleep = (ms: number): Promise<void> => {
     return new Promise((resolve: Function) => setTimeout(resolve, ms))
 }
@@ -12,7 +14,7 @@ const genMixParams = (
     signal: string,
     proof: any,
     recipientAddress: string,
-    fee: BigInt,
+    fee: ethers.BigNumber,
     publicSignals: BigInt[],
 ) => {
     return {
@@ -33,7 +35,7 @@ const genMixParams = (
         c: proof.pi_c.slice(0, 2).map(hexify),
         input: publicSignals.map(hexify),
         recipientAddress,
-        fee: hexify(fee),
+        fee: fee.toString(),
     }
 }
 

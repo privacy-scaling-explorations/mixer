@@ -42,7 +42,7 @@
             "$ref": "#/definitions/address"
         },
         "fee": {
-            "$ref": "#/definitions/hex"
+            "$ref": "#/definitions/integer"
         }
     },
     "definitions": {
@@ -57,6 +57,10 @@
         "hex": {
             "type": "string",
             "pattern": "^0x([A-Fa-f0-9]+)$"
+        },
+        "integer": {
+            "type": "string",
+            "pattern": "([0-9]+)$"
         },
         "twoHexStrs": {
             "type": "array",

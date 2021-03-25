@@ -16,6 +16,7 @@ const RelayerRegistry = require('@mixer-contracts/compiled/RelayerRegistry.json'
 const SemaphoreLibrary = require('@mixer-contracts/compiled/SemaphoreLibrary.json')
 const Forwarder = require('@mixer-contracts/compiled/Forwarder.json')
 const Registry = require('@mixer-contracts/compiled/Registry.json')
+const ForwarderRegistryERC20 = require('@mixer-contracts/compiled/ForwarderRegistryERC20.json')
 
 const deployContract = async (wallet, contract, ...args: any[]) => {
     let factory = new ethers.ContractFactory(
@@ -159,7 +160,21 @@ const deployAllContracts = async (
         relayerRegistryContract = await deployContractTryCatch(wallet, RelayerRegistry)
     }
 
-    //forwarder contract
+    //ForwarderRegistryERC20 contract
+    let forwarderRegistryERC20Contract
+    if (deployedAddressesNetwork && deployedAddressesNetwork.hasOwnProperty('ForwarderRegistryERC20')){
+        console.log('ForwarderRegistryERC20 already deployed')
+        forwarderRegistryERC20Contract = new ethers.Contract(
+                deployedAddressesNetwork.ForwarderRegistryERC20,
+                ForwarderRegistryERC20.abi,
+                wallet,
+            )
+    } else {
+        console.log('Deploying ForwarderRegistryERC20')
+        forwarderRegistryERC20Contract = await deployContractTryCatch(wallet, ForwarderRegistryERC20)
+    }
+
+    //Forwarder contract
     let forwarderContract
     if (deployedAddressesNetwork && deployedAddressesNetwork.hasOwnProperty('Forwarder')){
         console.log('Forwarder already deployed')
@@ -173,7 +188,7 @@ const deployAllContracts = async (
         forwarderContract = await deployContractTryCatch(wallet, Forwarder)
     }
 
-    //forwarder contract
+    //Registry contract
     let registryContract
     if (deployedAddressesNetwork && deployedAddressesNetwork.hasOwnProperty('Registry')){
         console.log('Registry already deployed')
@@ -416,7 +431,9 @@ const deployAllContracts = async (
                 await tx.wait()
 
                 console.log('Setting the external nullifier of the Semaphore contract')
-                tx = await mixerContract.setSemaphoreExternalNulllifier({ gasLimit: 100000 })
+                tx = await mixerContract.setSemaphoreExternalNulllifier(
+                    //{ gasLimit: 100000 }
+                )
                 await tx.wait()
             }
         }
@@ -430,8 +447,10 @@ const deployAllContracts = async (
         mixerContract,
         mixerRegistryContract,
         semaphoreLibraryContract,
+        forwarderRegistryERC20Contract,
         forwarderContract,
         registryContract,
+
     }
 }
 
@@ -519,6 +538,7 @@ const main = async () => {
                     mixerContract,
                     mixerRegistryContract,
                     semaphoreLibraryContract,
+                    forwarderRegistryERC20Contract,
                     forwarderContract,
                     registryContract,
                 } = await deployAllContracts(
@@ -537,6 +557,10 @@ const main = async () => {
 
                 if (semaphoreLibraryContract)
                     deployedAddressesNetwork.SemaphoreLibrary = semaphoreLibraryContract.address
+
+                if (forwarderRegistryERC20Contract)
+                    deployedAddressesNetwork.ForwarderRegistryERC20 = forwarderRegistryERC20Contract.address
+
 
                 if (forwarderContract)
                     deployedAddressesNetwork.Forwarder = forwarderContract.address

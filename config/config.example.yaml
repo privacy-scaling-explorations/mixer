@@ -2,8 +2,9 @@
 env: 'local-dev'
 
 network:
+
     kovan:
-        disable: false
+        disable: true
         useRegistry: true
         url: "https://kovan.infura.io/v3/5d37c494621a43558d77c90e368d4022"
         chainId: 42
@@ -11,8 +12,22 @@ network:
         privateKeysPath: "../kovanPrivateKeys.json"
         supportedNetworkName: "Kovan"
         blockExplorerTxPrefix: "https://kovan.etherscan.io/tx/"
-        gasPrice: 20000000000
-        relayerAddress: "0xf17f52151EbEF6C7334FAD080c5704D77216b732"
+        token:
+            eth:
+                mixAmt: 0.1
+                feeAmt: 0.001
+                sym: 'KETH'
+                name: 'Kovan Ether'
+
+    kovanTest:
+        disable: true
+        useRegistry: true
+        url: "https://kovan.infura.io/v3/5d37c494621a43558d77c90e368d4022"
+        chainId: 42
+        supportedNetwork: 42
+        privateKeysPath: "../kovanPrivateKeys.json"
+        supportedNetworkName: "Kovan"
+        blockExplorerTxPrefix: "https://kovan.etherscan.io/tx/"
         token:
             eth:
                 mixAmt: 0.1
@@ -41,29 +56,21 @@ network:
         supportedNetwork: 1337
         privateKeysPath: "../ganachePrivateKeys.json"
         supportedNetworkName: "Ganache"
-        gasPrice: 20000000000
         token:
             eth:
-                mixAmt: 0.1
-                feeAmt: 0.001
+                mixAmt: 0.102
+                feeAmt: 0.002
                 sym: 'ETH'
                 name: 'Ether'
-            tkn:
-                decimals: 18
-                mixAmt: 20
-                feeAmt: 0.02
-                sym: 'TKN'
-                name: 'Token'
 
     ganache2:
-        disable: false
+        disable: true
         useRegistry: false
         url: "http://localhost:8545"
         chainId: 1337
         supportedNetwork: 1337
         privateKeysPath: "../ganachePrivateKeys.json"
         supportedNetworkName: "Ganache"
-        gasPrice: 20000000000
         token:
             eth:
                 mixAmt: 0.1
@@ -78,7 +85,7 @@ network:
                 name: 'Token'
 
     ropsten:
-        disable: false
+        disable: true
         useRegistry: true
         url: "https://ropsten.infura.io/v3/5d37c494621a43558d77c90e368d4022"
         chainId: 3
@@ -86,8 +93,6 @@ network:
         privateKeysPath: "../kovanPrivateKeys.json"
         supportedNetworkName: "Ropsten"
         blockExplorerTxPrefix: "https://ropsten.etherscan.io/tx/"
-        gasPrice: 20000000000
-        relayerAddress: "0xf17f52151EbEF6C7334FAD080c5704D77216b732"
         token:
             eth:
                 mixAmt: 0.1
@@ -102,7 +107,7 @@ network:
 
 
     arbitrum:
-        disable: false
+        disable: true
         useRegistry: true
         url: "https://kovan3.arbitrum.io/rpc"
         chainId: 79377087078960
@@ -110,8 +115,6 @@ network:
         privateKeysPath: "../kovanPrivateKeys.json"
         blockExplorerTxPrefix: https://explorer.arbitrum.io/#/tx/
         supportedNetworkName: "Arbitrum"
-        gasPrice: 20000000000
-        relayerAddress: "0xf17f52151EbEF6C7334FAD080c5704D77216b732"
         token:
             tkn:
                 decimals: 18
@@ -125,16 +128,13 @@ network:
                 sym: 'ETH'
                 name: 'Ether'
     skale:
-        disable: false
+        disable: true
         useRegistry: true
         url: "https://dev-testnet-v1-0.skalelabs.com"
         chainId: 344435
         supportedNetwork: 344435
         privateKeysPath: "../kovanPrivateKeys.json"
-
         supportedNetworkName: "Skale"
-        gasPrice: 20000000000
-        relayerAddress: "0xf17f52151EbEF6C7334FAD080c5704D77216b732"
         token:
             tkn:
                 decimals: 18

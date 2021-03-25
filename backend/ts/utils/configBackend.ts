@@ -1,5 +1,5 @@
 
-const configMixer =  require('../../exported_config')
+import { configMixer } from 'mixer-config'
 
 const configEnv = configMixer.env
 const backendHost = configMixer.backend.host

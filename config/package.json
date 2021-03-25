@@ -4,7 +4,7 @@
     "description": "",
     "main": "build/index.js",
     "scripts": {
-        "build": "tsc && node build/export-config.js > ../frontend/exported_config.json && cp ../frontend/exported_config.json ../backend/exported_config.json",
+        "build": "tsc && node build/export-config.js > ../frontend/exported_config.json",
         "watch": "tsc --watch"
     },
     "author": "Koh Wei Jie",

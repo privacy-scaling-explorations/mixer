@@ -9,16 +9,17 @@ import {
     performeDeposit,
     checkErrorReason,
     mix,
-    surrogethMix,
-    surrogetGetBroadcaster,
     genDepositProof,
     areEqualAddresses,
     getSnarks,
     addressInfo,
-    buildRawTx,
-    surrogetSubmitTx,
-
 } from './utils'
+
+import {
+    surrogethMix,
+    surrogetGetBroadcaster,
+    surrogetSubmitTx,
+} from './surrogeth'
 
 import { sleep } from 'mixer-utils'
 import {
@@ -33,6 +34,7 @@ import {
 
 import { genAccounts } from '../accounts'
 const Mixer = require('@mixer-contracts/compiled/Mixer.json')
+const ForwarderRegistryERC20 = require('@mixer-contracts/compiled/ForwarderRegistryERC20.json')
 const ERC20Mintable = require('@mixer-contracts/compiled/ERC20Mintable.json')
 
 import {
@@ -90,7 +92,7 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
                           '0x0000000000000000000000000000000000000000',
                           mixAmtToken,
                           '0x0000000000000000000000000000000000000000',
-                          { gasLimit: 500000 }
+                          //{ gasLimit: 500000 }
                       )
                       expect(true).toBeFalsy()
                   }catch (error){
@@ -153,9 +155,8 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
               let mimcContract
               let mixerContract
               let semaphoreContract
-              let forwarderContract
+              let forwarderRegistryERC20Contract
               let tokenContract
-              let registryContract
               let externalNullifier : string
 
 
@@ -172,17 +173,15 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
                       )
 
                       expect(contracts).toBeTruthy()
-                      forwarderContract = contracts.forwarderContract
+                      forwarderRegistryERC20Contract = contracts.forwarderRegistryERC20Contract
                       mimcContract = contracts.mimcContract
                       tokenContract = contracts.tokenContract
                       semaphoreContract = contracts.semaphoreContract
                       mixerContract = contracts.mixerContract
-                      registryContract = contracts.registryContract
                       expect(mimcContract).toBeTruthy()
-                      expect(registryContract).toBeTruthy()
                       //expect(semaphoreContract).toBeTruthy()
                       expect(mixerContract).toBeTruthy()
-                      expect(forwarderContract).toBeTruthy()
+                      expect(forwarderRegistryERC20Contract).toBeTruthy()
                       if (isETH){
                           expect(tokenContract).not.toBeTruthy()
                       }else{
@@ -207,7 +206,7 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
                               semaphoreContract.address,
                               ethers.utils.parseEther('0'),
                               '0x0000000000000000000000000000000000000000',
-                              { gasLimit: 500000 }
+                              //{ gasLimit: 500000 }
                           )
                           expect(true).toBeFalsy()
                       }catch (error){
@@ -219,7 +218,7 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
                       expect(ethers.utils.isAddress(mimcContract.address)).toBeTruthy()
                       //expect(ethers.utils.isAddress(semaphoreContract.address)).toBeTruthy()
                       expect(ethers.utils.isAddress(mixerContract.address)).toBeTruthy()
-                      expect(ethers.utils.isAddress(forwarderContract.address)).toBeTruthy()
+                      expect(ethers.utils.isAddress(forwarderRegistryERC20Contract.address)).toBeTruthy()
 
                   })
 
@@ -254,7 +253,10 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
                           const identityCommitment = genIdentityCommitment(identity)
 
                           try {
-                              const tx = await mixerContract.depositERC20('0x' + identityCommitment.toString(16), { gasLimit: 1500000 })
+                              const tx = await mixerContract.depositERC20(
+                                  '0x' + identityCommitment.toString(16),
+                                  //{ gasLimit: 1500000 }
+                              )
                               const receipt = await tx.wait()
                               expect(true).toBeFalsy()
                           } catch (error) {
@@ -266,7 +268,10 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
                           const identity = identities[users[0]]
                           const identityCommitment = genIdentityCommitment(identity)
                           try {
-                              const tx = await mixerContract.deposit('0x' + identityCommitment.toString(16), { gasLimit: 1500000 })
+                              const tx = await mixerContract.deposit(
+                                  '0x' + identityCommitment.toString(16),
+                                  //{ gasLimit: 1500000 }
+                              )
                               const receipt = await tx.wait()
                               expect(true).toBeFalsy()
                           } catch (error) {
@@ -329,8 +334,6 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
 
                       const identity = identities[users[0]]
                       const identityCommitment = genIdentityCommitment(identity)
-
-
 
                       // make a deposit
                       await performeDeposit(isETH, identityCommitment, mixAmtToken, mixerContract, tokenContract)
@@ -424,7 +427,7 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
                           relayerBalanceBefore = ethers.BigNumber.from(await wallet.provider.getBalance(relayerAddress))
 
                           mixTx = await mix(
-                              forwarderContract,
+                              forwarderRegistryERC20Contract,
                               mixerContract,
                               signal,
                               proof,
@@ -440,7 +443,7 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
                           relayerBalanceBefore = ethers.BigNumber.from(await tokenContract.balanceOf(relayerAddress))
 
                           mixTx = await mix(
-                              forwarderContract,
+                              forwarderRegistryERC20Contract,
                               mixerContract,
                               signal,
                               proof,
@@ -517,7 +520,7 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
                           leaves,
                           20,
                           recipientAddress,
-                          relayerAddress,
+                          forwarderRegistryERC20Contract.address,
                           feeAmt,
                           externalNullifier,
                       )
@@ -563,8 +566,9 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
                       let mixTx
 
                       const broadcaster = await surrogetGetBroadcaster(
+                          configNetworkName,
                           wallet,
-                          registryContract.address)
+                          forwarderRegistryERC20Contract.address)
                       expect(broadcaster).toBeTruthy()
 
                       if (isETH){
@@ -575,16 +579,14 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
                           mixTx = await surrogethMix(
                               configNetworkName,
                               wallet,
-                              registryContract.address,
                               broadcaster,
-                              forwarderContract,
+                              forwarderRegistryERC20Contract,
                               mixerContract,
                               signal,
                               proof,
                               publicSignals,
                               recipientAddress,
                               feeAmt,
-                              relayerAddress,
                               "mix",
                           )
                       } else {
@@ -595,16 +597,14 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
                           mixTx = await surrogethMix(
                               configNetworkName,
                               wallet,
-                              registryContract.address,
                               broadcaster,
-                              forwarderContract,
+                              forwarderRegistryERC20Contract,
                               mixerContract,
                               signal,
                               proof,
                               publicSignals,
                               recipientAddress,
                               feeAmt,
-                              relayerAddress,
                               "mixERC20",
                           )
                       }
@@ -630,30 +630,43 @@ for (let configNetworkName of Object.keys(configMixer.get('network'))) {
 
                   it('should get surrogeth broadcaster', async () => {
                       const broadcaster = await surrogetGetBroadcaster(
+                          configNetworkName,
                           wallet,
-                          registryContract.address)
-                      console.log("broadcaster", broadcaster)
+                          forwarderRegistryERC20Contract.address)
                       expect(broadcaster).toBeTruthy()
 
                       const to = recipientAddress
                       const value = ethers.utils.parseEther("0.01").toHexString()
                       const value2 = ethers.utils.parseEther("0.02")
-                      const data = await buildRawTx(
-                          to,
-                          wallet,
-                          value,
-                          configNetwork.chainId,
 
+                      //Fake transaction that will be rejected by surrogeth
+                      const iface = new ethers.utils.Interface(Mixer.abi)
+                      const mixCallData = iface.encodeFunctionData("deposit", [
+                  	    recipientAddress,
+                      ])
+
+                      const forwarderIface = new ethers.utils.Interface(ForwarderRegistryERC20.abi)
+                      const relayCallData = forwarderIface.encodeFunctionData("relayCall",
+                          [
+                              mixerContract.address,
+                              mixCallData
+                          ],
                       )
-                      await surrogetSubmitTx(
-                          configNetworkName,
-                          wallet,
-                          registryContract.address,
-                          to,
-                          data,
-                          value2,
-                          broadcaster,
-                      )
+
+                      try{
+                          await surrogetSubmitTx(
+                              configNetworkName,
+                              wallet,
+                              forwarderRegistryERC20Contract.address,
+                              to,
+                              relayCallData,
+                              value2,
+                              broadcaster,
+                          )
+                          expect(false).toBeTruthy()
+                      }catch (error){
+                          expect(error.response.data.msg).toMatch("Fee too low!")
+                      }
                   })
 
               })

@@ -42,7 +42,7 @@ const topUpEthMsg =
     <div className="column is-8 is-offset-2">
         <p>
             Please top up your account with at least {mixAmt.toString()}
-            {tokenSym} ({mixAmt.toString()} to deposit and 0.1 for fee). You can get KETH
+            {tokenSym} ({mixAmt.toString()} to deposit and {operatorFee.toString()} for fee). You can get KETH
             from a faucet <a target="_blank"
             href="https://faucet.kovan.network/">here</a> or <a
             target="_blank" href="https://gitter.im/kovan-testnet/faucet">here</a>.

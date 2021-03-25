@@ -53,9 +53,9 @@ jest.setTimeout(90000)
 const PORT = backendPort
 const HOST = backendHost + ':' + backendPort.toString()
 
-const depositAmtEth = ethers.utils.parseEther(mixAmt.toString())
+const depositAmtWei = ethers.utils.parseUnits(mixAmt.toString(), tokenDecimals)
 
-const feeAmtWei = ethers.utils.parseEther(feeAmt.toString())
+const feeAmtWei = ethers.utils.parseUnits(feeAmt.toString(), tokenDecimals)
 
 const provider = new ethers.providers.JsonRpcProvider(
     chainUrl,
@@ -118,7 +118,7 @@ const schemaInvalidParamsForEth = {
     c: ['0x0', '0x0'],
     input: ['0x0', '0x0', '0x0', '0x0', '0x0'],
     recipientAddress: '0x2bD9aAa2953F988153c8629926D22A6a5F69b14E',
-    fee: '0x0',
+    fee: '0',
 }
 
 let server
@@ -142,7 +142,13 @@ describe('the mixer_mix_eth API call', () => {
             const identity = genIdentity()
             const identityCommitment = genIdentityCommitment(identity)
 
-            const tx = await mixerContract.deposit('0x' + identityCommitment.toString(16), { value: depositAmtEth, gasLimit: 1500000 })
+            const tx = await mixerContract.deposit(
+                '0x' + identityCommitment.toString(16),
+                {
+                    value: depositAmtWei,
+                    //gasLimit: 1500000
+                }
+            )
             const receipt = await tx.wait()
             expect(receipt.status).toEqual(1)
             expect(receipt.events).toBeTruthy()
@@ -188,7 +194,7 @@ describe('the mixer_mix_eth API call', () => {
                 signal,
                 proof,
                 recipientAddress,
-                BigInt(feeAmtWei.toString()),
+                feeAmtWei,
                 publicSignals,
             )
 
@@ -219,8 +225,8 @@ describe('the mixer_mix_eth API call', () => {
             }
 
             recipientBalanceAfter = await provider.getBalance(recipientAddress)
-            expect(ethers.utils.formatEther(recipientBalanceAfter.sub(recipientBalanceBefore)))
-                .toEqual('0.099')
+            expect(recipientBalanceAfter.sub(recipientBalanceBefore))
+                .toEqual(depositAmtWei.sub(feeAmtWei))
         })
     }else{
         test('accepts a valid proof to mix tokens and credits the recipient', async () => {
@@ -230,12 +236,12 @@ describe('the mixer_mix_eth API call', () => {
             await tokenContract.mint(
                 signer.address,
                 (mixAmt * (10 ** tokenDecimals)).toString(),
-                { gasLimit: 100000, }
+                //{ gasLimit: 100000, }
             )
             await tokenContract.approve(
                 mixerContract.address,
                 (mixAmt * (10 ** tokenDecimals)).toString(),
-                { gasLimit: 100000, }
+                //{ gasLimit: 100000, }
             )
 
             // generate an identityCommitment
@@ -244,7 +250,7 @@ describe('the mixer_mix_eth API call', () => {
 
             const tx = await mixerContract.depositERC20(
                 identityCommitment.toString(),
-                { gasLimit: 1500000, }
+                //{ gasLimit: 1500000, }
             )
             const receipt = await tx.wait()
 
@@ -270,7 +276,7 @@ describe('the mixer_mix_eth API call', () => {
                 20,
                 recipientAddress,
                 relayerAddress,
-                feeAmt * 10 ** tokenDecimals,
+                feeAmtWei,
                 externalNullifier,
             )
 
@@ -286,7 +292,7 @@ describe('the mixer_mix_eth API call', () => {
                 signal,
                 proof,
                 recipientAddress,
-                BigInt((feeAmt * 10 ** tokenDecimals).toString()),
+                feeAmtWei,
                 publicSignals,
             )
 
@@ -417,7 +423,7 @@ describe('the mixer_mix_eth API call', () => {
         test('rejects a proof where the token fee is too low', async () => {
             // deep copy and make the fee too low
             const lowFeeProof = JSON.parse(JSON.stringify(validParamsForTokens))
-            lowFeeProof.fee = '0x0'
+            lowFeeProof.fee = '0'
 
             const resp = await post(1, 'mixer_mix_tokens', lowFeeProof)
 
@@ -427,7 +433,7 @@ describe('the mixer_mix_eth API call', () => {
         test('rejects a proof where the ETH fee is too low', async () => {
             // deep copy and make the fee too low
             const lowFeeProof = JSON.parse(JSON.stringify(validParamsForEth))
-            lowFeeProof.fee = '0x0001'
+            lowFeeProof.fee = ethers.utils.parseEther('0.00001').toString()
 
             const resp = await post(1, 'mixer_mix_eth', lowFeeProof)
 

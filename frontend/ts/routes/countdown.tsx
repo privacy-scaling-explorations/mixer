@@ -216,7 +216,7 @@ export default () => {
                     result.signal,
                     proof,
                     recipientAddress,
-                    BigInt(feeAmt.toString()),
+                    feeAmt,
                     publicSignals,
                 )
 

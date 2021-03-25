@@ -283,6 +283,31 @@ const inputSurrogethForwarder = {
     }
 }
 
+const forwarderRegistryERC20 = {
+    language: 'Solidity',
+    sources: {
+        'ForwarderRegistryERC20.sol': {
+            content: loadContract(surrogethPath + 'ForwarderRegistryERC20.sol'),
+        },
+        'openzeppelin-solidity/contracts/math/SafeMath.sol': {
+            //content: loadContract(surrogethOpenzeppelinPath + 'math/SafeMath.sol'),
+            content: loadContract(solidityPath + 'openzeppelin/SafeMath.sol'),
+        },
+        'openzeppelin-solidity/contracts/token/ERC20/IERC20.sol': {
+            //content: loadContract(surrogethOpenzeppelinPath + 'access/Ownable.sol'),
+            content: loadContract(solidityPath + 'token/IERC20.sol'),
+        },
+
+    },
+    settings: {
+        outputSelection: {
+            '*': {
+                'ForwarderRegistryERC20': [ 'evm.bytecode.object', 'abi']
+            }
+        }
+    }
+}
+
 
 const inputRelayerRegistry = {
     language: 'Solidity',
@@ -315,6 +340,7 @@ const main = async () => {
 
     buildMiMC(outputPath)
     //compileInput(inputMiMC, outputPath)
+    compileInput(forwarderRegistryERC20, outputPath)
     compileInput(inputSurrogethRegistry, outputPath)
     compileInput(inputSurrogethForwarder, outputPath)
     compileInput(inputSemaphoreLibrary, outputPath)
