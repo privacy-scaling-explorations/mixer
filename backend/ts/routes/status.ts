@@ -1,16 +1,16 @@
 import { genValidator } from './utils'
 import {
-    getRelayerAddress,
+    getBackendAddress,
 } from '../utils/configBackendNetwork'
 import {ethers} from 'ethers'
 
 const _backendStatus = async (info) => {
 
-    const relayerAddress = await getRelayerAddress(info.networkName)
+    const backendAddress = await getBackendAddress(info.networkName)
 
     return {
         networkName: info.networkName,
-        address: relayerAddress,
+        address: backendAddress,
     }
 }
 

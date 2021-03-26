@@ -67,7 +67,6 @@ const chainId = configNetwork.chainId
 const supportedNetwork = configNetwork.supportedNetwork
 const supportedNetworkName = configNetwork.supportedNetworkName
 const blockExplorerTxPrefix = configNetwork.blockExplorerTxPrefix
-const relayerAddress = configNetwork.relayerAddress
 
 //config for token
 const configToken = configNetwork.token[token]
@@ -105,10 +104,12 @@ let deployedAddressesToken
 let mixerAddress
 let tokenAddress
 let semaphoreAddress
+let forwarderRegistryERC20Address
 
 if (deployedAddressesNetwork){
     relayerRegistryAddress = deployedAddressesNetwork.RelayerRegistry
     deployedAddressesToken = deployedAddressesNetwork.token[token]
+    forwarderRegistryERC20Address = deployedAddressesNetwork.ForwarderRegistryERC20
     //config of deployed address contract token
     if (deployedAddressesToken){
         mixerAddress = deployedAddressesToken.Mixer
@@ -128,7 +129,7 @@ export {
     mixerAddress,
     tokenAddress,
     semaphoreAddress,
-    relayerAddress,
+    forwarderRegistryERC20Address,
     blockExplorerTxPrefix,
     endsAtMidnight,
     endsAfterSecs,

@@ -233,10 +233,10 @@ const deployAllContracts = async (
     //token contract
     let tokenContract
     if (configToken  && configToken.hasOwnProperty('decimals')){
-        if (configToken.has('deployedAddresse')){
+        if (configToken.has('address')){
             console.log('Using existing token contract')
             tokenContract = new ethers.Contract(
-                configToken.deployedAddresse,
+                configToken.address,
                 ERC20Mintable.abi,
                 wallet,
             )

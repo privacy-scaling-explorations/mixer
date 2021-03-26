@@ -48,11 +48,9 @@ const _mixRoute = (forTokens: boolean) => async (
 ) => {
 
 
-    //const relayerAddress = await getRelayerAddress(depositProof.networkName)
-
     const wallet = await getRelayerWallet(depositProof.networkName)
 
-    const relayerAddress = await wallet.getAddress()
+    //const relayerAddress = await wallet.getAddress()
 
     const provider = wallet.provider
 
@@ -111,7 +109,7 @@ const _mixRoute = (forTokens: boolean) => async (
     // verify the signal off-chain
     const signal = genMixerSignal(
         depositProof.recipientAddress,
-        relayerAddress,
+        forwarderRegistryERC20Address,
         BigInt(depositProof.fee),
     )
 
@@ -266,10 +264,12 @@ const _mixRoute = (forTokens: boolean) => async (
     // Get the latest nonce
     const nonce = await provider.getTransactionCount(wallet.address, 'pending')
 
-    let mixCallData
+    let relayCallData
     const iface = new ethers.utils.Interface(mixerAbi)
+    const forwarderRegistryERC20Iface = new ethers.utils.Interface(forwarderRegistryERC20Abi)
     if (forTokens) {
-        mixCallData = iface.encodeFunctionData("mixERC20",[
+        const tokenAddress = await mixerContract.token()
+        const mixCallData = iface.encodeFunctionData("mixERC20",[
             depositProof.signal,
             depositProof.a,
             depositProof.b,
@@ -277,9 +277,17 @@ const _mixRoute = (forTokens: boolean) => async (
             depositProof.input,
             depositProof.recipientAddress,
             depositProof.fee,
-            relayerAddress])
+            forwarderRegistryERC20Address]
+        )
+        relayCallData = forwarderRegistryERC20Iface.encodeFunctionData("relayCallERC20",
+            [
+                mixerContractAddress,
+                mixCallData,
+                tokenAddress,
+            ],
+        )
     } else {
-        mixCallData = iface.encodeFunctionData("mix",[
+        const mixCallData = iface.encodeFunctionData("mix",[
             depositProof.signal,
             depositProof.a,
             depositProof.b,
@@ -287,16 +295,18 @@ const _mixRoute = (forTokens: boolean) => async (
             depositProof.input,
             depositProof.recipientAddress,
             depositProof.fee,
-            relayerAddress])
+            forwarderRegistryERC20Address]
+        )
+        relayCallData = forwarderRegistryERC20Iface.encodeFunctionData("relayCall",
+            [
+                mixerContractAddress,
+                mixCallData
+            ],
+        )
     }
 
-    const forwarderRegistryERC20Iface = new ethers.utils.Interface(forwarderRegistryERC20Abi)
-    const relayCallData = forwarderRegistryERC20Iface.encodeFunctionData("relayCall",
-        [
-            mixerContractAddress,
-            mixCallData
-        ],
-    )
+
+
 
     /*
     const unsignedTx = {

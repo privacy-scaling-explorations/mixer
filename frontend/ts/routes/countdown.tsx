@@ -39,6 +39,7 @@ import {
     endsAtMidnight,
     endsAfterSecs,
     mixerAddress,
+    forwarderRegistryERC20Address,
     chainId,
     snarksPathsCircuit,
     snarksPathsProvingKey,
@@ -104,7 +105,7 @@ export default () => {
             const recipientBalanceBefore = (await tokenContract.balanceOf(recipientAddress)) / (10 ** tokenDecimals)
         }
 
-        const relayerAddress = (await getBackendStatus(network)).address
+        const relayerAddress = forwarderRegistryERC20Address
 
         try {
 

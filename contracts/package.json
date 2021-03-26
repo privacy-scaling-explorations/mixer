@@ -15,6 +15,7 @@
     "test-debug": "NODE_ENV=local-test node --inspect-brk node_modules/.bin/jest --runInBand --testPathPattern=__tests__/",
     "watch": "tsc --watch",
     "deploy": "tsc && node ./build/deploy/deployContract.js -o deployedAddresses.json",
+    "surrogeth-info": "tsc && node ./build/deploy/surrogethInfo.js",
     "deploy-test": "tsc && NODE_ENV=local-test node ./build/deploy/deployContract.js -o deployedAddresses.json",
     "compile": "tsc && node ./build/deploy/compile.js",
     "ganache": "npx ganache-cli -a 10 -m='candy maple cake sugar pudding cream honey rich smooth crumble sweet treat' --gasLimit=8000000 --port 8545 -i 1234 --networkId 1234"

@@ -10,7 +10,8 @@
     "screen-ganache": "screen -S Ganache -d -m bash -c \"cd contracts && npm run ganache\"",
     "screen-backend": "screen -S MixerBackend -d -m bash -c \"cd backend && npm run server\"",
     "screen-semaphore": "screen -S MixerSemaphore -d -m bash -c \"cd semaphore/semaphorejs && npx http-server -p 8000 --cors\"",
-    "screen-frontend": "screen -S MixerFrontend -d -m bash -c \"cd frontend && npm run server\""
+    "screen-frontend": "screen -S MixerFrontend -d -m bash -c \"cd frontend && npm run server\"",
+    "screen-surrogeth": "screen -S Surrogeth -d -m bash -c \"cd surrogeth/surrogethd && NODE_ENV=surrogeth-mixer npm run server\""
   },
   "devDependencies": {
     "lerna": "3.22.1",

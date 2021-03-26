@@ -4,28 +4,12 @@ env: 'local-dev'
 network:
 
     kovan:
-        disable: true
+        disable: false
         useRegistry: true
         url: "https://kovan.infura.io/v3/5d37c494621a43558d77c90e368d4022"
         chainId: 42
         supportedNetwork: 42
-        privateKeysPath: "../kovanPrivateKeys.json"
-        supportedNetworkName: "Kovan"
-        blockExplorerTxPrefix: "https://kovan.etherscan.io/tx/"
-        token:
-            eth:
-                mixAmt: 0.1
-                feeAmt: 0.001
-                sym: 'KETH'
-                name: 'Kovan Ether'
-
-    kovanTest:
-        disable: true
-        useRegistry: true
-        url: "https://kovan.infura.io/v3/5d37c494621a43558d77c90e368d4022"
-        chainId: 42
-        supportedNetwork: 42
-        privateKeysPath: "../kovanPrivateKeys.json"
+        privateKeysPath: "kovanPrivateKeys.json"
         supportedNetworkName: "Kovan"
         blockExplorerTxPrefix: "https://kovan.etherscan.io/tx/"
         token:
@@ -36,12 +20,12 @@ network:
                 name: 'Kovan Ether'
             tkn:
                 decimals: 18
-                mixAmt: 20
-                feeAmt: 0.02
+                mixAmt: 100
+                feeAmt: 2
                 sym: 'TKN'
                 name: 'Token'
             dai:
-                deployedAddresse: '0x4F96Fe3b7A6Cf9725f59d353F723c1bDb64CA6Aa'
+                address: '0x4F96Fe3b7A6Cf9725f59d353F723c1bDb64CA6Aa'
                 decimals: 18
                 mixAmt: 20
                 feeAmt: 0.02
@@ -54,7 +38,7 @@ network:
         url: "http://localhost:8545"
         chainId: 1337
         supportedNetwork: 1337
-        privateKeysPath: "../ganachePrivateKeys.json"
+        privateKeysPath: "ganachePrivateKeys.json"
         supportedNetworkName: "Ganache"
         token:
             eth:
@@ -62,14 +46,20 @@ network:
                 feeAmt: 0.002
                 sym: 'ETH'
                 name: 'Ether'
+            tkn:
+                decimals: 18
+                mixAmt: 102
+                feeAmt: 2
+                sym: 'TKN'
+                name: 'Token'
 
     ganache2:
-        disable: true
+        disable: false
         useRegistry: false
         url: "http://localhost:8545"
         chainId: 1337
         supportedNetwork: 1337
-        privateKeysPath: "../ganachePrivateKeys.json"
+        privateKeysPath: "ganachePrivateKeys.json"
         supportedNetworkName: "Ganache"
         token:
             eth:
@@ -85,12 +75,12 @@ network:
                 name: 'Token'
 
     ropsten:
-        disable: true
+        disable: false
         useRegistry: true
         url: "https://ropsten.infura.io/v3/5d37c494621a43558d77c90e368d4022"
         chainId: 3
         supportedNetwork: 3
-        privateKeysPath: "../kovanPrivateKeys.json"
+        privateKeysPath: "kovanPrivateKeys.json"
         supportedNetworkName: "Ropsten"
         blockExplorerTxPrefix: "https://ropsten.etherscan.io/tx/"
         token:
@@ -112,7 +102,7 @@ network:
         url: "https://kovan3.arbitrum.io/rpc"
         chainId: 79377087078960
         supportedNetwork: 79377087078960
-        privateKeysPath: "../kovanPrivateKeys.json"
+        privateKeysPath: "kovanPrivateKeys.json"
         blockExplorerTxPrefix: https://explorer.arbitrum.io/#/tx/
         supportedNetworkName: "Arbitrum"
         token:
@@ -128,29 +118,25 @@ network:
                 sym: 'ETH'
                 name: 'Ether'
     skale:
-        disable: true
+        disable: false
         useRegistry: true
         url: "https://dev-testnet-v1-0.skalelabs.com"
         chainId: 344435
         supportedNetwork: 344435
-        privateKeysPath: "../kovanPrivateKeys.json"
+        privateKeysPath: "kovanPrivateKeys.json"
         supportedNetworkName: "Skale"
         token:
             tkn:
                 decimals: 18
-                mixAmt: 20
-                feeAmt: 0.02
+                mixAmt: 102
+                feeAmt: 2
                 sym: 'TKN'
                 name: 'Token'
             eth:
-                mixAmt: 0.1
-                feeAmt: 0.001
+                mixAmt: 0.102
+                feeAmt: 0.002
                 sym: 'ETH'
                 name: 'Ether'
-
-chain:
-    gasLimit:
-        mix: 8000000
 
 backend:
   port: 3000
@@ -169,3 +155,6 @@ frontend:
   countdown:
     endsAtUtcMidnight: false
     endsAfterSecs: 5
+
+#for surrogeth compatibility
+surrogethPort: 8123

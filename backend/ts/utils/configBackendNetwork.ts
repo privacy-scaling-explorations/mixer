@@ -13,7 +13,6 @@ const getTestParam = (network : string, token : string) => {
     const hotWalletPrivKeyPath = configNetwork.hotWalletPrivKeyPath
     const privateKeysPath = configNetwork.privateKeysPath
 
-
     const mixAmt = configToken.mixAmt
     const feeAmt = configToken.feeAmt
     let tokenDecimals = configToken.decimals
@@ -27,10 +26,11 @@ const getTestParam = (network : string, token : string) => {
     const deployedAddressesNetwork = deployedAddresses[network]
     const deployedAddressesToken = deployedAddressesNetwork.token[token]
 
-    const relayerRegistryAddress = deployedAddressesNetwork.RelayerRegistryAddress
     const tokenAddress = deployedAddressesToken.Token
     const mixerAddress = deployedAddressesToken.Mixer
+    console.log("mixerAddress", mixerAddress)
     const semaphoreAddress = deployedAddressesToken.Semaphore
+    const forwarderRegistryERC20Address = deployedAddressesNetwork.ForwarderRegistryERC20
 
     return {
         isETH,
@@ -42,15 +42,16 @@ const getTestParam = (network : string, token : string) => {
         privateKeysPath,
         mixerAddress,
         tokenAddress,
+        forwarderRegistryERC20Address,
     }
 }
 
-const getRelayerAddress = async (network) => {
+const getBackendAddress = async (network) => {
 
     const configNetwork = configMixer.network[network]
     const privateKeysPath = configNetwork.privateKeysPath
 
-    const hotWalletPrivKey = require("../" + privateKeysPath)
+    const hotWalletPrivKey = require("../../" + privateKeysPath)
 
     const wallet = new ethers.Wallet(
         hotWalletPrivKey[1],
@@ -66,7 +67,7 @@ const getRelayerWallet = async (network) => {
     const chainId = configNetwork.chainId
     const chainUrl = configNetwork.url
 
-    const hotWalletPrivKey = require("../" + privateKeysPath)
+    const hotWalletPrivKey = require("../../" + privateKeysPath)
 
     const provider = new ethers.providers.JsonRpcProvider(
         chainUrl,
@@ -122,7 +123,7 @@ const getMixerInfo = async (network, mixer) => {
 }
 
 export {
-    getRelayerAddress,
+    getBackendAddress,
     getRelayerWallet,
     getMixerInfo,
     getTestParam,

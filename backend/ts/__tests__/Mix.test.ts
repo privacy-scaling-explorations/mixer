@@ -28,13 +28,13 @@ import {
 
 import {
     getTestParam,
-    getRelayerAddress,
+    getBackendAddress,
 } from '../utils/configBackendNetwork'
 
 import { post } from './utils'
 
 const network = 'ganache'
-const token = 'eth'
+const token = 'tkn'
 
 const {
     isETH,
@@ -46,6 +46,7 @@ const {
     privateKeysPath,
     mixerAddress,
     tokenAddress,
+    forwarderRegistryERC20Address,
 } = getTestParam(network, token)
 
 jest.setTimeout(90000)
@@ -62,7 +63,7 @@ const provider = new ethers.providers.JsonRpcProvider(
     chainId,
 )
 
-const testingPrivKeys = require("../" + privateKeysPath)
+const testingPrivKeys = require("../../" + privateKeysPath)
 
 const signer = new ethers.Wallet(
     testingPrivKeys[0],
@@ -125,23 +126,19 @@ let server
 const recipientAddress = '0xC5fdf4076b8F3A5357c5E395ab970B5B54098Fef'
 
 describe('the mixer_mix_eth API call', () => {
-    let recipientBalanceBefore
-    let recipientBalanceAfter
 
     beforeAll(async () => {
         const app = createApp()
         server = app.listen(PORT)
     })
 
-
-
     if (isETH){
         test('accepts a valid proof to mix ETH and credits the recipient', async () => {
             // generate an identityCommitment
-            const relayerAddress = await getRelayerAddress(network)
+            const backendAddress = await getBackendAddress(network)
+            const relayerAddress = forwarderRegistryERC20Address
             const identity = genIdentity()
             const identityCommitment = genIdentityCommitment(identity)
-
             const tx = await mixerContract.deposit(
                 '0x' + identityCommitment.toString(16),
                 {
@@ -202,7 +199,8 @@ describe('the mixer_mix_eth API call', () => {
 
             //console.log("validParamsForEth", validParamsForEth)
 
-            recipientBalanceBefore = await provider.getBalance(recipientAddress)
+            const recipientBalanceBefore = await provider.getBalance(recipientAddress)
+            const backendBalanceBefore = await provider.getBalance(backendAddress)
 
             // make the API call to submit the proof
             const resp = await post(1, 'mixer_mix_eth', params)
@@ -224,29 +222,35 @@ describe('the mixer_mix_eth API call', () => {
                 }
             }
 
-            recipientBalanceAfter = await provider.getBalance(recipientAddress)
+            const recipientBalanceAfter = await provider.getBalance(recipientAddress)
+            const backendBalanceAfter = await provider.getBalance(backendAddress)
             expect(recipientBalanceAfter.sub(recipientBalanceBefore))
                 .toEqual(depositAmtWei.sub(feeAmtWei))
+            expect(backendBalanceAfter.sub(backendBalanceBefore).gt(0)).toBeTruthy()
+            expect(backendBalanceAfter.sub(backendBalanceBefore).lt(feeAmtWei)).toBeTruthy()
         })
     }else{
         test('accepts a valid proof to mix tokens and credits the recipient', async () => {
-            const relayerAddress = await getRelayerAddress(network)
+            const backendAddress = await getBackendAddress(network)
+            const relayerAddress = forwarderRegistryERC20Address
             const expectedTokenAmtToReceive = mixAmt - feeAmt
             // mint tokens for the sender
             await tokenContract.mint(
                 signer.address,
-                (mixAmt * (10 ** tokenDecimals)).toString(),
+                depositAmtWei,
                 //{ gasLimit: 100000, }
             )
             await tokenContract.approve(
                 mixerContract.address,
-                (mixAmt * (10 ** tokenDecimals)).toString(),
+                depositAmtWei,
                 //{ gasLimit: 100000, }
             )
 
             // generate an identityCommitment
             const identity = genIdentity()
             const identityCommitment = genIdentityCommitment(identity)
+
+            console.log("depositAmtWei", depositAmtWei.toString(), (await mixerContract.mixAmt()).toString())
 
             const tx = await mixerContract.depositERC20(
                 identityCommitment.toString(),
@@ -298,7 +302,8 @@ describe('the mixer_mix_eth API call', () => {
 
             validParamsForTokens = params
 
-            recipientBalanceBefore = await tokenContract.balanceOf(recipientAddress)
+            const recipientBalanceBefore = await tokenContract.balanceOf(recipientAddress)
+            const backendBalanceBefore = await tokenContract.balanceOf(backendAddress)
 
             // make the API call to submit the proof
             const resp = await post(1, 'mixer_mix_tokens', params)
@@ -320,14 +325,20 @@ describe('the mixer_mix_eth API call', () => {
                 }
             }
 
-            recipientBalanceAfter = await tokenContract.balanceOf(recipientAddress)
+            const recipientBalanceAfter = await tokenContract.balanceOf(recipientAddress)
+            const backendBalanceAfter = await tokenContract.balanceOf(backendAddress)
             const diff = recipientBalanceAfter.sub(recipientBalanceBefore).toString()
-            expect(diff).toEqual((expectedTokenAmtToReceive * (10 ** tokenDecimals)).toString())
+            expect(diff)
+                .toEqual((expectedTokenAmtToReceive * (10 ** tokenDecimals)).toString())
+            expect(backendBalanceAfter.sub(backendBalanceBefore).toString())
+                .toEqual(feeAmtWei.toString())
         })
 
     }
 
-
+    test('check if we use the right mixer', async () => {
+        expect(depositAmtWei.eq(await mixerContract.mixAmt())).toBeTruthy()
+    })
 
     if (isETH){
         test('rejects a request where the JSON-RPC schema is invalid', async () => {
@@ -440,9 +451,6 @@ describe('the mixer_mix_eth API call', () => {
             expect(resp.data.error.code).toEqual(errors.errorCodes.BACKEND_MIX_INSUFFICIENT_ETH_FEE)
         })
     }
-
-
-
 
     afterAll(async () => {
         server.close()
