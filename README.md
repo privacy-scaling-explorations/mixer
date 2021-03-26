@@ -25,7 +25,7 @@ A technical specification of the mixer is
 [here](https://hackmd.io/qlKORn5MSOes1WtsEznu_g).
 
 This mixer is highly experimental and not yet audited. Do not use it to mix
-real funds yet. It only supports Kovan ETH for now. Get Kovan ETH from a faucet
+real funds yet. It have been tested on Ganache, Kovan ETH, Ropsten ETH. Get Kovan ETH from a faucet
 [here](https://faucet.kovan.network/) or
 [here](https://gitter.im/kovan-testnet/faucet).
 
@@ -33,7 +33,7 @@ real funds yet. It only supports Kovan ETH for now. Get Kovan ETH from a faucet
 
 The current version of this mixer is a simple MVP for desktop Chrome, Brave, or
 Firefox. You should also have [MetaMask](https://metamask.io/) installed, and
-some Kovan ETH. You need at least 0.11 KETH to mix 0.1 ETH, and 20 Kovan DAI
+some Kovan ETH. By default you need at least 0.11 KETH to mix 0.1 ETH, and 20 Kovan DAI
 and 0.01 ETH to mix Kovan DAI. You can generate Kovan DAI using MakerDAO's CDP
 creation tool [here](https://cdp.makerdao.com).
 
@@ -77,7 +77,7 @@ It has the following features:
 
 ## Local development and testing
 
-These instructions have been tested with Ubuntu 18.0.4 and Node 11.14.0. (! It may not work with node > 11)
+These instructions have been tested with Debian 4.19 and Node v15.10.0
 
 ### Requirements
 
@@ -86,15 +86,17 @@ These instructions have been tested with Ubuntu 18.0.4 and Node 11.14.0. (! It m
       - We recommend [`nvm`](https://github.com/nvm-sh/nvm) to manage your Node
         installation.
 
+-->
+
 - [`etcd`](https://github.com/etcd-io/etcd) v3.3.13
     - The relayer server requires an `etcd` server to lock the account nonce of
       its hot wallet.
 
--->
+
 
 <!--
 
-### (Optional) Install Node 11.14.0 for local user
+### (Optional) Install Node x.x.x for local user
 
 Add at the end of ~/.profile or run it in your terminal to setup the path
 
@@ -108,7 +110,7 @@ Activate change in profile:
 . ~/.profile
 ```
 
-Install npm (nedd any node version)
+Install npm (need any node version) you may use the one already present on the system.
 ```bash
 wget https://nodejs.org/dist/v14.15.4/node-v14.15.4-linux-x64.tar.xz
 tar -xf node-v14.15.4-linux-x64.tar.xz
@@ -117,10 +119,10 @@ cd node-v14.15.4-linux-x64/bin
 npm config set prefix '~/.npm-global'
 ```
 
-Install n (Package manager for node) and node 11.4.0
+Install n (Package manager for node) and node x.x.x
 ```bash
 npm i -g n
-n 11.15.0
+n x.x.x
 ```
 
 Clean not needed version
@@ -132,19 +134,19 @@ rm -rf node-v14.15.4-linux-x64.tar.xz  node-v14.15.4-linux-x64
 Verify
 ```bash
 npm -v
-#6.4.1
+#x.x.x
 ```
 
 
 ```bash
 node -v
-#v11.15.0
+#vx.x.x
 ```
 -->
 
 ### Local development
 
-Clone this repository and its `semaphore` submodule:
+Clone this repository and its `semaphore` and `surrogeth` submodule:
 
 ```bash
 git clone https://github.com/jrastit/mixer.git
@@ -160,28 +162,31 @@ discarded.
 ```bash
 ./scripts/downloadSnarks.sh
 ```
+If you want to use other network than ganache
+Create a file named `kovanPrivateKeys.json` (or a name of your choice if you 
+modify the config) in the mixer/contracts directory or for more security 
+in a location outside this repository with a private key which will serve as 
+the operator's hot wallet.
 
-Create a file named `hotWalletPrivKey.json` in a location outside this
-repository with a private key which will serve as the operator's hot wallet.
-The following private key corresponds to the address
-`0x627306090abab3a6e1400e9345bc60c78a8bef57`, the first Ethereum address which
-can be derived from the well-known `candy maple cake sugar...` mnemonic. Don't
-use this in production.
+You can copy it from `/mixer/contracts/ganachePrivateKey.json`
+Don't use any of this key in production
+Only the first 3 values are used for testing
 
 ```json
-{
-    "privateKey": "0xc87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3"
-}
+[
+    "0xaa3680d5d48a8283413f7a108367c7299ca73f553735860a87b08f39395618b7",
+    "0x0f62d96d6675f32685bbdb8ac13cda7c23436f63efbb9d07700d8669ff12b7c4",
+    "0x8d5366123cb560bb606379f90a0bfd4769eecc0557f1b362dcae9012b548b1e5"
+]
 ```
-
-`0x62730609...` is also the address to which the Mixer contract will transfer
-fees.
 
 Copy `config/config.example.yaml` to `config/local-dev.yaml` to  and modify
 it as such:
 
-- Change `backend.hotWalletPrivKeyPath` to the absolute path to the
-  `hotWalletPrivKey.json` file you just created.
+- Change `kovanPrivateKeys.json` to the absolute path to the
+  `kovanPrivateKeys.json` file you just created if not in the contracts directory.
+
+- If you want to test only on ganache, put disalbe : true on all other network (kovan, ... )
 
 <!--
 Install dependencies for the Semaphore submodule and compile its contracts:
@@ -197,56 +202,74 @@ Install dependencies and build the source code:
 ```bash
 cd ../../
 # if you are still in semaphore/semaphorejs/
+```
 -->
+```bash
 npm i && \
 npm run bootstrap && \
 npm run build
 ```
-
-In a new terminal, run Ganche:
-
+Run ganache with screen
 ```bash
 # Assuming you are in mixer/
+npm run screen-ganache
+````
 
+Or run it in a new terminal to see the output 
+(let it run and open a new terminal)
+```bash
+# Assuming you are in mixer/
 cd contracts && \
 npm run ganache
 ```
 
-In another terminal, deploy the contracts:
+Deploy the contracts:
 
 ```bash
 # Assuming you are in mixer/
-
-cd contracts && \
 npm run deploy
 ```
-<!--
-In another terminal, run `etcd`:
+
+Run `etcd` with screen
+
+```bash
+screen -S etcd -d -m etcd
+```
+
+Or in another terminal, run `etcd`:
 
 ```bash
 etcd
 ```
 
-In another terminal, run the relayer server:
+Run the `backend` with screen
+```bash
+# Assuming you are in mixer/
+npm run screen-backend
+```
+
+Or in another terminal, run the backend:
 
 ```bash
 # Assuming you are in mixer/
-
 cd backend && \
 npm run server
 ```
--->
-In annother terminal launch a HTTP server to serve the zk-SNARK content:
 
+Run `semaphore` server with screen
 ```bash
 # Assuming you are in mixer/
+npm run screen-semaphore
+```
 
+Or in annother terminal launch a HTTP server to serve the zk-SNARK content:
+```bash
+# Assuming you are in mixer/
 cd semaphore/semaphorejs/ && \
 npx http-server -p 8000 --cors
 ```
 
 You can now run the frontend at http://localhost:1234.
-
 ```bash
 # Assuming you are in mixer/
 cd frontend && \
