@@ -7,11 +7,17 @@
     "buildBaseImage": "./scripts/buildBaseImage.sh",
     "buildImages": "./scripts/buildImages.sh",
     "deploy": "cd contracts && npm run deploy",
-    "screen-ganache": "screen -S Ganache -d -m bash -c \"cd contracts && npm run ganache\"",
-    "screen-backend": "screen -S MixerBackend -d -m bash -c \"cd backend && npm run server\"",
-    "screen-semaphore": "screen -S MixerSemaphore -d -m bash -c \"cd semaphore/semaphorejs && npx http-server -p 8000 --cors\"",
-    "screen-frontend": "screen -S MixerFrontend -d -m bash -c \"cd frontend && npm run server\"",
-    "screen-surrogeth": "screen -S Surrogeth -d -m bash -c \"cd surrogeth/surrogethd && NODE_ENV=surrogeth-mixer npm run server\""
+    "surrogeth-info": "cd contracts && npm run surrogeth",
+    "ganache": "cd contracts && npm run ganache",
+    "backend": "cd backend && npm run server",
+    "semaphore": "cd semaphore/semaphorejs",
+    "frontend": "cd frontend && npm run server",
+    "surrogeth": "cd surrogeth/surrogethd && NODE_ENV=surrogeth-mixer node js/server.js",
+    "screen-ganache": "screen -S Ganache -d -m bash -c \"npm run ganache\"",
+    "screen-backend": "screen -S MixerBackend -d -m bash -c \"npm run backend\"",
+    "screen-semaphore": "screen -S MixerSemaphore -d -m bash -c \"npm run semaphore\"",
+    "screen-frontend": "screen -S MixerFrontend -d -m bash -c \"npm run frontend\"",
+    "screen-surrogeth": "screen -S Surrogeth -d -m bash -c \"npm run surrogeth\""
   },
   "devDependencies": {
     "lerna": "3.22.1",

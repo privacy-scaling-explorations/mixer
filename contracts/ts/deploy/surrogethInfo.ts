@@ -62,7 +62,12 @@ const surrogethInfo = (path) => {
                                 writeAProperty(fd, indent, "address", deployedAddressesToken.Token)
                         }
                         writeProperty(fd, indent, "decimals", configToken)
-                        writeProperty(fd, indent, "feeAmt", configToken)
+                        if (configToken.surrogethFeeAmt){
+                            writeAProperty(fd, indent, "feeAmt", configToken.surrogethFeeAmt)
+                        }else{
+                            writeProperty(fd, indent, "feeAmt", configToken)
+                        }
+
                     indent--
                 }
 

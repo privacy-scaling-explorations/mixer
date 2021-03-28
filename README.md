@@ -47,12 +47,12 @@ It has the following features:
 
     - Immediate self-withdrawals in case the user wants their funds back at the
       cost of privacy.
-    
+
     - Immediate withdraw requests if the user wishes the operator to mix the
       funds immediately, which also comes at the cost of some privacy.
 
 2. A backend server with one JSON-RPC 2.0 endpoint, `mixer_mix()`, which:
-    
+
     - Accepts, verifies, and submits a zk-SNARK proof (generated in the user's
       browser) to the mixer contract.
 
@@ -63,14 +63,14 @@ It has the following features:
       signalling system as a base layer.
 
     - A Mixer contract with functions which
-        
+
         - Accepts ETH or ERC20 token deposits.
 
         - Accepts mix requests. Each request comprises of a zk-SNARK proof that
           a deposit had been made in the past and has not already been claimed.
           If the proof is valid, it transfers funds to the recipient and takes an
           operator's fee.
-        
+
         - Allows the operator to withdraw all accurred fees.
 
     - Gas costs after the Istanbul network upgrade is currently 1.2 million per deposit and 378k per withdrawal. The gas cost for each withdrawal (before Istanbul) is 886k.
@@ -163,9 +163,9 @@ discarded.
 ./scripts/downloadSnarks.sh
 ```
 If you want to use other network than ganache
-Create a file named `kovanPrivateKeys.json` (or a name of your choice if you 
-modify the config) in the mixer/contracts directory or for more security 
-in a location outside this repository with a private key which will serve as 
+Create a file named `kovanPrivateKeys.json` (or a name of your choice if you
+modify the config) in the mixer/contracts directory or for more security
+in a location outside this repository with a private key which will serve as
 the operator's hot wallet.
 
 You can copy it from `/mixer/contracts/ganachePrivateKey.json`
@@ -215,11 +215,10 @@ Run ganache with screen
 npm run screen-ganache
 ````
 
-Or run it in a new terminal to see the output 
+Or run it in a new terminal to see the output
 (let it run and open a new terminal)
 ```bash
 # Assuming you are in mixer/
-cd contracts && \
 npm run ganache
 ```
 
@@ -229,6 +228,14 @@ Deploy the contracts:
 # Assuming you are in mixer/
 npm run deploy
 ```
+
+Autoconfig surrogeth
+```bash
+# Assuming you are in mixer/
+npm run surrogeth-info
+```
+
+
 
 Run `etcd` with screen
 
@@ -252,8 +259,7 @@ Or in another terminal, run the backend:
 
 ```bash
 # Assuming you are in mixer/
-cd backend && \
-npm run server
+npm run backend
 ```
 
 Run `semaphore` server with screen
@@ -265,16 +271,24 @@ npm run screen-semaphore
 Or in annother terminal launch a HTTP server to serve the zk-SNARK content:
 ```bash
 # Assuming you are in mixer/
-cd semaphore/semaphorejs/ && \
-npx http-server -p 8000 --cors
+npm run semahpore
 ```
 
 You can now run the frontend at http://localhost:1234.
+Using screen
 ```bash
 # Assuming you are in mixer/
-cd frontend && \
-npm run server
+npm run frontend
 ```
+in the terminal
+```bash
+# Assuming you are in mixer/
+npm run frontend
+```
+
+To check the status of screen : screen -ls
+To check a running screen : screen -r MixerFrontend (and then to quit without
+killing it Ctrl + a / Ctrl + d)
 
 To automatically compile the TypeScript source code whenever you change it,
 first make sure that you have `npm run watch` running in a terminal. For
@@ -287,11 +301,12 @@ If you use a terminal multiplexer like `tmux`, your screen might now look like t
 
 Clockwise from top right:
 
-1. Ganache (`runGanache.sh`)
-2. Frontend (`npm run watch`)
-3. Deployed contracts (`npm run deploy`)
-4. HTTP server (`http-server`)
-5. Backend (`npm run server`)
+1. Ganache (`npm run ganache`)
+2. Deployed contracts (`npm run deploy`)
+3. Frontend (`npm run frontend`)
+4. HTTP server (`npm run semaphore`)
+5. Backend (`npm run backend`)
+6. Surrogeth (`npm run surrogeth`)
 
 ## Testing
 
@@ -299,22 +314,14 @@ Clockwise from top right:
 
 #### Contracts
 
-In the `mixer/contracts/` directory:
+In the `mixer/contracts/` directory (after starting ganache and deployed the contracts):
 
-1. Run `npm run build` if you haven't built the source already
-2. Run `npm run test`
+1. Run `npm run test`
 
 #### Backend
 
-In the `mixer/contracts/` directory:
+In the `mixer/backend/` directory (after starting ganache and deployed the contracts):
 
-1. Run `npm run build` if you haven't built the source already
-2. Run `npm run testnet`
-3. Run `npm run deploy`
-
-In the `mixer/backend/` directory:
-
-1. Run `npm run build` if you haven't built the source already
 2. Run `npm run test`
 
 <!--### Integration tests-->
