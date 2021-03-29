@@ -10,7 +10,7 @@
     "surrogeth-info": "cd contracts && npm run surrogeth-info",
     "ganache": "cd contracts && npm run ganache",
     "backend": "cd backend && npm run server",
-    "semaphore": "cd semaphore/semaphorejs",
+    "semaphore": "cd semaphore/semaphorejs && npx http-server -p 8000 --cors",
     "frontend": "cd frontend && npm run server",
     "surrogeth": "cd surrogeth/surrogethd && NODE_ENV=surrogeth-mixer node js/server.js",
     "screen-ganache": "screen -S Ganache -d -m bash -c \"npm run ganache\"",
