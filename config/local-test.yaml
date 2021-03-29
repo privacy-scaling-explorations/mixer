@@ -168,4 +168,5 @@ frontend:
     endsAfterSecs: 5
 
 #for surrogeth compatibility
-surrogethPort: "8123"
+surrogethPort: 8124
+surrogethIp: "127.0.0.1"

@@ -61,15 +61,11 @@ const surrogetGetBroadcaster = async (
 
     const client = new SurrogethClient(
         wallet,
-        network, // "KOVAN" || "MAINNET"
+        network,
         forwarderRegistryERC20ContractAddress, // defaults to current deployment on specified network
         ForwarderRegistryERC20.abi,
         protocol // "https" || "http"
     )
-
-    //console.log("client", client)
-
-    //console.log(JSON.stringify(ForwarderRegistryERC20.abi, null, 2))
 
     let relayers = await client.getBroadcasters(
         1,
@@ -77,32 +73,7 @@ const surrogetGetBroadcaster = async (
         new Set(["ip"]) // only return relayers with an IP address
     )
 
-    //console.log("relayers", relayers)
-
-    if (!relayers.length){
-
-        console.log("Set default relayer locator")
-
-        const tx = await client.setIPRelayerLocator("127.0.0.1:8123")
-
-        //await tx.wait()
-
-        relayers = await client.getBroadcasters(
-            1,
-            //new Set([]), // don't ignore any addresses
-            new Set(["ip"]) // only return relayers with an IP address
-        )
-    }
-
     if (relayers.length > 0) {
-        const fee = await client.getAvgFee(relayers[0])
-
-        //console.log("fee", fee)
-
-        // ... construct transaction using fee -> tx: {to, data, value}. If this tx is to be used in the burn
-        // registry, it *must* be sent to the deployed RelayerForwarder contract
-
-        //const txHash = await client.submitTx(tx, relayers[0]);
         return relayers[0]
     }
 

@@ -7,7 +7,7 @@
     "buildBaseImage": "./scripts/buildBaseImage.sh",
     "buildImages": "./scripts/buildImages.sh",
     "deploy": "cd contracts && npm run deploy",
-    "surrogeth-info": "cd contracts && npm run surrogeth",
+    "surrogeth-info": "cd contracts && npm run surrogeth-info",
     "ganache": "cd contracts && npm run ganache",
     "backend": "cd backend && npm run server",
     "semaphore": "cd semaphore/semaphorejs",
