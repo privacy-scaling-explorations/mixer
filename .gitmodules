@@ -2,7 +2,11 @@
 	path = semaphore
 	url = https://github.com/jrastit/semaphore.git
 	branch = mixer-1
+[submodule "libsemaphore"]
+	path = libsemaphore
+	url = https://github.com/jrastit/libsemaphore.git
+	branch = mixer-1
 [submodule "surrogeth"]
 	path = surrogeth
 	url = https://github.com/jrastit/surrogeth.git
-	branch = master 
+	branch = master
