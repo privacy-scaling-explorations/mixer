@@ -1,5 +1,5 @@
 import * as ethers from 'ethers'
-import { getRelayerRegistryContract, getMixerContract, Mixer } from './mixer'
+import { getForwarderRegistryERC20Contract, getMixerContract, Mixer } from './mixer'
 
 import{
     chainId,
@@ -43,7 +43,7 @@ const quickWithdrawEth = async (
 ) => {
 
     const mixerContract = await getMixerContract(provider)
-    const relayerRegistryContract = await getRelayerRegistryContract(provider)
+    const relayerRegistryContract = await getForwarderRegistryERC20Contract(provider)
 
     const depositProof = genDepositProof(
         signal,
@@ -88,7 +88,7 @@ const quickWithdrawTokens = async (
 ) => {
 
     const mixerContract = await getMixerContract(provider)
-    const relayerRegistryContract = await getRelayerRegistryContract(provider)
+    const relayerRegistryContract = await getForwarderRegistryERC20Contract(provider)
 
     const depositProof = genDepositProof(
         signal,
@@ -109,7 +109,7 @@ const quickWithdrawTokens = async (
         depositProof.fee,
         broadcasterAddress])
 
-    return relayerRegistryContract.relayCall(
+    return relayerRegistryContract.relayCallERC20(
         mixerAddress,
         callData,
         { gasLimit: 8000000 },

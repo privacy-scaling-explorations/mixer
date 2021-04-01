@@ -1,13 +1,13 @@
 import * as ethers from 'ethers'
 const Mixer = require('../../compiled/Mixer.json')
 const Semaphore = require('../../compiled/Semaphore.json')
-const RelayerRegistry = require('../../compiled/RelayerRegistry.json')
+const ForwarderRegistryERC20 = require('../../compiled/ForwarderRegistryERC20.json')
 const Token = require('../../compiled/ERC20Mintable.json')
 
 import{
     chainId,
     tokenAddress,
-    relayerRegistryAddress,
+    forwarderRegistryERC20Address,
     mixerAddress,
     semaphoreAddress,
 } from '../utils/configFrontend'
@@ -15,13 +15,13 @@ import{
 // It's not trivial to generalise these functions as Parcel won't let you
 // dynamically require JSON files
 
-const getRelayerRegistryContract = async (provider) => {
+const getForwarderRegistryERC20Contract = async (provider) => {
 
     const signer = provider.getSigner()
 
     return new ethers.Contract(
-        relayerRegistryAddress,
-        RelayerRegistry.abi,
+        forwarderRegistryERC20Address,
+        ForwarderRegistryERC20.abi,
         signer,
     )
 }
@@ -61,7 +61,7 @@ const getTokenContract = async (provider) => {
 
 export {
     Mixer,
-    getRelayerRegistryContract,
+    getForwarderRegistryERC20Contract,
     getMixerContract,
     getSemaphoreContract,
     getTokenContract,

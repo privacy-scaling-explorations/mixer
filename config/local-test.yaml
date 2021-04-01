@@ -4,7 +4,7 @@ env: 'local-dev'
 network:
 
     kovan:
-        disable: false
+        disable: true
         useRegistry: true
         url: "https://kovan.infura.io/v3/5d37c494621a43558d77c90e368d4022"
         chainId: 42
@@ -57,7 +57,7 @@ network:
                 name: 'Token'
 
     ganache2:
-        disable: false
+        disable: true
         useRegistry: false
         url: "http://localhost:8545"
         chainId: 1337
@@ -79,7 +79,7 @@ network:
                 name: 'Token'
 
     ropsten:
-        disable: false
+        disable: true
         useRegistry: true
         url: "https://ropsten.infura.io/v3/5d37c494621a43558d77c90e368d4022"
         chainId: 3
