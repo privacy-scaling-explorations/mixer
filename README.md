@@ -244,6 +244,12 @@ Or run it in a new terminal to see the output
 npm run ganache
 ```
 
+Clean contract deployed cache (if already deployed before):
+```bash
+# Assuming you are in mixer/
+npm run clean-cache
+```
+
 Deploy the contracts:
 
 ```bash
