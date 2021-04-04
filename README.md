@@ -188,6 +188,19 @@ it as such:
 
 - If you want to test only on ganache, put disalbe : true on all other network (kovan, ... )
 
+Install dependencies for the Surrogeth submodule:
+```bash
+cd surrogeth/client && \
+npm i
+# if you are still in surrogeth
+cd ../../
+
+cd surrogeth/surrogethd && \
+npm i
+# if you are still in surrogeth
+cd ../../
+```
+
 <!--
 Install dependencies for the Semaphore submodule and compile its contracts:
 
