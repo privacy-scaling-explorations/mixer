@@ -33,7 +33,7 @@ const writeProperty = (fd, indent, name, config) => {
 }
 
 const surrogethInfo = (surrogethPath) => {
-    console.log("write file")
+    console.log("write file " + surrogethPath)
     fs.open(surrogethPath, 'w', function (err, fd) {
         if (err){
             throw err

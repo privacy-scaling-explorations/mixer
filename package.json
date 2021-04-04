@@ -6,6 +6,7 @@
     "build": "lerna run build",
     "buildBaseImage": "./scripts/buildBaseImage.sh",
     "buildImages": "./scripts/buildImages.sh",
+    "clean-cache": "cd contracts && npm run clean-cache",
     "deploy": "cd contracts && npm run deploy",
     "surrogeth-info": "cd contracts && npm run surrogeth-info",
     "ganache": "cd contracts && npm run ganache",

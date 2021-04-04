@@ -338,7 +338,7 @@ const main = async () => {
         fs.mkdirSync(outputPath)
     }
 
-    buildMiMC(outputPath)
+    await buildMiMC(outputPath)
     //compileInput(inputMiMC, outputPath)
     compileInput(forwarderRegistryERC20, outputPath)
     compileInput(inputSurrogethRegistry, outputPath)
