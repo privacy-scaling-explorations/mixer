@@ -51,7 +51,7 @@ const getBackendAddress = async (network) => {
     const configNetwork = configMixer.network[network]
     const privateKeysPath = configNetwork.privateKeysPath
 
-    const hotWalletPrivKey = require("../../" + privateKeysPath)
+    const hotWalletPrivKey = require("../../../" + privateKeysPath)
 
     const wallet = new ethers.Wallet(
         hotWalletPrivKey[1],
@@ -67,7 +67,7 @@ const getRelayerWallet = async (network) => {
     const chainId = configNetwork.chainId
     const chainUrl = configNetwork.url
 
-    const hotWalletPrivKey = require("../../" + privateKeysPath)
+    const hotWalletPrivKey = require("../../../" + privateKeysPath)
 
     const provider = new ethers.providers.JsonRpcProvider(
         chainUrl,

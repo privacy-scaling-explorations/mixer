@@ -164,11 +164,11 @@ discarded.
 ```
 If you want to use other network than ganache
 Create a file named `kovanPrivateKeys.json` (or a name of your choice if you
-modify the config) in the mixer/contracts directory or for more security
+modify the config) in the mixer/key directory or for more security
 in a location outside this repository with a private key which will serve as
 the operator's hot wallet.
 
-You can copy it from `/mixer/contracts/ganachePrivateKey.json`
+You can copy it from `/mixer/key/ganachePrivateKey.json`
 Don't use any of this key in production
 Only the first 3 values are used for testing
 
@@ -183,7 +183,7 @@ Only the first 3 values are used for testing
 Copy `config/config.example.yaml` to `config/local-dev.yaml` to  and modify
 it as such:
 
-- Change `kovanPrivateKeys.json` to the absolute path to the
+- Change `key/kovanPrivateKeys.json` to the absolute path to the
   `kovanPrivateKeys.json` file you just created if not in the contracts directory.
 
 - If you want to test only on ganache, put disalbe : true on all other network (kovan, ... )
@@ -234,8 +234,6 @@ Autoconfig surrogeth
 # Assuming you are in mixer/
 npm run surrogeth-info
 ```
-
-
 
 Run `etcd` with screen
 

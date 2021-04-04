@@ -9,7 +9,7 @@ network:
         url: "https://kovan.infura.io/v3/5d37c494621a43558d77c90e368d4022"
         chainId: 42
         supportedNetwork: 42
-        privateKeysPath: "kovanPrivateKeys.json"
+        privateKeysPath: "key/kovanPrivateKeys.json"
         supportedNetworkName: "Kovan"
         blockExplorerTxPrefix: "https://kovan.etherscan.io/tx/"
         token:
@@ -38,7 +38,7 @@ network:
         url: "http://localhost:8545"
         chainId: 1337
         supportedNetwork: 1337
-        privateKeysPath: "ganachePrivateKeys.json"
+        privateKeysPath: "key/ganachePrivateKeys.json"
         supportedNetworkName: "Ganache"
         token:
             eth:
@@ -59,7 +59,7 @@ network:
         url: "http://localhost:8545"
         chainId: 1337
         supportedNetwork: 1337
-        privateKeysPath: "ganachePrivateKeys.json"
+        privateKeysPath: "key/ganachePrivateKeys.json"
         supportedNetworkName: "Ganache"
         token:
             eth:
@@ -80,7 +80,7 @@ network:
         url: "https://ropsten.infura.io/v3/5d37c494621a43558d77c90e368d4022"
         chainId: 3
         supportedNetwork: 3
-        privateKeysPath: "kovanPrivateKeys.json"
+        privateKeysPath: "key/kovanPrivateKeys.json"
         supportedNetworkName: "Ropsten"
         blockExplorerTxPrefix: "https://ropsten.etherscan.io/tx/"
         token:
@@ -102,7 +102,7 @@ network:
         url: "https://kovan3.arbitrum.io/rpc"
         chainId: 79377087078960
         supportedNetwork: 79377087078960
-        privateKeysPath: "kovanPrivateKeys.json"
+        privateKeysPath: "key/kovanPrivateKeys.json"
         blockExplorerTxPrefix: https://explorer.arbitrum.io/#/tx/
         supportedNetworkName: "Arbitrum"
         token:
@@ -123,7 +123,7 @@ network:
         url: "https://dev-testnet-v1-0.skalelabs.com"
         chainId: 344435
         supportedNetwork: 344435
-        privateKeysPath: "kovanPrivateKeys.json"
+        privateKeysPath: "key/kovanPrivateKeys.json"
         supportedNetworkName: "Skale"
         token:
             tkn:

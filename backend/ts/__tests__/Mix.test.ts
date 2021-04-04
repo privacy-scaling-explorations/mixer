@@ -63,7 +63,7 @@ const provider = new ethers.providers.JsonRpcProvider(
     chainId,
 )
 
-const testingPrivKeys = require("../../" + privateKeysPath)
+const testingPrivKeys = require("../../../" + privateKeysPath)
 
 const signer = new ethers.Wallet(
     testingPrivKeys[0],

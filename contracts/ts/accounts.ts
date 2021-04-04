@@ -2,7 +2,7 @@ import * as ethers from 'ethers'
 import configMixer from 'mixer-config'
 
 const genAccounts = (_configNetwork: configMixer) => {
-    let privateKeys = require("../" + _configNetwork.get('privateKeysPath'))
+    let privateKeys = require("../../" + _configNetwork.get('privateKeysPath'))
     return privateKeys.map((pk: string) => {
         return new ethers.Wallet(pk)
     })

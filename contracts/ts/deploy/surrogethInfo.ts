@@ -1,7 +1,8 @@
 import { configMixer } from 'mixer-config'
 const deployedAddresses = require('../../deployedAddresses.json')
 
-var fs = require('fs');
+const fs = require('fs');
+const path = require('path');
 
 const writeLine = (fd, indent, text) => {
     for (let i = 0; i < indent; i++){
@@ -31,9 +32,9 @@ const writeProperty = (fd, indent, name, config) => {
     }
 }
 
-const surrogethInfo = (path) => {
+const surrogethInfo = (surrogethPath) => {
     console.log("write file")
-    fs.open(path, 'w', function (err, fd) {
+    fs.open(surrogethPath, 'w', function (err, fd) {
         if (err){
             throw err
         }
@@ -52,7 +53,13 @@ const surrogethInfo = (path) => {
                 writeHead(fd, indent++, configNetworkName)
                 writeProperty(fd, indent, "url", configNetwork)
                 writeProperty(fd, indent, "chainId", configNetwork)
-                writeProperty(fd, indent, "privateKeysPath", configNetwork)
+                let privateKeysPath = configNetwork.get('privateKeysPath')
+                if (privateKeysPath){
+                    if (!path.isAbsolute(privateKeysPath)){
+                        privateKeysPath = path.join("..", "..", privateKeysPath)
+                    }
+                    writeAProperty(fd, indent, "privateKeysPath", privateKeysPath)
+                }
                 writeProperty(fd, indent, "ForwarderRegistryERC20", deployedAddressesNetwork)
                 writeHead(fd, indent++, "token")
                 for (let configTokenName of Object.keys(configNetwork.get('token'))) {
