@@ -187,7 +187,7 @@ it as such:
   `kovanPrivateKeys.json` file you just created if not in the contracts directory.
 
 - If you want to test only on ganache, put disalbe : true on all other network (kovan, ... )
-
+Or if you want to run the test, in config : ln -s local-test.yaml local-dev.yaml
 
 Install dependencies for the libsemaphore submodule:
 ```bash

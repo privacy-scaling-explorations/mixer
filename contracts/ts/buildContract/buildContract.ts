@@ -335,8 +335,8 @@ const main = async () => {
 
     if (fs.existsSync(outputPath)){
         fs.rmdirSync(outputPath, { recursive: true })
-        fs.mkdirSync(outputPath)
     }
+    fs.mkdirSync(outputPath)
 
     await buildMiMC(outputPath)
     //compileInput(inputMiMC, outputPath)
