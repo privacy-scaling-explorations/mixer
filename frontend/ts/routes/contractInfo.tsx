@@ -6,6 +6,8 @@ import{
     chainId,
     network,
     tokenAddress,
+    tokenDecimals,
+    tokenSym,
     mixerAddress,
     semaphoreAddress,
     forwarderRegistryERC20Address,
@@ -22,21 +24,25 @@ import {
 const AboutRoute = () => {
 
     const [relayerAddress, setRelayerAddress] = useState('Request...')
-    const [broadcasterList, setBroadcasterList] = useState('Request...')
+    const [broadcasterList, setBroadcasterList] = useState(["Request..."])
 
     let initBroadcasterList
 
     const context = useContext(ConnectionContext)
 
-    const connectWallet = () => {
+    const connectWallet = (interval) => {
         if (!initBroadcasterList && context.signer)
-        getBroadcasterList(context.signer, network, tokenAddress).then((result) => {
-            //console.log(result)
-            if (result){
+        getBroadcasterList(context.signer, network, tokenAddress, tokenDecimals).then((result) => {
+            //console.log(JSON.stringify(result), JSON.stringify(broadcasterList))
+            if (result && JSON.stringify(result) !== JSON.stringify(broadcasterList)){
                 //{locator, locatorType, address}
-                setBroadcasterList(result[0].address + " " + result[0].locator)
+                //setBroadcasterList(result[0].address + " " + result[0].locator)
+                setBroadcasterList(result)
+            }else if (!result){
+                setBroadcasterList(["error"])
             }else{
-                setBroadcasterList("error")
+                //Stop check each second for server load
+                clearInterval(interval)
             }
 
         })
@@ -49,9 +55,11 @@ const AboutRoute = () => {
             //console.log(result)
             setRelayerAddress(result.address)
         })
-        const interval = setInterval(() => connectWallet(), 1000)
+        const interval = setInterval(() => connectWallet(interval), 1000)
         return () => clearInterval(interval)
     })
+
+    //console.log("Draw Contract info")
 
     return (
         <div className='columns'>
@@ -75,14 +83,56 @@ const AboutRoute = () => {
                 Relayer Address : {relayerAddress}
             </p>
             <p>
-                forwarderRegistryERC20 Address : {forwarderRegistryERC20Address}
+                ForwarderRegistryERC20 Address : {forwarderRegistryERC20Address}
             </p>
-            <p>
-                broadcaster Address : {broadcasterList}
-            </p>
+
+                Broadcaster : <br/>
+                <table style={{marginLeft: "0em"}}>
+                    <thead>
+                        <tr>
+                            <td style={
+                                {textAlign: "center", padding: '0 1em 0 1em'}
+                            }>IP</td>
+                            <td style={
+                                {textAlign: "center", padding: '0 1em 0 1em'}
+                            }>Address</td>
+                            <td style={
+                                {textAlign: "center", padding: '0 1em 0 1em'}
+                            }>Transaction</td>
+                            <td style={
+                                {textAlign: "center", padding: '0 1em 0 1em'}
+                            }>Average fee</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {broadcasterList.map((obj:any) => {
+                        if (typeof obj === 'string' || obj instanceof String){
+                            return (<tr key="msg">
+                                <td>{obj}</td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                            </tr>)
+                        }else{
+                            return (
+                                //The address is unique
+                                <tr key={obj.address}>
+                                    <td style={{padding: '0 1em 0 1em'}}>
+                                        {obj.locator}
+                                    </td><td style={{padding: '0 1em 0 1em'}}>
+                                        {obj.address}
+                                    </td><td style={{padding: '0 1em 0 1em'}}>
+                                        {obj.feeCount}
+                                    </td><td style={{padding: '0 1em 0 1em'}}>
+                                        {obj.feeAvg}&nbsp;{tokenSym}
+                                    </td></tr>)
+                        }
+                    })}
+                </tbody></table>
+
         </div>
     </div>
-)
+    )
 }
 
 export default AboutRoute
