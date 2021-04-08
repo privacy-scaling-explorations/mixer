@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react'
 import ReactDOM from 'react-dom'
 import { ConnectionContext } from '../utils/connectionContext'
-
+import { ethers } from 'ethers'
 import{
     chainId,
     network,
@@ -32,7 +32,7 @@ const AboutRoute = () => {
 
     const connectWallet = (interval) => {
         if (!initBroadcasterList && context.signer)
-        getBroadcasterList(context.signer, network, tokenAddress, tokenDecimals).then((result) => {
+        getBroadcasterList(context.signer, network, tokenAddress).then((result) => {
             //console.log(JSON.stringify(result), JSON.stringify(broadcasterList))
             if (result && JSON.stringify(result) !== JSON.stringify(broadcasterList)){
                 //{locator, locatorType, address}
@@ -114,6 +114,13 @@ const AboutRoute = () => {
                                 <td></td>
                             </tr>)
                         }else{
+                            const feeAvg = obj.feeCount.eq(0) ?
+                                '' :
+                                ethers.utils.formatUnits(
+                                    obj.feeSum.div(obj.feeCount),
+                                    tokenDecimals
+                                )
+
                             return (
                                 //The address is unique
                                 <tr key={obj.address}>
@@ -122,9 +129,9 @@ const AboutRoute = () => {
                                     </td><td style={{padding: '0 1em 0 1em'}}>
                                         {obj.address}
                                     </td><td style={{padding: '0 1em 0 1em'}}>
-                                        {obj.feeCount}
+                                        {obj.feeCount.toString()}
                                     </td><td style={{padding: '0 1em 0 1em'}}>
-                                        {obj.feeAvg}&nbsp;{tokenSym}
+                                        {feeAvg}&nbsp;{feeAvg?tokenSym:''}
                                     </td></tr>)
                         }
                     })}

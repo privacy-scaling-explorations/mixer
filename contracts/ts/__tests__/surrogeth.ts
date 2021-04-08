@@ -25,7 +25,8 @@ const surrogetSubmitTx = async (
         network, // "KOVAN" || "MAINNET"
         forwarderRegistryERC20Contract.address, // defaults to current deployment on specified network
         ForwarderRegistryERC20.abi,
-        protocol // "https" || "http"
+        protocol, // "https" || "http"
+        tokenContractAddress
     )
 
     const valueStr = value.toString()
@@ -33,12 +34,7 @@ const surrogetSubmitTx = async (
     const tx = { to, data, value: valueStr }
 
     try {
-        if (tokenContractAddress){
-            const result = await client.submitTxERC20(tx, relayer, tokenContractAddress)
-        }else{
-            const result = await client.submitTx(tx, relayer)
-        }
-
+        const result = await client.submitTx(tx, relayer)
         //console.log(result)
     } catch (error) {
         if (error.response){
@@ -56,6 +52,7 @@ const surrogetGetBroadcaster = async (
     network,
     wallet,
     forwarderRegistryERC20ContractAddress,
+    tokenContractAddress,
 ) => {
     const protocol = "http"
 
@@ -64,7 +61,8 @@ const surrogetGetBroadcaster = async (
         network,
         forwarderRegistryERC20ContractAddress, // defaults to current deployment on specified network
         ForwarderRegistryERC20.abi,
-        protocol // "https" || "http"
+        protocol, // "https" || "http"
+        tokenContractAddress
     )
 
     let relayers = await client.getBroadcasters(
@@ -142,6 +140,7 @@ const surrogethMix = async (
         network,
         wallet,
         forwarderRegistryERC20Contract.address,
+        tokenContractAddress,
     )
 
     return await surrogetSubmitTx(

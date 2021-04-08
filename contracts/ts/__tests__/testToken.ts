@@ -506,7 +506,9 @@ const testToken = (
                 const broadcaster = await surrogetGetBroadcaster(
                     configNetworkName,
                     wallet,
-                    forwarderRegistryERC20Contract.address)
+                    forwarderRegistryERC20Contract.address,
+                    tokenContractAddress,
+                )
                 expect(broadcaster).toBeTruthy()
 
                 if (isETH){
@@ -572,7 +574,9 @@ const testToken = (
                 const broadcaster = await surrogetGetBroadcaster(
                     configNetworkName,
                     wallet,
-                    forwarderRegistryERC20Contract.address)
+                    forwarderRegistryERC20Contract.address,
+                    tokenContractAddress,
+                )
                 expect(broadcaster).toBeTruthy()
 
                 const to = recipientAddress
