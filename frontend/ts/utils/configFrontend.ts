@@ -72,11 +72,13 @@ const blockExplorerTxPrefix = configNetwork.blockExplorerTxPrefix
 const configToken = configNetwork.token[token]
 let tokenDecimals
 let tokenSym
+let tokenName
 let mixAmt
 let operatorFee
 if (configToken){
     tokenDecimals = configToken.decimals
     tokenSym = configToken.sym
+    tokenName = configToken.name
     mixAmt = configToken.mixAmt
     operatorFee = configToken.feeAmt
 }
@@ -105,16 +107,35 @@ let mixerAddress
 let tokenAddress
 let semaphoreAddress
 let forwarderRegistryERC20Address
+let mixerRegistryAddress
 
 if (deployedAddressesNetwork){
     relayerRegistryAddress = deployedAddressesNetwork.RelayerRegistry
     deployedAddressesToken = deployedAddressesNetwork.token[token]
     forwarderRegistryERC20Address = deployedAddressesNetwork.ForwarderRegistryERC20
+    mixerRegistryAddress = deployedAddressesNetwork.MixerRegistry
     //config of deployed address contract token
     if (deployedAddressesToken){
         mixerAddress = deployedAddressesToken.Mixer
         tokenAddress = deployedAddressesToken.Token
         semaphoreAddress = deployedAddressesToken.Semaphore
+    }
+}
+
+const getTokenConfig = (tokenAddress) => {
+    if (deployedAddressesNetwork && deployedAddressesNetwork.token && configNetwork && configNetwork.token){
+        for (let configTokenName of Object.keys(deployedAddressesNetwork.token)) {
+            if (configNetwork.token[configTokenName]){
+                if ((deployedAddressesNetwork.token[configTokenName] &&
+                    deployedAddressesNetwork.token[configTokenName].Token == tokenAddress) ||
+                    configNetwork.token[configTokenName].address == tokenAddress){
+                    return configNetwork.token[configTokenName]
+                } else if(tokenAddress == "0x0000000000000000000000000000000000000000" &&
+                    !configNetwork.token[configTokenName].decimals){
+                    return configNetwork.token[configTokenName]
+                }
+            }
+        }
     }
 }
 
@@ -127,6 +148,7 @@ export {
     supportedNetworkName,
     relayerRegistryAddress,
     mixerAddress,
+    mixerRegistryAddress,
     tokenAddress,
     semaphoreAddress,
     forwarderRegistryERC20Address,
@@ -135,6 +157,7 @@ export {
     endsAfterSecs,
     tokenDecimals,
     tokenSym,
+    tokenName,
     snarksPathsCircuit,
     snarksPathsProvingKey,
     snarksPathsVerificationKey,
@@ -143,4 +166,5 @@ export {
     setToken,
     network,
     token,
+    getTokenConfig,
 }

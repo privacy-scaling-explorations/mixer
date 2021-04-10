@@ -1,6 +1,7 @@
 import * as ethers from 'ethers'
 const Mixer = require('../../compiled/Mixer.json')
 const Semaphore = require('../../compiled/Semaphore.json')
+const MixerRegistry = require('../../compiled/MixerRegistry.json')
 const ForwarderRegistryERC20 = require('../../compiled/ForwarderRegistryERC20.json')
 const Token = require('../../compiled/ERC20Mintable.json')
 
@@ -8,6 +9,7 @@ import{
     chainId,
     tokenAddress,
     forwarderRegistryERC20Address,
+    mixerRegistryAddress,
     mixerAddress,
     semaphoreAddress,
 } from '../utils/configFrontend'
@@ -22,6 +24,17 @@ const getForwarderRegistryERC20Contract = async (provider) => {
     return new ethers.Contract(
         forwarderRegistryERC20Address,
         ForwarderRegistryERC20.abi,
+        signer,
+    )
+}
+
+const getMixerRegistryContract = async (provider) => {
+
+    const signer = provider.getSigner()
+
+    return new ethers.Contract(
+        mixerRegistryAddress,
+        MixerRegistry.abi,
         signer,
     )
 }
@@ -62,6 +75,7 @@ const getTokenContract = async (provider) => {
 export {
     Mixer,
     getForwarderRegistryERC20Contract,
+    getMixerRegistryContract,
     getMixerContract,
     getSemaphoreContract,
     getTokenContract,
