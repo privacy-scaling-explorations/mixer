@@ -237,52 +237,6 @@ const inputToken = {
     }
 }
 
-
-const inputSurrogethRegistry = {
-    language: 'Solidity',
-    sources: {
-        'Registry.sol': {
-            content: loadContract(surrogethPath + 'Registry.sol'),
-        },
-    },
-    settings: {
-        outputSelection: {
-            '*': {
-                'Registry': [ 'evm.bytecode.object', 'abi']
-            }
-        }
-    }
-}
-
-const inputSurrogethForwarder = {
-    language: 'Solidity',
-    sources: {
-        'Registry.sol': {
-            content: loadContract(surrogethPath + 'Registry.sol'),
-        },
-        'Forwarder.sol': {
-            content: loadContract(surrogethPath + 'Forwarder.sol'),
-        },
-        'openzeppelin-solidity/contracts/math/SafeMath.sol': {
-            //content: loadContract(surrogethOpenzeppelinPath + 'math/SafeMath.sol'),
-            content: loadContract(solidityPath + 'openzeppelin/SafeMath.sol'),
-        },
-        'openzeppelin-solidity/contracts/ownership/Ownable.sol': {
-            //content: loadContract(surrogethOpenzeppelinPath + 'access/Ownable.sol'),
-            content: loadContract(semaphorePath + 'Ownable.sol'),
-        },
-
-
-    },
-    settings: {
-        outputSelection: {
-            '*': {
-                'Forwarder': [ 'evm.bytecode.object', 'abi']
-            }
-        }
-    }
-}
-
 const forwarderRegistryERC20 = {
     language: 'Solidity',
     sources: {
@@ -308,23 +262,6 @@ const forwarderRegistryERC20 = {
     }
 }
 
-
-const inputRelayerRegistry = {
-    language: 'Solidity',
-    sources: {
-        'MockRelayerRegistry.sol': {
-            content: loadContract(solidityPath + 'MockRelayerRegistry.sol'),
-        },
-    },
-    settings: {
-        outputSelection: {
-            '*': {
-                'RelayerRegistry': [ 'evm.bytecode.object', 'abi']
-            }
-        }
-    }
-}
-
 const getSemaphoreBytecode = async () => {
     return compileInputBytecode(inputSemaphore)
 }
@@ -341,14 +278,11 @@ const main = async () => {
     await buildMiMC(outputPath)
     //compileInput(inputMiMC, outputPath)
     compileInput(forwarderRegistryERC20, outputPath)
-    compileInput(inputSurrogethRegistry, outputPath)
-    compileInput(inputSurrogethForwarder, outputPath)
     compileInput(inputSemaphoreLibrary, outputPath)
     compileInput(inputMixerRegistry, outputPath)
     compileInput(inputSemaphore, outputPath)
     compileInput(inputMixer, outputPath)
     compileInput(inputToken, outputPath)
-    compileInput(inputRelayerRegistry, outputPath)
 
 
     fs.rmSync('../frontend/' + outputPath, { recursive: true, force : true })

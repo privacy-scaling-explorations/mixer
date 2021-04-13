@@ -31,20 +31,22 @@ import {
     getBackendAddress,
 } from '../utils/configBackendNetwork'
 
+import {
+    getMixerList
+} from 'mixer-contracts'
+
 import { post } from './utils'
 
 const network = 'ganache'
-const token = 'tkn'
+const token = 'eth'
 
 const {
     isETH,
-    mixAmt,
     tokenDecimals,
     feeAmt,
     chainId,
     chainUrl,
     privateKeysPath,
-    mixerAddress,
     tokenAddress,
     forwarderRegistryERC20Address,
 } = getTestParam(network, token)
@@ -53,39 +55,6 @@ jest.setTimeout(90000)
 
 const PORT = backendPort
 const HOST = backendHost + ':' + backendPort.toString()
-
-const depositAmtWei = ethers.utils.parseUnits(mixAmt.toString(), tokenDecimals)
-
-const feeAmtWei = ethers.utils.parseUnits(feeAmt.toString(), tokenDecimals)
-
-const provider = new ethers.providers.JsonRpcProvider(
-    chainUrl,
-    chainId,
-)
-
-const testingPrivKeys = require("../../../" + privateKeysPath)
-
-const signer = new ethers.Wallet(
-    testingPrivKeys[0],
-    provider,
-)
-
-const mixerContract = getContract(
-    'Mixer',
-    signer,
-    mixerAddress,
-)
-
-let tokenContract
-
-if (!isETH){
-    tokenContract = getContract(
-        'Token',
-        signer,
-        tokenAddress,
-        'ERC20Mintable',
-    )
-}
 
 const provingKey = fs.readFileSync(
     path.join(__dirname, '../../../semaphore/semaphorejs/build/proving_key.bin'),
@@ -125,11 +94,59 @@ const schemaInvalidParamsForEth = {
 let server
 const recipientAddress = '0xC5fdf4076b8F3A5357c5E395ab970B5B54098Fef'
 
+let provider
+let signer
+let mixerAddress
+let mixAmtWei
+let feeAmtWei
+let mixerContract
+let tokenContract
+
 describe('the mixer_mix_eth API call', () => {
 
     beforeAll(async () => {
         const app = createApp()
         server = app.listen(PORT)
+
+        provider = new ethers.providers.JsonRpcProvider(
+            chainUrl,
+            chainId,
+        )
+
+        const testingPrivKeys = require("../../../" + privateKeysPath)
+
+        signer = new ethers.Wallet(
+            testingPrivKeys[0],
+            provider,
+        )
+
+        const mixerList = await getMixerList(signer, tokenAddress)
+        expect(mixerList).toBeTruthy()
+        expect(mixerList.length).toBeGreaterThan(0)
+        mixAmtWei = mixerList[0].mixAmt
+        mixerAddress = mixerList[0].address
+
+        feeAmtWei = ethers.utils.parseUnits(feeAmt.toString(), tokenDecimals)
+
+        mixerContract = getContract(
+            'Mixer',
+            signer,
+            mixerAddress,
+        )
+
+        if (!isETH){
+            tokenContract = getContract(
+                'Token',
+                signer,
+                tokenAddress,
+                'ERC20Mintable',
+            )
+        }
+        console.log("depositAddress", signer.address)
+        console.log("backendAddress", await getBackendAddress(network))
+        console.log("recipientAddress", recipientAddress)
+
+
     })
 
     if (isETH){
@@ -142,7 +159,7 @@ describe('the mixer_mix_eth API call', () => {
             const tx = await mixerContract.deposit(
                 '0x' + identityCommitment.toString(16),
                 {
-                    value: depositAmtWei,
+                    value: mixAmtWei,
                     //gasLimit: 1500000
                 }
             )
@@ -213,36 +230,38 @@ describe('the mixer_mix_eth API call', () => {
             expect(resp.data.result.txHash).toMatch(/^0x[a-fA-F0-9]{40}/)
 
             // wait for the tx to be mined
+            let receipt2
             while (true) {
-                const receipt = await provider.getTransactionReceipt(resp.data.result.txHash)
-                if (receipt == null) {
+                receipt2 = await provider.getTransactionReceipt(resp.data.result.txHash)
+                if (receipt2 == null) {
                     await sleep(1000)
                 } else {
                     break
                 }
             }
 
+            const tx2 = await provider.getTransaction(resp.data.result.txHash)
+
             const recipientBalanceAfter = await provider.getBalance(recipientAddress)
             const backendBalanceAfter = await provider.getBalance(backendAddress)
             expect(recipientBalanceAfter.sub(recipientBalanceBefore))
-                .toEqual(depositAmtWei.sub(feeAmtWei))
-            expect(backendBalanceAfter.sub(backendBalanceBefore).gt(0)).toBeTruthy()
-            expect(backendBalanceAfter.sub(backendBalanceBefore).lt(feeAmtWei)).toBeTruthy()
+                .toEqual(mixAmtWei.sub(feeAmtWei))
+            expect(backendBalanceAfter.sub(backendBalanceBefore).toString())
+                .toEqual(feeAmtWei.sub(receipt2.gasUsed.mul(tx2.gasPrice)).toString())
         })
     }else{
         test('accepts a valid proof to mix tokens and credits the recipient', async () => {
             const backendAddress = await getBackendAddress(network)
             const relayerAddress = forwarderRegistryERC20Address
-            const expectedTokenAmtToReceive = mixAmt - feeAmt
             // mint tokens for the sender
             await tokenContract.mint(
                 signer.address,
-                depositAmtWei,
+                mixAmtWei,
                 //{ gasLimit: 100000, }
             )
             await tokenContract.approve(
                 mixerContract.address,
-                depositAmtWei,
+                mixAmtWei,
                 //{ gasLimit: 100000, }
             )
 
@@ -250,7 +269,7 @@ describe('the mixer_mix_eth API call', () => {
             const identity = genIdentity()
             const identityCommitment = genIdentityCommitment(identity)
 
-            console.log("depositAmtWei", depositAmtWei.toString(), (await mixerContract.mixAmt()).toString())
+            console.log("mixAmtWei", mixAmtWei.toString(), (await mixerContract.mixAmt()).toString())
 
             const tx = await mixerContract.depositERC20(
                 identityCommitment.toString(),
@@ -329,7 +348,7 @@ describe('the mixer_mix_eth API call', () => {
             const backendBalanceAfter = await tokenContract.balanceOf(backendAddress)
             const diff = recipientBalanceAfter.sub(recipientBalanceBefore).toString()
             expect(diff)
-                .toEqual((expectedTokenAmtToReceive * (10 ** tokenDecimals)).toString())
+                .toEqual(mixAmtWei.sub(feeAmtWei).toString())
             expect(backendBalanceAfter.sub(backendBalanceBefore).toString())
                 .toEqual(feeAmtWei.toString())
         })
@@ -337,7 +356,7 @@ describe('the mixer_mix_eth API call', () => {
     }
 
     test('check if we use the right mixer', async () => {
-        expect(depositAmtWei.eq(await mixerContract.mixAmt())).toBeTruthy()
+        expect(mixAmtWei.eq(await mixerContract.mixAmt())).toBeTruthy()
     })
 
     if (isETH){

@@ -73,14 +73,12 @@ const configToken = configNetwork.token[token]
 let tokenDecimals
 let tokenSym
 let tokenName
-let mixAmt
-let operatorFee
+let feeAmt
 if (configToken){
     tokenDecimals = configToken.decimals
     tokenSym = configToken.sym
     tokenName = configToken.name
-    mixAmt = configToken.mixAmt
-    operatorFee = configToken.feeAmt
+    feeAmt = configToken.feeAmt
 }
 let isETH = true
 if (tokenDecimals){
@@ -103,9 +101,7 @@ const configEnv = configMixer.env
 const deployedAddressesNetwork = deployedAddresses[network]
 let relayerRegistryAddress
 let deployedAddressesToken
-let mixerAddress
 let tokenAddress
-let semaphoreAddress
 let forwarderRegistryERC20Address
 let mixerRegistryAddress
 
@@ -116,9 +112,7 @@ if (deployedAddressesNetwork){
     mixerRegistryAddress = deployedAddressesNetwork.MixerRegistry
     //config of deployed address contract token
     if (deployedAddressesToken){
-        mixerAddress = deployedAddressesToken.Mixer
         tokenAddress = deployedAddressesToken.Token
-        semaphoreAddress = deployedAddressesToken.Semaphore
     }
 }
 
@@ -139,18 +133,34 @@ const getTokenConfig = (tokenAddress) => {
     }
 }
 
+const getTokenInfo = (tokenAddress) => {
+    const tokenConfig = getTokenConfig(tokenAddress)
+    const tokenSym = tokenConfig.sym
+    const feeAmt = tokenConfig.feeAmt
+    const isETH = tokenConfig.tokenDecimals ? false : true
+    const tokenDecimals = tokenConfig.tokenDecimals ? tokenConfig.tokenDecimals : 18
+
+    const feeAmtWei = ethers.utils.parseUnits(feeAmt.toString(), tokenDecimals)
+    return {
+        tokenSym,
+        feeAmt,
+        isETH,
+        tokenDecimals,
+        feeAmtWei,
+    }
+}
+
+
+
 export {
     isETH,
-    mixAmt,
-    operatorFee,
+    feeAmt,
     chainId,
     supportedNetwork,
     supportedNetworkName,
     relayerRegistryAddress,
-    mixerAddress,
     mixerRegistryAddress,
     tokenAddress,
-    semaphoreAddress,
     forwarderRegistryERC20Address,
     blockExplorerTxPrefix,
     endsAtMidnight,
@@ -167,4 +177,5 @@ export {
     network,
     token,
     getTokenConfig,
+    getTokenInfo,
 }

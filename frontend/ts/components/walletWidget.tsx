@@ -2,8 +2,6 @@ import React, { useState, useEffect, useContext } from 'react'
 import ReactDOM from 'react-dom'
 import { ethers } from 'ethers'
 
-import { ConnectionContext, connectionConnect } from '../utils/connectionContext'
-
 
 import{
     chainId,
@@ -21,28 +19,7 @@ const circleIcon = (className: string) => (
     </svg>
 )
 
-const WalletWidget = () => {
-
-    const context =  useContext(ConnectionContext)
-
-    connectionConnect(context)
-
-    const [provider, setProvider] = useState(context.provider)
-
-    const [networkChainId, setnetworkChainId] = useState(context.networkChainId)
-    const [address, setAddress] = useState(context.address)
-
-    const connectWallet = () => {
-        connectionConnect(context)
-        setnetworkChainId(context.networkChainId)
-        setAddress(context.address)
-    }
-
-    useEffect(() => {
-        const interval = setInterval(() => connectWallet(), 1000)
-        return () => clearInterval(interval)
-        //connectWallet()
-    })
+const WalletWidget = (props) => {
 
     const render = () => {
 
@@ -59,20 +36,20 @@ const WalletWidget = () => {
                     </a>
                 </p>
             )
-        } else if (context.networkChainId == chainId) {
+        } else if (!props.error) {
             return (
                 <p>
                     <span className='is-family-monospace address'>
                         { circleIcon('ok') }
-                        { context.address }
+                        { props.address }
                     </span>
                 </p>
             )
-        } else if (context.networkChainId) {
+        } else if (props.error) {
             return (
                 <p>
                     { circleIcon('warn') }
-                    Please connect to the {supportedNetworkName} testnet.
+                    { props.error }
                 </p>
             )
         } else {
@@ -80,7 +57,7 @@ const WalletWidget = () => {
                 <p className='button is-link is-rounded'
                     role='button'
                     //TODO fix connect
-                    onClick={() => {window.ethereum.enable().then(connectWallet())}} >
+                    onClick={() => {window.ethereum.enable().then()}} >
                     Connect wallet
                 </p>
             )

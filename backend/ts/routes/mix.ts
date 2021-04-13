@@ -54,16 +54,53 @@ const _mixRoute = (forTokens: boolean) => async (
 
     const provider = wallet.provider
 
+    // TODO: check whether the contract has been deployed
+    // Best to do this on server startup
+
+    const mixerContract = getContract(
+        'Mixer',
+        wallet,
+        depositProof.mixer,
+    )
+
+    const tokenAddress = forTokens ? await mixerContract.token() : undefined
+
+    if (forTokens && !tokenAddress) {
+        const errorMsg = 'invalid network/mixer address'
+        throw {
+            code: errors.errorCodes.BACKEND_MIX_INVALID_MIXER_ADDRESS,
+            message: errorMsg,
+            data: errors.genError(
+                errors.MixerErrorNames.BACKEND_MIX_INVALID_MIXER_ADDRESS,
+                errorMsg,
+            )
+        }
+    }
+
+    const mixerAbi = getAbi(
+        'Mixer',
+    )
+
     const {
         feeAmt,
         tokenDecimals,
-        mixerAddress,
-        semaphoreAddress,
         forwarderRegistryERC20Address,
     } = await getMixerInfo(
         depositProof.networkName,
-        depositProof.mixer,
+        tokenAddress,
     )
+
+    if (!feeAmt) {
+        const errorMsg = 'invalid token'
+        throw {
+            code: errors.errorCodes.BACKEND_MIX_INVALID_MIXER_ADDRESS,
+            message: errorMsg,
+            data: errors.genError(
+                errors.MixerErrorNames.BACKEND_MIX_INVALID_MIXER_ADDRESS,
+                errorMsg,
+            )
+        }
+    }
 
     // This operator accepts a fee that is large enough
     const operatorFeeWei = ethers.utils.parseUnits(feeAmt.toString(), tokenDecimals)
@@ -91,7 +128,7 @@ const _mixRoute = (forTokens: boolean) => async (
         }
     }
 
-    const mixerContractAddress = mixerAddress
+    const mixerContractAddress = mixerContract.address
 
     // verify the external nullifier
     if (!areEqualAddresses(mixerContractAddress, depositProof.input[3])) {
@@ -192,18 +229,9 @@ const _mixRoute = (forTokens: boolean) => async (
         }
     }
 
-    // TODO: check whether the contract has been deployed
-    // Best to do this on server startup
 
-    const mixerContract = getContract(
-        'Mixer',
-        wallet,
-        depositProof.mixer,
-    )
 
-    const mixerAbi = getAbi(
-        'Mixer',
-    )
+    const semaphoreAddress = await mixerContract.semaphore()
 
     let semaphoreContractName = forTokens ? 'TokenSemaphore' : 'Semaphore'
     const semaphoreContract = getContract(
@@ -304,9 +332,6 @@ const _mixRoute = (forTokens: boolean) => async (
             ],
         )
     }
-
-
-
 
     /*
     const unsignedTx = {

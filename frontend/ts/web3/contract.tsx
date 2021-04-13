@@ -6,12 +6,9 @@ const ForwarderRegistryERC20 = require('../../compiled/ForwarderRegistryERC20.js
 const Token = require('../../compiled/ERC20Mintable.json')
 
 import{
-    chainId,
     tokenAddress,
     forwarderRegistryERC20Address,
     mixerRegistryAddress,
-    mixerAddress,
-    semaphoreAddress,
 } from '../utils/configFrontend'
 
 // It's not trivial to generalise these functions as Parcel won't let you
@@ -19,56 +16,37 @@ import{
 
 const getForwarderRegistryERC20Contract = async (provider) => {
 
-    const signer = provider.getSigner()
-
     return new ethers.Contract(
         forwarderRegistryERC20Address,
         ForwarderRegistryERC20.abi,
-        signer,
+        provider,
     )
 }
 
 const getMixerRegistryContract = async (provider) => {
 
-    const signer = provider.getSigner()
-
     return new ethers.Contract(
         mixerRegistryAddress,
         MixerRegistry.abi,
-        signer,
+        provider,
     )
 }
 
-const getMixerContract = async (provider) => {
-
-    const signer = provider.getSigner()
+const getMixerContract = async (provider, mixerAddress) => {
 
     return new ethers.Contract(
         mixerAddress,
         Mixer.abi,
-        signer,
-    )
-}
-
-const getSemaphoreContract = async (provider) => {
-
-    const signer = provider.getSigner()
-
-    return new ethers.Contract(
-        semaphoreAddress,
-        Semaphore.abi,
-        signer,
+        provider,
     )
 }
 
 const getTokenContract = async (provider) => {
 
-    const signer = provider.getSigner()
-
     return new ethers.Contract(
         tokenAddress,
         Token.abi,
-        signer,
+        provider,
     )
 }
 
@@ -77,6 +55,5 @@ export {
     getForwarderRegistryERC20Contract,
     getMixerRegistryContract,
     getMixerContract,
-    getSemaphoreContract,
     getTokenContract,
 }

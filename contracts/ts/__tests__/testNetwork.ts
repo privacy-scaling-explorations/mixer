@@ -2,12 +2,16 @@ import * as ethers from 'ethers'
 import {
     deployContract,
     getWallet,
-} from '../deploy/deployContract'
+} from '../deploy/deployAllContract'
 
 import {
     checkErrorReason,
     addressInfo,
 } from './utils'
+
+import {
+    getNetworkFromSigner
+} from '../utils/configUtils'
 
 import { genAccounts } from '../accounts'
 const Mixer = require('@mixer-contracts/compiled/Mixer.json')
@@ -61,6 +65,10 @@ const testNetwork = (configNetworkName, configNetwork, deployedAddresses) => {
             await addressInfo("depositorAddress", depositorAddress, true, wallet, 18, null)
             await addressInfo("recipientAddress", recipientAddress, true, wallet, 18, null)
             await addressInfo("relayerAddress", relayerAddress, true, wallet, 18, null)
+        })
+        it('Network ChainId check', async() => {
+            expect(await getNetworkFromSigner(wallet)).toMatch(configNetworkName)
+
         })
     })
 

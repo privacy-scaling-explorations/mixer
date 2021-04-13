@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react'
 import ReactDOM from 'react-dom'
-import { ConnectionContext } from '../utils/connectionContext'
 import { ethers } from 'ethers'
 import{
     chainId,
@@ -27,44 +26,56 @@ import {
     getBroadcasterList
 } from '../web3/surrogeth'
 
-const AboutRoute = () => {
+const AboutRoute = (props) => {
 
     const [relayerAddress, setRelayerAddress] = useState('Request...')
     const [broadcasterList, setBroadcasterList] = useState(["Request..."])
-    const [tokenList, setTokenList] = useState(["Request..."])
-    const [mixerList, setMixerList] = useState(["Request..."])
+    const [tokenList, setTokenList] = useState([{
+        address : "Request...",
+        tokenConfig : null
+    }])
+    const [mixerList, setMixerList] = useState([{
+            mixAmt : null,
+            address : "Request...",
+            semaphore : null,
+        }])
     const [isInit, setIsInit] = useState(false)
 
-    let initBroadcasterList
-
-    const context = useContext(ConnectionContext)
-
-    const connectWallet = (interval) => {
-        if (!isInit && context.signer){
+    useEffect(() => {
+        if (!isInit && props.provider){
             setIsInit(true)
-            //Dont update each second not to overload server
-            clearInterval(interval)
-            getTokenList(context.signer).then((result) => {
+            getBackendStatus(network).then((result) => {
+                //console.log(result)
+                setRelayerAddress(result.address)
+            })
+            getTokenList(props.provider).then((result) => {
                 //console.log(JSON.stringify(result), JSON.stringify(tokenList))
                 if (result && JSON.stringify(result) !== JSON.stringify(tokenList)){
                     //{locator, locatorType, address}
                     //setBroadcasterList(result[0].address + " " + result[0].locator)
                     setTokenList(result)
                 }else if (!result){
-                    setTokenList(["error"])
+                    setTokenList([{
+                        address : "Error",
+                        tokenConfig : null
+                    }])
                 }
             })
-            getMixerList(context.signer, tokenAddress).then((result) => {
+            getMixerList(props.provider, tokenAddress).then((result) => {
                 //console.log(JSON.stringify(result), JSON.stringify(tokenList))
                 if (result && JSON.stringify(result) !== JSON.stringify(mixerList)){
                     //{locator, locatorType, address}
                     //setBroadcasterList(result[0].address + " " + result[0].locator)
                     setMixerList(result)
                 }else if (!result){
-                    setMixerList(["error"])
+                    setMixerList([{
+                        mixAmt : null,
+                        address : "Error",
+                        semaphore : null
+                    }])
                 }
             })
-            getBroadcasterList(context.signer, network, tokenAddress).then((result) => {
+            getBroadcasterList(props.provider, network, tokenAddress).then((result) => {
                 //console.log(JSON.stringify(result), JSON.stringify(broadcasterList))
                 if (result && JSON.stringify(result) !== JSON.stringify(broadcasterList)){
                     //{locator, locatorType, address}
@@ -75,19 +86,6 @@ const AboutRoute = () => {
                 }
             })
         }
-
-
-
-    }
-
-    useEffect(() => {
-        initBroadcasterList = false
-        getBackendStatus(network).then((result) => {
-            //console.log(result)
-            setRelayerAddress(result.address)
-        })
-        const interval = setInterval(() => connectWallet(interval), 1000)
-        return () => clearInterval(interval)
     })
 
     //console.log("Draw Contract info")

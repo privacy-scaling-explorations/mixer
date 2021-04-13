@@ -13,7 +13,6 @@ const getTestParam = (network : string, token : string) => {
     const hotWalletPrivKeyPath = configNetwork.hotWalletPrivKeyPath
     const privateKeysPath = configNetwork.privateKeysPath
 
-    const mixAmt = configToken.mixAmt
     const feeAmt = configToken.feeAmt
     let tokenDecimals = configToken.decimals
     let isETH = 1
@@ -27,20 +26,15 @@ const getTestParam = (network : string, token : string) => {
     const deployedAddressesToken = deployedAddressesNetwork.token[token]
 
     const tokenAddress = deployedAddressesToken.Token
-    const mixerAddress = deployedAddressesToken.Mixer
-    console.log("mixerAddress", mixerAddress)
-    const semaphoreAddress = deployedAddressesToken.Semaphore
     const forwarderRegistryERC20Address = deployedAddressesNetwork.ForwarderRegistryERC20
 
     return {
         isETH,
-        mixAmt,
         tokenDecimals,
         feeAmt,
         chainId,
         chainUrl,
         privateKeysPath,
-        mixerAddress,
         tokenAddress,
         forwarderRegistryERC20Address,
     }
@@ -82,22 +76,35 @@ const getRelayerWallet = async (network) => {
     return await wallet
 }
 
-const getMixerInfo = async (network, mixer) => {
-
+const getMixerInfo = async (network, tokenAddress) => {
     const configNetwork = configMixer.network[network]
-
+    tokenAddress = tokenAddress?
+        ethers.utils.getAddress(tokenAddress) :
+        undefined
     const deployedAddressesNetwork = deployedAddresses[network]
-
     for (let configTokenName of Object.keys(configNetwork.token)) {
+        const configToken = configNetwork.token[configTokenName]
+        let isToken = false
+        if (tokenAddress){
+            isToken = configToken.address ?
+                tokenAddress == ethers.utils.getAddress(configToken.address) :
+                false
+            if (!isToken){
+                try {
+                    if (tokenAddress == ethers.utils.getAddress(deployedAddressesNetwork.token[configTokenName].Token)){
+                        isToken = true
+                    }
+                } catch (err){
+                    //May not be present in file
+                }
+            }
+        } else {
+            isToken = configToken.decimals ? false : true
+        }
 
-        const deployedAddressesToken = deployedAddressesNetwork.token[configTokenName]
-
-        const mixerAddress = deployedAddressesToken.Mixer
-
-        if (mixerAddress == mixer){
+        if (isToken){
             const forwarderRegistryERC20Address = deployedAddressesNetwork.ForwarderRegistryERC20
-            const configToken = configNetwork.token[configTokenName]
-            const semaphoreAddress = deployedAddressesToken.Semaphore
+
             const feeAmt = configToken.feeAmt
             let tokenDecimals = configToken.decimals
 
@@ -108,17 +115,13 @@ const getMixerInfo = async (network, mixer) => {
             return {
                 feeAmt: feeAmt,
                 tokenDecimals: tokenDecimals,
-                mixerAddress: mixerAddress,
-                semaphoreAddress: semaphoreAddress,
                 forwarderRegistryERC20Address: forwarderRegistryERC20Address,
             }
         }
-
     }
+
     return {
-        feeAmt: null,
-        mixerAddress: null,
-        semaphoreAddress: null,
+        feeAmt: undefined,
     }
 }
 

@@ -28,10 +28,15 @@ const TxHashMessage = ({
     return (
         <article className={"message " + articleClass}>
             <div className="message-body">
-                {msg} <a
-                    href={blockExplorerTxPrefix + txHash}
-                    target="_blank">View on Etherscan.
-                </a>
+                {msg}
+                { blockExplorerTxPrefix ?
+                     <a
+                        href={blockExplorerTxPrefix + txHash}
+                        target="_blank">View on Etherscan.
+                    </a>
+                :
+                    txHash
+            }
             </div>
         </article>
     )

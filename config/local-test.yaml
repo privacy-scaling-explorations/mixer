@@ -5,7 +5,6 @@ network:
 
     kovan:
         disable: true
-        useRegistry: true
         url: "https://kovan.infura.io/v3/5d37c494621a43558d77c90e368d4022"
         chainId: 42
         supportedNetwork: 42
@@ -20,7 +19,6 @@ network:
                 sym: 'KETH'
                 name: 'Kovan Ether'
             tkn:
-                address: "0x6fB66Fe3a00aFF2fD0a373223592D9Ebe21913eF"
                 decimals: 18
                 mixAmt: 100
                 feeAmt: 2
@@ -36,7 +34,6 @@ network:
 
     ganache:
         disable: false
-        useRegistry: true
         url: "http://localhost:8545"
         chainId: 1337
         supportedNetwork: 1337
@@ -44,14 +41,14 @@ network:
         supportedNetworkName: "Ganache"
         token:
             eth:
-                mixAmt: 0.102
+                mixAmt: [0.102, 1.002]
                 feeAmt: 0.002
                 surrogethFeeAmt: 0.001
                 sym: 'ETH'
                 name: 'Ether'
             tkn:
                 decimals: 18
-                mixAmt: 102
+                mixAmt: [102, 12, 1002]
                 feeAmt: 2
                 sym: 'TKN'
                 name: 'Token'
@@ -80,7 +77,6 @@ network:
 
     ropsten:
         disable: true
-        useRegistry: true
         url: "https://ropsten.infura.io/v3/5d37c494621a43558d77c90e368d4022"
         chainId: 3
         supportedNetwork: 3
@@ -103,7 +99,6 @@ network:
 
     arbitrum:
         disable: true
-        useRegistry: true
         url: "https://kovan3.arbitrum.io/rpc"
         chainId: 79377087078960
         supportedNetwork: 79377087078960
@@ -125,7 +120,6 @@ network:
                 name: 'Ether'
     skale:
         disable: true
-        useRegistry: true
         url: "https://dev-testnet-v1-0.skalelabs.com"
         chainId: 344435
         supportedNetwork: 344435
@@ -144,10 +138,6 @@ network:
                 surrogethFeeAmt: 0.001
                 sym: 'ETH'
                 name: 'Ether'
-
-chain:
-    gasLimit:
-        mix: 8000000
 
 backend:
   port: 3000

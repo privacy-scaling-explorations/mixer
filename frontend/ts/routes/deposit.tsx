@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom'
 import { Redirect } from 'react-router-dom'
 import * as ethers from 'ethers'
 import { Buffer } from 'buffer'
-import { ConnectionContext } from '../utils/connectionContext'
 import { Erc20ApproveButton, TxButton, TxStatuses } from '../components/txButton'
 import { TxHashMessage } from '../components/txHashMessage'
 import { sleep } from 'mixer-utils'
@@ -17,7 +16,11 @@ import {
     getNumUnwithdrawn,
 } from '../storage'
 
-import { depositEth, depositTokens, getTokenAllowance, approveTokens } from '../web3/deposit'
+import {
+    depositEth,
+    depositTokens,
+    approveTokens
+} from '../web3/deposit'
 import {
     genIdentity,
     genIdentityCommitment,
@@ -25,83 +28,93 @@ import {
 
 import {
     isETH,
-    chainId,
-    mixAmt,
-    operatorFee,
+    feeAmt,
     tokenSym,
     blockExplorerTxPrefix,
     tokenDecimals,
-    supportedNetworkName,
-    configEnv,
-    mixerAddress,
+    tokenAddress,
 } from '../utils/configFrontend'
+
+import {
+    getBalance,
+    getTokenBalance,
+    getTokenAllowance,
+} from '../utils/networkInfo'
+
+import MixerSelect from '../components/mixerSelect'
 
 const name = 'MicroMix'
 
-const topUpEthMsg =
-    <div className="column is-8 is-offset-2">
-        <p>
-            Please top up your account with at least {mixAmt.toString()}
-            {tokenSym} ({mixAmt.toString()} to deposit and {operatorFee.toString()} for fee). You can get KETH
-            from a faucet <a target="_blank"
-            href="https://faucet.kovan.network/">here</a> or <a
-            target="_blank" href="https://gitter.im/kovan-testnet/faucet">here</a>.
-        </p>
-    </div>
-
-let topUpDaiMsg
-
-if (!isETH)
-    topUpDaiMsg =
-    <div className="column is-8 is-offset-2">
-        <p>
-            Please top up your account with at least {mixAmt.toString()} {tokenSym}
-            and {operatorFee.toString()} for fee. You can convert KETH to DAI <a
-            href="https://cdp.makerdao.com" target="_blank">here</a>, and you can get KETH
-            from a faucet <a target="_blank" href="https://faucet.kovan.network/">here</a> or <a target="_blank" href="https://gitter.im/kovan-testnet/faucet">here</a>.
-        </p>
-    </div>
-
-export default () => {
+export default (props) => {
 
     const [txStatus, setTxStatus] = useState(TxStatuses.None)
     const [erc20ApproveTxStatus, setErc20ApproveTxStatus] = useState(TxStatuses.None)
     const [txHash, setTxHash] = useState('')
     const [recipientAddress, setRecipientAddress] = useState('')
     const [errorMsg, setErrorMsg] = useState('')
-    const [tokenType, setTokenType] = useState(tokenSym)
+    const [mixInfo, setMixInfo] = useState<{mixAmt : ethers.BigNumber, address : string}>()
+    const [balance, setBalance] = useState<ethers.BigNumber>()
+    const [tokenBalance, setTokenBalance] = useState<ethers.BigNumber>()
+    const [tokenAllowance, setTokenAllowance] = useState<ethers.BigNumber>()
 
-    let tokenAllowanceNeeded = -1
+    let mixAmt
+    let mixAmtWei
+    let feeAmtWei
+    let mixerAddress
+    if(mixInfo){
+        feeAmtWei = ethers.utils.parseUnits(feeAmt.toString(), tokenDecimals)
+        mixAmtWei = mixInfo.mixAmt
+        mixAmt = ethers.utils.formatUnits(mixAmtWei, tokenDecimals)
+        mixerAddress = mixInfo.address
+    }
+
+
+    let tokenAllowanceNeeded = ethers.BigNumber.from(-1)
     let enoughEth = false
     let enoughEthAndToken = false
 
-
-    const context = useContext(ConnectionContext)
-    const [networkInfo, setnetworkInfo] = useState(
-        {
-            chainId : context.networkChainId,
-            address : context.address,
-            balance : context.balance,
-            tokenBalance : context.tokenBalance,
-            allowance : context.allowance,
-        })
-    const connectWallet = () => {
-        //console.log("connectWallet deposit", context.networkChainId, networkInfo.chainId, context.address, networkInfo.address)
-        const networkInfoNew = {
-            chainId : context.networkChainId,
-            address : context.address,
-            balance : context.balance,
-            tokenBalance : context.tokenBalance,
-            allowance : context.allowance,
+    const updateBalance = (_balance) => {
+        console.log("Balance : " + _balance)
+        if (balance != _balance){
+            setBalance(_balance)
         }
-        if (JSON.stringify(networkInfo) !== JSON.stringify(networkInfoNew) )
-            setnetworkInfo(networkInfoNew)
+    }
+
+    const updateTokenBalance = (_balance) => {
+        console.log("Token balance : " + _balance)
+        if (tokenBalance != _balance){
+            setTokenBalance(_balance)
+        }
+    }
+
+    const updateTokenAllowance = (_balance) => {
+        console.log("Token allowance : " + _balance)
+        if (tokenAllowance != _balance){
+            setTokenAllowance(_balance)
+        }
+    }
+
+    const updateAllBalance = () => {
+        if (props.address && props.signer){
+            if (!balance){
+                getBalance(props.signer, props.address, updateBalance)
+            }
+            if (!isETH){
+                if (!tokenBalance){
+                    getTokenBalance(props.signer, props.address, updateTokenBalance)
+                }
+                if (mixerAddress && !tokenAllowance){
+                    getTokenAllowance(props.signer, props.address, mixerAddress, updateTokenAllowance)
+                }
+            }
+        }
     }
 
     useEffect(() => {
         initStorage()
-        const interval = setInterval(() => connectWallet(), 1000)
-        return () => clearInterval(interval)
+        updateAllBalance()
+        //const interval = setInterval(() => checkBalance(interval), 1000)
+        //return () => clearInterval(interval)
         //connectWallet()
     })
 
@@ -116,52 +129,100 @@ export default () => {
           return <Redirect to='/countdown' />
     }
 
+    const topUpEthMsg =
+        <div className="column is-8 is-offset-2">
+            <p>
+                Please top up your account with at least {mixAmt}
+                {tokenSym} ({mixAmt} to deposit and {feeAmt.toString()} for fee). You can get KETH
+                from a faucet <a target="_blank"
+                href="https://faucet.kovan.network/">here</a> or <a
+                target="_blank" href="https://gitter.im/kovan-testnet/faucet">here</a>.
+            </p>
+        </div>
 
+    let topUpDaiMsg
+
+    if (!isETH)
+        topUpDaiMsg =
+        <div className="column is-8 is-offset-2">
+            <p>
+                Please top up your account with at least {mixAmt} {tokenSym}&nbsp;
+                and {feeAmt.toString()} for fee. You can convert KETH to DAI <a
+                href="https://cdp.makerdao.com" target="_blank">here</a>, and you can get KETH
+                from a faucet <a target="_blank" href="https://faucet.kovan.network/">here</a> or <a target="_blank" href="https://gitter.im/kovan-testnet/faucet">here</a>.
+            </p>
+        </div>
 
     const handleTokenApproveBtnClick = async () => {
         setErc20ApproveTxStatus(TxStatuses.Pending)
 
-        approveTokens(context.provider, tokenAllowanceNeeded * (10 ** tokenDecimals))
+        approveTokens(props.signer, tokenAllowanceNeeded, mixerAddress)
             .then(async (tx) => {await tx.wait(); setErc20ApproveTxStatus(TxStatuses.Mined)})
             .catch((err) => {console.log(err); setErc20ApproveTxStatus(TxStatuses.Err)})
     }
 
-    const handleDepositBtnClick = async () => {
+    const handleDepositBtnClick = () => {
         if (!validRecipientAddress) {
             return
         }
 
+        setTxStatus(TxStatuses.Pending)
+
+        //Wait for redraw of pending button
+        setTimeout(processDeposit, 100)
+
+    }
+
+    const processDeposit = async() => {
+        console.time("deposit");
+
         initStorage()
+
+        console.timeLog("deposit");
 
         // generate an Identity and identity commitment
         const identity = genIdentity()
         const identityCommitment = '0x' + genIdentityCommitment(identity).toString(16)
 
+        console.timeLog("deposit");
+
         // Perform the deposit tx
         try {
-            setTxStatus(TxStatuses.Pending)
+
 
             let tx
             if (isETH) {
                 tx = await depositEth(
-                    context.provider,
+                    props.signer,
                     identityCommitment,
-                    ethers.utils.parseEther(mixAmt.toString()),
+                    ethers.utils.parseEther(mixAmt),
+                    mixerAddress,
                 )
             } else {
                 tx = await depositTokens(
-                    context.provider,
+                    props.signer,
                     identityCommitment,
+                    mixerAddress,
                 )
             }
 
+            console.timeLog("deposit");
+
             setTxHash(tx.hash)
 
-            storeDeposit(identity, recipientAddress, tokenType)
+            console.timeLog("deposit");
+
+            storeDeposit(identity, recipientAddress, tokenAddress, mixerAddress, mixAmt)
+
+            console.timeLog("deposit");
 
             const receipt = await tx.wait()
 
+            console.timeLog("deposit");
+
             updateDepositTxStatus(identity, tx.hash)
+
+            console.timeLog("deposit");
 
             setTxStatus(TxStatuses.Mined)
 
@@ -182,23 +243,22 @@ export default () => {
     }
 
     const checkBalances = () => {
-        if (mixAmt && networkInfo.address ) {
-            const minAmt = isETH ? mixAmt + operatorFee : operatorFee
-            if (networkInfo.balance) {
-                enoughEth = networkInfo.balance >= minAmt
-            }
+        if (mixAmtWei) {
+            const minAmt = isETH ? mixAmtWei.add(feeAmtWei) : feeAmtWei
+            enoughEth = balance ? balance.gte(minAmt) : false
             if (!isETH) {
-                const enoughToken = networkInfo.tokenBalance >= mixAmt
+                const enoughToken = tokenBalance ? tokenBalance.gte(mixAmtWei) : false
                 enoughEthAndToken = enoughEth && enoughToken
             }
-            tokenAllowanceNeeded = mixAmt - networkInfo.allowance
-            if (tokenAllowanceNeeded < 0) {
-                tokenAllowanceNeeded = 0
+            tokenAllowanceNeeded = tokenAllowance ? mixAmtWei.sub(tokenAllowance) : mixAmtWei
+            if (tokenAllowanceNeeded.lt(ethers.BigNumber.from(0))) {
+                tokenAllowanceNeeded = ethers.BigNumber.from(0)
             }
         }
     }
 
     checkBalances()
+
 
     const tokenAllowanceBtn = (
         <div>
@@ -207,7 +267,7 @@ export default () => {
                 onClick={handleTokenApproveBtnClick}
                 txStatus={erc20ApproveTxStatus}
                 isDisabled={false}
-                label= {`To continue, approve ${tokenAllowanceNeeded} ${tokenType}`}
+                label= {`To continue, approve ${ethers.utils.formatUnits(tokenAllowanceNeeded, tokenDecimals)} ${tokenSym}`}
             />
             <br />
         </div>
@@ -215,16 +275,11 @@ export default () => {
 
 
 
-    const showMixForm = ((networkInfo.chainId == chainId) &&
+    const showMixForm = ((!props.error) &&
         (
-            (!isETH && tokenAllowanceNeeded === 0 && enoughEthAndToken) ||
+            (!isETH && tokenAllowanceNeeded.isZero() && enoughEthAndToken) ||
             (isETH && enoughEth)
         ))
-
-    const handleTokenTypeSelect = (e) => {
-        const t = e.target.value
-        setTokenType(t)
-    }
 
     /*
     console.log("deposit redraw ",
@@ -235,29 +290,22 @@ export default () => {
     */
     //return (<div>{networkInfo.balance} ETH, {networkInfo.tokenBalance} TOKEN, Allowance {tokenAllowanceNeeded} TOKEN</div>)
 
+    const signer = props.signer
+    const address = props.address
+
     return (
         <div className='columns has-text-centered'>
             <div className='column is-12'>
                 <div className='section first-section'>
                     <h2 className='subtitle'>
-                        {name} makes your ETH or DAI anonymous.
-                        Learn more <a href="https://github.com/weijiekoh/mixer"
+                        {name} makes your ETH or ERC20 tokens anonymous.
+                        Learn more <a href="https://github.com/jrastit/mixer"
                         target="_blank">here</a>.
                     </h2>
 
                     <div className='sendTo column is-12'>
                         <span>Send</span>
-                        <div className="control token-select">
-                            <div className="select is-primary">
-                                <select
-                                    value={tokenType}
-                                    id="token"
-                                    onChange={handleTokenTypeSelect}
-                                >
-                                    <option value="{tokenSym}">{mixAmt.toString()} {tokenSym}</option>
-                                </select>
-                            </div>
-                        </div>
+                        <MixerSelect signer={signer} address={address} setMixInfo={setMixInfo}/>
                         <span>to</span>
                     </div>
 
@@ -279,27 +327,25 @@ export default () => {
                         </div>
                     }
 
-                    { (context.networkChainId && context.networkChainId !== chainId) === true ?
+                    { props.error ?
                         <p>
-                            Please connect to
-                            the {supportedNetworkName} Ethereum
-                            network.
+                            {props.error}
                         </p>
                         :
                         <div className='column is-12'>
                             <div>
                                 <p>
-                                    {`The fee is ${operatorFee} ${tokenSym}.`}
+                                    {`The fee is ${feeAmt} ${tokenSym}.`}
                                 </p>
                                 <p>
-                                    {`The recipient will receive ${mixAmt - operatorFee} ${tokenSym} after midnight, UTC.`}
+                                    {`The recipient will receive ${mixAmtWei ? ethers.utils.formatUnits(mixAmtWei.sub(feeAmtWei), tokenDecimals) : 0} ${tokenSym} after midnight, UTC.`}
                                 </p>
                             </div>
 
                             { isETH && !enoughEth && topUpEthMsg }
                             { !isETH && !enoughEthAndToken && topUpDaiMsg }
 
-                            { !isETH && enoughEthAndToken && tokenAllowanceNeeded > 0 && tokenAllowanceBtn }
+                            { !isETH && enoughEthAndToken && tokenAllowanceNeeded.gt(0) && tokenAllowanceBtn }
                         </div>
                     }
 
@@ -311,7 +357,7 @@ export default () => {
                             onClick={handleDepositBtnClick}
                             txStatus={txStatus}
                             isDisabled={depositBtnDisabled}
-                            label={`Mix ${mixAmt} ${tokenType}`}
+                            label={`Mix ${mixAmt} ${tokenSym}`}
                         />
 
                         { txHash.length > 0 &&

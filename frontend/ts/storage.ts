@@ -17,20 +17,22 @@ interface IdentityStored {
     depositTxHash: string,
     withdrawTxHash: string,
     timestamp: number,
-    tokenType: string,
+    tokenAddress: string,
+    mixerAddress: string,
+    mixAmt: string,
 }
 
 import{
     network,
-    mixerAddress,
+    tokenAddress,
 } from './utils/configFrontend'
 
 const localStorage = window.localStorage
 
 // The storage key depends on the mixer contracts to prevent conflicts
 let mixerPrefix
-if (mixerAddress){
-    mixerPrefix = mixerAddress.slice(4).toLowerCase()
+if (tokenAddress){
+    mixerPrefix = tokenAddress.slice(4).toLowerCase()
 }else{
     mixerPrefix = "0000"
 }
@@ -115,7 +117,9 @@ const saveItems = (items: any[]) => {
 const storeDeposit = (
     identity: Identity,
     recipientAddress: string,
-    tokenType: string,
+    tokenAddress: string,
+    mixerAddress: string,
+    mixAmt: string,
     depositTxHash=null,
 ) =>  {
     const items = getRawItems()
@@ -125,7 +129,9 @@ const storeDeposit = (
         identityTrapdoor: identity.identityTrapdoor,
         depositTxHash,
         recipientAddress,
-        tokenType,
+        tokenAddress,
+        mixerAddress,
+        mixAmt,
         timestamp: (new Date()).getTime(),
         withdrawTxHash: '',
     })

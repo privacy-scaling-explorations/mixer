@@ -23,7 +23,7 @@ import {
 import {
     deployContract,
     deployAllContracts,
-} from '../deploy/deployContract'
+} from '../deploy/deployAllContract'
 
 import {
     performeDeposit,
@@ -34,6 +34,16 @@ import {
     getSnarks,
     addressInfo,
 } from './utils'
+
+import {
+    getMixerList
+} from '../contract/mixerRegistry'
+
+import {
+    getMixerContract,
+    getSemaphoreContract,
+} from '../utils/contractUtils'
+
 
 const testToken = (
     configNetwork,
@@ -63,7 +73,6 @@ const testToken = (
         }
 
         let decimals
-        let mixAmtToken
         let feeAmt
         if (isETH){
             decimals = 18
@@ -71,7 +80,6 @@ const testToken = (
             decimals = configToken.get('decimals')
         }
 
-        mixAmtToken = ethers.BigNumber.from((configToken.get('mixAmt') * (10 ** decimals)).toString())
         feeAmt = ethers.BigNumber.from((configToken.get('feeAmt') * (10 ** decimals)).toString())
 
         const users = accounts.slice(1, 6).map((user) => user.address)
@@ -91,14 +99,15 @@ const testToken = (
         let tokenContract
         let tokenContractAddress
         let externalNullifier : string
-
+        let mixerList
+        let mixAmtWei
 
         beforeAll( done =>  {
             const func_async = (async () => {
                 console.log("Network:", configNetworkName, " Token ", configTokenName);
                 const contracts = await deployAllContracts(
+                    configNetworkName,
                     wallet,
-                    configNetwork,
                     configToken,
                     depositorAddress,
                     deployedAddressesNetwork,
@@ -112,8 +121,13 @@ const testToken = (
                 if (tokenContract){
                     tokenContractAddress = tokenContract.address
                 }
-                semaphoreContract = contracts.semaphoreContract
-                mixerContract = contracts.mixerContract
+                console.log("start")
+                mixerList = await getMixerList(wallet, tokenContractAddress, configNetworkName)
+                console.log("stop", mixerList)
+                expect(mixerList.length > 0).toBeTruthy()
+                semaphoreContract = await getSemaphoreContract(wallet, mixerList[0].semaphore, configNetworkName)
+                mixerContract = await getMixerContract(wallet, mixerList[0].address, configNetworkName)
+                mixAmtWei =  mixerList[0].mixAmt
                 expect(mimcContract).toBeTruthy()
                 //expect(semaphoreContract).toBeTruthy()
                 expect(mixerContract).toBeTruthy()
@@ -131,7 +145,17 @@ const testToken = (
             //expect(semaphoreContract).toBeTruthy()
         })
 
+        describe('Contract call', () => {
 
+            it('should get the mixer list', async () => {
+                const mixerList = await getMixerList(wallet, tokenContractAddress, configNetworkName)
+                expect(mixerList).toBeTruthy()
+                expect(mixerList.length).toBeGreaterThan(0)
+                expect(mixerList[0].address).toBeTruthy()
+                expect(mixerList[0].semaphore).toBeTruthy()
+            })
+
+        })
 
         describe('Contract deployments', () => {
 
@@ -178,7 +202,7 @@ const testToken = (
                 it('should not add the identity commitment to the contract if the amount is incorrect', async () => {
                     await assert.revert(mixerContract.deposit(identityCommitment.toString(), { value: 0 }))
 
-                    const invalidValue = (BigInt(mixAmtToken) + BigInt(1)).toString()
+                    const invalidValue = (BigInt(mixAmtWei) + BigInt(1)).toString()
                     await assert.revert(mixerContract.deposit(identityCommitment.toString(), { value: invalidValue }))
                 })
                 */
@@ -223,7 +247,7 @@ const testToken = (
 
             it('should have setup mixAmt', async () => {
                 const mixAmtBefore = await mixerContract.mixAmt()
-                expect(mixAmtBefore.eq(mixAmtToken)).toBeTruthy()
+                expect(mixAmtBefore.eq(mixAmtWei)).toBeTruthy()
             })
 
             it('address balance', async () => {
@@ -243,10 +267,10 @@ const testToken = (
                 } else {
                     balanceBefore = await tokenContract.balanceOf(depositorAddress)
                 }
-                expect(balanceBefore.gte(mixAmtToken)).toBeTruthy()
+                expect(balanceBefore.gte(mixAmtWei)).toBeTruthy()
 
                 // make a deposit
-                const receipt = await performeDeposit(isETH, identityCommitment, mixAmtToken, mixerContract, tokenContract)
+                const receipt = await performeDeposit(isETH, identityCommitment, mixAmtWei, mixerContract, tokenContract)
 
                 const gasUsed = receipt.gasUsed
                 console.log('Gas used for this deposit:', gasUsed.toString())
@@ -263,7 +287,7 @@ const testToken = (
                 } else {
                     balanceAfter = await tokenContract.balanceOf(depositorAddress)
                 }
-                expect(balanceBefore.sub(balanceAfter).gte(mixAmtToken)).toBeTruthy()
+                expect(balanceBefore.sub(balanceAfter).gte(mixAmtWei)).toBeTruthy()
             })
 
             it('should make a withdrawal', async () => {
@@ -272,7 +296,7 @@ const testToken = (
                 const identityCommitment = genIdentityCommitment(identity)
 
                 // make a deposit
-                await performeDeposit(isETH, identityCommitment, mixAmtToken, mixerContract, tokenContract)
+                await performeDeposit(isETH, identityCommitment, mixAmtWei, mixerContract, tokenContract)
 
                 // get the circuit, verifying key, and proving key
                 const { verifyingKey, provingKey, circuit } = await getSnarks()
@@ -409,7 +433,7 @@ const testToken = (
                 relayerBalanceDiff = relayerBalanceAfter.sub(relayerBalanceBefore)
                 expect(relayerBalanceDiff.eq(feeAmt)).toBeTruthy()
                 recipientBalanceDiff = recipientBalanceAfter.sub(recipientBalanceBefore)
-                expect(recipientBalanceDiff.add(feeAmt).eq(mixAmtToken)).toBeTruthy()
+                expect(recipientBalanceDiff.add(feeAmt).eq(mixAmtWei)).toBeTruthy()
             })
 
             it('should make a withdrawal with surrogeth', async () => {
@@ -418,7 +442,7 @@ const testToken = (
                 const identityCommitment = genIdentityCommitment(identity)
 
                 // make a deposit
-                await performeDeposit(isETH, identityCommitment, mixAmtToken, mixerContract, tokenContract)
+                await performeDeposit(isETH, identityCommitment, mixAmtWei, mixerContract, tokenContract)
 
                 // get the circuit, verifying key, and proving key
                 const { verifyingKey, provingKey, circuit } = await getSnarks()
@@ -567,7 +591,7 @@ const testToken = (
                 relayerBalanceDiff = relayerBalanceAfter.sub(relayerBalanceBefore)
                 //expect(relayerBalanceDiff.eq(feeAmt)).toBeTruthy()
                 recipientBalanceDiff = recipientBalanceAfter.sub(recipientBalanceBefore)
-                expect(recipientBalanceDiff.add(feeAmt).eq(mixAmtToken)).toBeTruthy()
+                expect(recipientBalanceDiff.add(feeAmt).eq(mixAmtWei)).toBeTruthy()
             })
 
             it('should get surrogeth broadcaster', async () => {

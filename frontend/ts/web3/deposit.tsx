@@ -4,13 +4,8 @@ import {
     getMixerContract,
     getTokenContract,
     Mixer,
-} from './mixer'
+} from './contract'
 
-import{
-    blockExplorerTxPrefix,
-    chainId,
-    mixerAddress,
-} from '../utils/configFrontend'
 /*
  * Perform a web3 transaction to make a deposit
  * @param context The web3-react context
@@ -18,49 +13,33 @@ import{
  * @param mixAmt The amount to mix
  */
 const depositEth = async (
-    provider: any,
+    signer: ethers.Signer,
     identityCommitment: string,
     mixAmt: ethers.BigNumber,
+    mixerAddress: string
 ) => {
 
-    const mixerContract = await getMixerContract(provider)
+    const mixerContract = await getMixerContract(signer, mixerAddress)
 
     console.log("deposit:",mixAmt)
-    const tx = await mixerContract.deposit(identityCommitment, { value: mixAmt, gasLimit: 8000000 })
+    const tx = await mixerContract.deposit(identityCommitment, { value: mixAmt})
     console.log("deposit ok")
     return tx
 }
 
 const depositTokens = async(
-    provider: any,
+    signer: ethers.Signer,
     identityCommitment: string,
+    mixerAddress: string
 ) => {
 
-    const mixerContract = await getMixerContract(provider)
+    const mixerContract = await getMixerContract(signer, mixerAddress)
 
-    const tx = await mixerContract.depositERC20(identityCommitment, { gasLimit: 8000000 })
+    const tx = await mixerContract.depositERC20(identityCommitment)
 
     return tx
 
 
-}
-
-const getTokenAllowance = async (
-    context: any,
-) => {
-    const library = context.library
-    const connector = context.connector
-    if (library && connector) {
-        const provider = new ethers.providers.Web3Provider(
-            await connector.getProvider(chainId),
-        )
-        const signer = provider.getSigner()
-
-        const tokenContract = await getTokenContract(context)
-
-        const tx = await tokenContract.allowance(context.account, mixerAddress)
-        return tx
-    }
 }
 
 /*
@@ -70,14 +49,15 @@ const getTokenAllowance = async (
  *                  token.decimals before passing it to this function.
  */
 const approveTokens = async (
-    provider: any,
-    numTokens: number,
+    signer: ethers.Signer,
+    numTokens: ethers.BigNumber,
+    mixerAddress: string
 ) => {
-        const tokenContract = await getTokenContract(provider)
+        const tokenContract = await getTokenContract(signer)
 
-        const tx = await tokenContract.approve(mixerAddress, numTokens.toString())
+        const tx = await tokenContract.approve(mixerAddress, numTokens)
 
         return tx
     }
 
-export { depositEth, depositTokens, getTokenAllowance, approveTokens }
+export { depositEth, depositTokens, approveTokens }

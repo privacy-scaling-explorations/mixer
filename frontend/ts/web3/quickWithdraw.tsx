@@ -1,10 +1,9 @@
 import * as ethers from 'ethers'
-import { getForwarderRegistryERC20Contract, getMixerContract, Mixer } from './mixer'
-
-import{
-    chainId,
-    mixerAddress,
-} from '../utils/configFrontend'
+import {
+    getForwarderRegistryERC20Contract,
+    getMixerContract,
+    Mixer
+} from './contract'
 
 const genDepositProof = (
     signal,
@@ -33,17 +32,18 @@ const genDepositProof = (
  * @param identityCommitment A hex string of the user's identity commitment
  */
 const quickWithdrawEth = async (
-    provider: any,
+    signer: ethers.Signer,
     signal,
     proof,
     publicSignals,
     recipientAddress,
     feeAmt,
     broadcasterAddress,
+    mixerAddress,
 ) => {
 
-    const mixerContract = await getMixerContract(provider)
-    const relayerRegistryContract = await getForwarderRegistryERC20Contract(provider)
+    const mixerContract = await getMixerContract(signer, mixerAddress)
+    const forwarderRegistryERC20Contract = await getForwarderRegistryERC20Contract(signer)
 
     const depositProof = genDepositProof(
         signal,
@@ -64,10 +64,9 @@ const quickWithdrawEth = async (
         depositProof.fee,
         broadcasterAddress])
 
-    return relayerRegistryContract.relayCall(
+    return forwarderRegistryERC20Contract.relayCall(
         mixerAddress,
         callData,
-        { gasLimit: 8000000 },
     )
 
 }
@@ -78,17 +77,18 @@ const quickWithdrawEth = async (
  * @param identityCommitment A hex string of the user's identity commitment
  */
 const quickWithdrawTokens = async (
-    provider: any,
+    signer: ethers.Signer,
     signal,
     proof,
     publicSignals,
     recipientAddress,
     feeAmt,
     broadcasterAddress,
+    mixerAddress,
 ) => {
 
-    const mixerContract = await getMixerContract(provider)
-    const relayerRegistryContract = await getForwarderRegistryERC20Contract(provider)
+    const mixerContract = await getMixerContract(signer, mixerAddress)
+    const forwarderRegistryERC20Contract = await getForwarderRegistryERC20Contract(signer)
 
     const depositProof = genDepositProof(
         signal,
@@ -109,10 +109,9 @@ const quickWithdrawTokens = async (
         depositProof.fee,
         broadcasterAddress])
 
-    return relayerRegistryContract.relayCallERC20(
+    return forwarderRegistryERC20Contract.relayCallERC20(
         mixerAddress,
         callData,
-        { gasLimit: 8000000 },
     )
 
 }

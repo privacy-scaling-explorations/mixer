@@ -7,7 +7,7 @@ import WalletWidget from './components/walletWidget'
 import NetworkSelect from './components/networkSelect'
 import TokenSelect from './components/tokenSelect'
 
-const Nav = () => {
+const Nav = (props) => {
     const [menuToggle, setMenuToggle] = useState(false)
 
     const burgerClassName = menuToggle ? 'navbar-burger is-active' : 'navbar-burger'
@@ -39,7 +39,7 @@ const Nav = () => {
                         <TokenSelect />
                     </div>
                     <div className='navbar-item' id='wallet-widget'>
-                        <WalletWidget />
+                        <WalletWidget address={props.address} error={props.error}/>
                     </div>
 
                     <a className='navbar-item' href='/about'>

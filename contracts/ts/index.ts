@@ -1,5 +1,9 @@
 import * as ethers from 'ethers'
 
+import {
+    getMixerList
+} from './contract/mixerRegistry'
+
 let deployedAddresses
 try{
     deployedAddresses = require('../deployedAddresses')
@@ -39,4 +43,4 @@ const getAbi = (
 }
 
 
-export { getContract, deployedAddresses, getAbi }
+export { getContract, deployedAddresses, getAbi, getMixerList }
