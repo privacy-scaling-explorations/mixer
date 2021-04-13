@@ -1,5 +1,4 @@
-import React, { Component, useState, useContext, useEffect } from 'react'
-import ReactDOM from 'react-dom'
+import React, { useState} from 'react'
 import * as ethers from 'ethers'
 import { sleep } from 'mixer-utils'
 
@@ -44,6 +43,8 @@ import {
     getNumUnwithdrawn,
 } from '../storage'
 
+import ProgressBar from '../components/progressBar'
+
 const noItemsCol = (
     <div className='column is-8 is-offset-2'>
         <h2 className='subtitle'>
@@ -66,7 +67,7 @@ export default (props) => {
         return noItems
     }
 
-    const [proofGenProgress, setProofGenProgress] = useState('')
+    const [proofGenProgress, setProofGenProgress] = useState({label : '', completed : 0})
     const [pendingTxHash, setPendingTxHash] = useState('')
     const [completedWithdraw, setCompletedWithdraw] = useState(false)
     const [txStatus, setTxStatus] = useState(TxStatuses.None)
@@ -220,15 +221,18 @@ export default (props) => {
                           <br />
                           <br />
 
-                          { proofGenProgress.length > 0 &&
+                          { proofGenProgress.label.length > 0 &&
                               <div className="has-text-left">
                                   <br />
                                   <pre>
-                                      {proofGenProgress}
+                                      {proofGenProgress.label}
                                   </pre>
                               </div>
                           }
-
+                          { proofGenProgress.completed > 0 &&
+                              <ProgressBar
+                                completed={proofGenProgress.completed}/>
+                          }
                           <br />
                           <br />
 

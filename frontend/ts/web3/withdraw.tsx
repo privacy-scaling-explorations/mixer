@@ -64,7 +64,7 @@ const generateProof = async (
 
         const externalNullifier = mixerContract.address
 
-        progress('Downloading leaves...')
+        progress('Downloading leaves...', 1)
 
         const leaves = await mixerContract.getLeaves()
 
@@ -79,13 +79,13 @@ const generateProof = async (
 
         const identityCommitment = genIdentityCommitment(identity)
 
-        progress('Downloading circuit...')
+        progress('Downloading circuit...', 10)
         const cirDef = await (await fetchWithoutCache(snarksPathsCircuit)).json()
 
-        progress('Generating circuit...')
+        progress('Generating circuit...', 20)
         const circuit = genCircuit(cirDef)
 
-        progress('Generating witness...')
+        progress('Generating witness...', 30)
         let result
         try {
             result = await genMixerWitness(
@@ -106,7 +106,7 @@ const generateProof = async (
             }
         }
 
-        progress('Verify Signature...')
+        progress('Verify Signature...', 40)
         const validSig = verifySignature(result.msg, result.signature, pubKey)
         if (!validSig) {
             throw {
@@ -114,31 +114,31 @@ const generateProof = async (
             }
         }
 
-        progress('Verify Witness...')
+        progress('Verify Witness...', 50)
         if (!circuit.checkWitness(result.witness)) {
             throw {
                 code: ErrorCodes.INVALID_WITNESS,
             }
         }
 
-        progress('Downloading proving key...')
+        progress('Downloading proving key...', 55)
         const provingKey = Buffer.from(new Uint8Array(
             await (await fetch(snarksPathsProvingKey)).arrayBuffer())
         )
 
-        progress('Downloading verification key...')
+        progress('Downloading verification key...', 60)
         const verifyingKey = parseVerifyingKeyJson(
             // @ts-ignore
             await (await fetch(snarksPathsVerificationKey)).text()
         )
 
-        progress('Generating proof...')
+        progress('Generating proof...', 65)
         const proof = await genProof(result.witness, provingKey)
 
-        progress('Generating public signal...')
+        progress('Generating public signal...', 70)
         const publicSignals = genPublicSignals(result.witness, circuit)
 
-        progress('Verify proof...')
+        progress('Verify proof...', 75)
         const isVerified = verifyProof(verifyingKey, proof, publicSignals)
 
         if (!isVerified) {
@@ -187,9 +187,9 @@ const backendWithdraw = async (
     setErrorMsg,
 ) => {
 
-    const progress = (line: string) => {
+    const progress = (line: string, completed: number) => {
         console.log(line)
-        setProgress(line)
+        setProgress({label:line, completed})
     }
 
     console.log("withdraw start")
@@ -262,7 +262,7 @@ const backendWithdraw = async (
             params,
         }
 
-        progress('Sending JSON-RPC call to the relayer...')
+        progress('Sending JSON-RPC call to the relayer...', 90)
         //console.log("request:", request.toString(), request)
 
         const response = await fetch(
@@ -283,7 +283,7 @@ const backendWithdraw = async (
             console.error(err)
         }
         if (responseJson && responseJson.result) {
-            progress('')
+            progress('Completed', 100)
             setTxHash(responseJson.result.txHash)
             console.log("json to serveur", responseJson.result.txHash)
             updateWithdrawTxHash(identityStored, responseJson.result.txHash)

@@ -13,21 +13,21 @@ network:
         blockExplorerTxPrefix: "https://kovan.etherscan.io/tx/"
         token:
             eth:
-                mixAmt: 0.1
+                mixAmt: [ 0.1 , 0.01]
                 feeAmt: 0.002
                 surrogethFeeAmt: 0.001
                 sym: 'KETH'
                 name: 'Kovan Ether'
             tkn:
                 decimals: 18
-                mixAmt: 100
+                mixAmt: [ 100 , 12, 10 ]
                 feeAmt: 2
                 sym: 'TKN'
                 name: 'Token'
             dai:
                 address: '0x4F96Fe3b7A6Cf9725f59d353F723c1bDb64CA6Aa'
                 decimals: 18
-                mixAmt: 20
+                mixAmt: [ 20, 10, 2, 1 ]
                 feeAmt: 0.02
                 sym: 'DAI'
                 name: 'Dai'

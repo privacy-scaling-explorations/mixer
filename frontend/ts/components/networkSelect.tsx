@@ -8,10 +8,14 @@ import {
 } from '../utils/configFrontend'
 
 function mapOption(value) {
-  return {value: value, label: configMixer.network[value].supportedNetworkName};
+    return {value: value, label: configMixer.network[value].supportedNetworkName}
 }
 
-const options = Object.keys(configMixer.network).map(mapOption)
+function filterDisable(value) {
+    return !configMixer.network[value].disable
+}
+
+const options = Object.keys(configMixer.network).filter(filterDisable).map(mapOption)
 
 const customStyles = {
   control: () => ({

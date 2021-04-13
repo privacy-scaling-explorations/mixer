@@ -22,6 +22,10 @@ import {
     endsAfterSecs,
 } from '../utils/configFrontend'
 
+import MixerDeposit from '../components/mixerDeposit'
+
+import ProgressBar from '../components/progressBar'
+
 const months = [
     'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
 ]
@@ -35,7 +39,7 @@ export default (props) => {
     const [firstLoadTime, setFirstLoadTime] = useState(new Date())
     const [withdrawStarted, setWithdrawStarted] = useState(false)
     const [countdownDone, setCountdownDone] = useState(false)
-    const [proofGenProgress, setProofGenProgress] = useState('')
+    const [proofGenProgress, setProofGenProgress] = useState({label : '', completed : 0})
     const [showAdvanced, setShowAdvanced] = useState(false)
     const [withdrawBtnClicked, setWithdrawBtnClicked] = useState(false)
     const [errorMsg, setErrorMsg] = useState('')
@@ -131,13 +135,17 @@ export default (props) => {
                                             {' '}.
                                         </span>
                                     }
-                                  { proofGenProgress.length > 0 &&
+                                  { proofGenProgress.label.length > 0 &&
                                       <div className="has-text-left">
                                           <br />
                                           <pre>
-                                              {proofGenProgress}
+                                              {proofGenProgress.label}
                                           </pre>
                                       </div>
+                                  }
+                                  { proofGenProgress.completed > 0 &&
+                                      <ProgressBar
+                                        completed={proofGenProgress.completed}/>
                                   }
                                 </span>
                                 :
@@ -146,6 +154,10 @@ export default (props) => {
                                 </span>
                             }
                         </h2>
+                        <MixerDeposit
+                            mixerAddress={identityStored.mixerAddress}
+                            provider={props.provider}
+                            transactionHash={identityStored.depositTxHash}/>
 
                         { !props.error && txHash.length === 0 && (midnightOver || withdrawStarted) &&  !withdrawBtnClicked &&
                             withdrawBtn

@@ -41,6 +41,8 @@ import {
     getTokenAllowance,
 } from '../utils/networkInfo'
 
+
+import MixerDeposit from '../components/mixerDeposit'
 import MixerSelect from '../components/mixerSelect'
 
 const name = 'MicroMix'
