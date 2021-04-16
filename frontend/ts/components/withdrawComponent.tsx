@@ -1,12 +1,21 @@
 import React, { useState, useEffect } from 'react'
 import ProgressBar from '../components/progressBar'
+import * as ethers from 'ethers'
 import { backendWithdraw } from '../web3/withdraw'
 import {
     blockExplorerTxPrefix,
 } from '../utils/configFrontend'
+import {
+    updateWithdrawTxHash,
+} from '../storage'
+import BalanceComponent from '../components/balanceComponent'
 
 export default (props) => {
-    const [txHash, setTxHash] = useState<String | undefined>()
+    const [txHash, setTxHash] = useState<{
+        txHash:String,
+        balance:ethers.BigNumber,
+        balanceBefore:ethers.BigNumber
+    } | undefined>()
     const [proofGenProgress, setProofGenProgress] = useState<{
         label:string|undefined,
         completed : number
@@ -16,8 +25,6 @@ export default (props) => {
     )
     const [withdrawStarted, setWithdrawStarted] = useState(false)
     const [errorMsg, setErrorMsg] = useState<String | undefined>()
-
-    console.log("WithdrawComponent redraw")
 
     return(
         <div>
@@ -68,13 +75,21 @@ export default (props) => {
                     <div className="message-body">
                         Mix successful.
                         { blockExplorerTxPrefix ?
-                            <a href={blockExplorerTxPrefix + txHash}
+                            <a href={blockExplorerTxPrefix + txHash.txHash}
                                 target="_blank">View on Etherscan.
                             </a>
                         :
-                            txHash
+                            txHash.txHash
                         }
                     </div>
+                    <BalanceComponent
+                        provider={props.provider}
+                        txHash={txHash}
+                        tokenDecimals={props.tokenDecimals}
+                        tokenSym={props.tokenSym}
+                        tokenAddress={props.identityStored.tokenAddress}
+                        recipientAddress={props.identityStored.recipientAddress}
+                        />
                 </article>
             }
             { errorMsg &&
@@ -82,6 +97,14 @@ export default (props) => {
                     <div className="message-body">
                         {'Error: ' + errorMsg}
                     </div>
+                    <span
+                        onClick={() => {
+                            updateWithdrawTxHash(props.identityStored, "0x0")
+                            window.location.reload()
+                        }}
+                        className='button is-warning'>
+                        Forget about this proof
+                    </span>
                 </article>
             }
         </div>

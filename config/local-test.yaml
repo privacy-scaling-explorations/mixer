@@ -4,7 +4,7 @@ env: 'local-dev'
 network:
 
     kovan:
-        disable: false
+        disable: true
         url: "https://kovan.infura.io/v3/5d37c494621a43558d77c90e368d4022"
         chainId: 42
         privateKeysPath: "key/kovanPrivateKeys.json"

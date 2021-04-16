@@ -19,6 +19,7 @@ import {
 import {
     getSigner,
     getAddress,
+    addHooks,
 } from './utils/networkInfo'
 
 function ErrorFallback({error, resetErrorBoundary}) {
@@ -57,6 +58,7 @@ const App = () => {
     useEffect(() => {
         if (!address.signer){
             getSigner(updateSigner, updateError)
+            addHooks()
         }
     })
 

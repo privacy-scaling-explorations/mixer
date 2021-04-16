@@ -41,10 +41,12 @@ const getMixerContract = async (provider, mixerAddress) => {
     )
 }
 
-const getTokenContract = async (provider) => {
-
+const getTokenContract = async (provider, _tokenAddress?) => {
+    if(!_tokenAddress){
+        _tokenAddress = tokenAddress
+    }
     return new ethers.Contract(
-        tokenAddress,
+        _tokenAddress,
         Token.abi,
         provider,
     )

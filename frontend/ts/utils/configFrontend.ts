@@ -100,7 +100,6 @@ const configEnv = configMixer.env
 //config of deployed address contract network
 //const deployedAddresses = getDeployedAddresses(network)
 const deployedAddressesNetwork = getDeployedAddresses(network)
-console.log("deployedAddressesNetwork", getDeployedAddresses(network), deployedAddressesNetwork, network)
 let relayerRegistryAddress
 let deployedAddressesToken
 let tokenAddress

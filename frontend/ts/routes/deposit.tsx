@@ -96,16 +96,16 @@ export default (props) => {
         }
     }
 
-    const updateAllBalance = () => {
+    const updateAllBalance = (force?:boolean) => {
         if (props.address && props.signer){
-            if (!balance){
+            if (!balance || force){
                 getBalance(props.signer, props.address, updateBalance)
             }
             if (!isETH){
-                if (!tokenBalance){
+                if (!tokenBalance || force){
                     getTokenBalance(props.signer, props.address, updateTokenBalance)
                 }
-                if (mixerAddress && !tokenAllowance){
+                if (mixerAddress && (!tokenAllowance || force)){
                     getTokenAllowance(props.signer, props.address, mixerAddress, updateTokenAllowance)
                 }
             }
@@ -161,8 +161,11 @@ export default (props) => {
         approveTokens(props.signer, tokenAllowanceNeeded, mixerAddress)
             .then(async (tx) => {
                 await tx.wait();
-                setErc20ApproveTxStatus(TxStatuses.Mined)
-                updateAllBalance()
+                setTimeout(() => {
+                    setErc20ApproveTxStatus(TxStatuses.Mined)
+                    updateAllBalance(true)
+                }, 4000)
+
             })
             .catch((err) => {console.log(err); setErc20ApproveTxStatus(TxStatuses.Err)})
     }
@@ -237,7 +240,6 @@ export default (props) => {
 
     checkBalances()
 
-
     const tokenAllowanceBtn = (
         <div>
             <br />
@@ -251,22 +253,12 @@ export default (props) => {
         </div>
     )
 
-
-
     const showMixForm = ((!props.error) &&
         (
             (!isETH && tokenAllowanceNeeded.isZero() && enoughEthAndToken) ||
             (isETH && enoughEth)
         ))
 
-    /*
-    console.log("deposit redraw ",
-        "ETH : ", networkInfo.balance,
-        "TOKEN : ", networkInfo.tokenBalance,
-        "Allowance : ", networkInfo.allowance
-    )
-    */
-    //return (<div>{networkInfo.balance} ETH, {networkInfo.tokenBalance} TOKEN, Allowance {tokenAllowanceNeeded} TOKEN</div>)
 
     const signer = props.signer
     const address = props.address

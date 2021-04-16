@@ -29,6 +29,7 @@ const deployContract = async (wallet, contract, ...args: any[]) => {
     //console.timeLog("Deploy contract");
     await contractToDeploy.deployed()
     console.timeEnd("Deploy contract");
+    console.log("contract deployed ", contractToDeploy.address)
     return contractToDeploy
 }
 

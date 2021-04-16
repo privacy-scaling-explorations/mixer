@@ -27,7 +27,7 @@ export default (props) => {
     }
 
     const [withdrawStarted, setWithdrawStarted] = useState(false)
-    const [withdrawEnable, setwithdrawEnable] = useState(false)
+    const [withdrawEnable, setWithdrawEnable] = useState(false)
     const [showAdvanced, setShowAdvanced] = useState(false)
 
 
@@ -59,7 +59,7 @@ export default (props) => {
         ethers.BigNumber.from(0)
 
     if (!withdrawEnable){
-        //setwithdrawEnable(true)
+        //setWithdrawEnable(true)
     }
 
     const withdrawChild = () => {
@@ -95,8 +95,10 @@ export default (props) => {
                             identityStored={identityStored}
                             isETH={isETH}
                             tokenDecimals={tokenDecimals}
+                            tokenSym={tokenSym}
                             surrogethInfo={surrogethInfo}
                             setWithdrawStarted={setWithdrawStarted}
+                            setWithdrawEnable={setWithdrawEnable}
                             />
                     }
                 </div>
@@ -105,7 +107,6 @@ export default (props) => {
         return undefined
     }
 
-    console.log("Cutdown redraw")
     return (
         <div className='section first-section'>
             <div className='columns has-text-centered'>
@@ -188,7 +189,7 @@ export default (props) => {
 
                                     <span
                                         onClick={() => {
-                                            setwithdrawEnable(true)
+                                            setWithdrawEnable(true)
                                         }}
                                         className='button is-warning'>
                                         I Agree

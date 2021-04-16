@@ -18,12 +18,8 @@ const depositEth = async (
     mixAmt: ethers.BigNumber,
     mixerAddress: string
 ) => {
-
     const mixerContract = await getMixerContract(signer, mixerAddress)
-
-    console.log("deposit:",mixAmt)
     const tx = await mixerContract.deposit(identityCommitment, { value: mixAmt})
-    console.log("deposit ok")
     return tx
 }
 
@@ -32,14 +28,9 @@ const depositTokens = async(
     identityCommitment: string,
     mixerAddress: string
 ) => {
-
     const mixerContract = await getMixerContract(signer, mixerAddress)
-
     const tx = await mixerContract.depositERC20(identityCommitment)
-
     return tx
-
-
 }
 
 /*

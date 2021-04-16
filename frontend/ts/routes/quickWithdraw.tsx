@@ -78,7 +78,7 @@ export default (props) => {
     let withdrawBtnDisabled = !consentChecked
 
     const progress = (line: string, completed: number) => {
-        console.info(line)
+        if (line) console.info(line)
         setProofGenProgress({label: line, completed})
     }
 

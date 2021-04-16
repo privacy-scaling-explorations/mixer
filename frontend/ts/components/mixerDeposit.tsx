@@ -64,16 +64,7 @@ export default (props) => {
     if (provider && mixerAddress && eventList.length == 0){
         loadEvent()
     }
-    /*
-    console.log("event list:", eventList)
 
-    eventList.map((event)=>{
-        console.log("event:", event)
-        event.getBlock().then((block) =>{
-            console.log(new Date(block.timestamp * 1000).toUTCString(), event.transactionHash)
-        })
-    })
-    */
     let completed = eventList.length  * 10
     if (completed > 100){
         completed = 100
@@ -97,7 +88,7 @@ export default (props) => {
         color = "#FF4136" //Red
         level = "null"
     }
-    console.log("mixerDeposit redraw")
+    
     return (
         <div>
             <div >

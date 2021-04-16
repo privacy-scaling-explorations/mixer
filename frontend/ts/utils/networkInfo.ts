@@ -17,6 +17,11 @@ declare global {
 let provider
 let signer
 
+const addHooks = () => {
+    window.ethereum.on('chainChanged', (_chainId) => window.location.reload());
+    window.ethereum.on('accountsChanged', (accounts: Array<string>) => {console.log(accounts);window.location.reload()});
+}
+
 const getSigner = (setSigner, setError) => {
     const provider = new ethers.providers.Web3Provider(
         window.ethereum,
@@ -84,6 +89,7 @@ const getTokenAllowance = async (signer, address, mixerAddress, setTokenAllowanc
 }
 
 export {
+    addHooks,
     getSigner,
     getBalance,
     getAddress,

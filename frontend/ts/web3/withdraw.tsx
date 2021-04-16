@@ -204,7 +204,7 @@ const backendWithdraw = async (
     try {
 
         const progress = async (line: string, completed: number) => {
-            console.log(line)
+            console.info(line)
             setProgress({label:line, completed})
             //Let the time to redraw
             await sleep(10)
@@ -233,12 +233,12 @@ const backendWithdraw = async (
         } = identityStored
 
         let tokenContract
-
+        let recipientBalanceBefore
         if (isETH) {
-            const recipientBalanceBefore = await provider.getBalance(recipientAddress)
+            recipientBalanceBefore = await provider.getBalance(recipientAddress)
         } else {
             tokenContract = await getTokenContract(provider)
-            const recipientBalanceBefore = (await tokenContract.balanceOf(recipientAddress)) / (10 ** tokenDecimals)
+            recipientBalanceBefore = await tokenContract.balanceOf(recipientAddress)
         }
 
         const relayerAddress = forwarderRegistryERC20Address
@@ -308,11 +308,6 @@ const backendWithdraw = async (
             }
             if (responseJson && responseJson.result) {
                 txHash = responseJson.result.txHash
-
-
-
-
-
 
             } else if (responseJson && responseJson.error && responseJson.error.data && responseJson.error.data.name === 'BACKEND_MIX_PROOF_PRE_BROADCAST_INVALID') {
                 throw {
@@ -389,8 +384,7 @@ const backendWithdraw = async (
             }
 
             try {
-                const result = await client.submitTx(tx, relayer)
-                console.log(result)
+                txHash = await client.submitTx(tx, relayer)
             } catch (error) {
                 if (error.response){
                     console.log(error.response.data)
@@ -401,23 +395,37 @@ const backendWithdraw = async (
             }
         }
 
-        if (txHash){
-            await progress('Completed', 100)
-            setTxHash(txHash)
-            console.log("json to serveur", txHash)
-            updateWithdrawTxHash(identityStored, txHash)
+        await progress('Check balance...', 95)
+        //await sleep(10000)
+        let recipientBalanceAfter
+        if (isETH) {
+            recipientBalanceAfter = await provider.getBalance(recipientAddress)
+            console.log('The recipient balance increased by ',
+                ethers.utils.formatEther(
+                    recipientBalanceAfter.sub(
+                        recipientBalanceBefore)),
+                'ETH',
+                ethers.utils.formatEther(recipientBalanceAfter),
+                ethers.utils.formatEther(recipientBalanceBefore),
+            )
+        } else {
+            recipientBalanceAfter = await tokenContract.balanceOf(recipientAddress)
+            console.log('The recipient balance increased by ',
+                ethers.utils.formatUnits(
+                    recipientBalanceAfter.sub(
+                        recipientBalanceBefore
+                    ), tokenDecimals), 'tokens')
         }
 
-        await progress('Check balance...', 95)
-        await sleep(4000)
-        if (isETH) {
-            const recipientBalanceAfter = await provider.getBalance(recipientAddress)
-            console.log('The recipient now has', ethers.utils.formatEther(recipientBalanceAfter), 'ETH')
-        } else {
-            const recipientBalanceAfter = (await tokenContract.balanceOf(recipientAddress)) / (10 ** tokenDecimals)
-            console.log('The recipient now has', recipientBalanceAfter.toString(), 'tokens')
+        if (txHash){
+            updateWithdrawTxHash(identityStored, txHash)
+            await progress('Completed', 100)
+            console.log("json to serveur", txHash)
+            setTxHash({txHash,
+                balanceBefore: recipientBalanceBefore,
+                balance: recipientBalanceAfter.sub(
+                recipientBalanceBefore)})
         }
-        await progress('', 100)
 
     } catch (err) {
         console.log(err)
