@@ -18,15 +18,15 @@ const deployContract = async (wallet, contract, ...args: any[]) => {
         contract.bytecode,
         wallet,
     )
-    console.log("Deploy contract ", (contract.bytecode.length / 2) - 1, "<", 24576);
+    console.log("Deploy contract size ", (contract.bytecode.length / 2) - 1, "< max ethereum size", 24576);
     console.time("Deploy contract");
     //calculate the estimate gas (not eeded, to check for error)
     let tx = factory.getDeployTransaction(...args)
     console.log("Deploy contract --> estimate gas : " , (await wallet.estimateGas(tx)).toString())
-    console.timeLog("Deploy contract");
+    //console.timeLog("Deploy contract");
 
     let contractToDeploy = await factory.deploy(...args)
-    console.timeLog("Deploy contract");
+    //console.timeLog("Deploy contract");
     await contractToDeploy.deployed()
     console.timeEnd("Deploy contract");
     return contractToDeploy

@@ -5,26 +5,31 @@ config/*-prod.yml
 config/local-dev.yaml
 config/local-dev.yml
 
-kovanPrivateKeys.json
-frontend/ts/exported_config.json
-
-verification_key.json
-backend/verification_key.json
-contracts/.privateKeys.json
-contracts/privateKeys.json
-
 **/build
 
+#frontend
 frontend/server.cert
 frontend/server.key
-
-contracts/.etherlime-store/
-contracts/compiled/
-contracts/.outputParameter
+frontend/ts/exported_config.json
 frontend/dist/
 frontend/.cache/
 frontend/ts/abis
-deployedAddresses.json
+frontend/exported_config.json
+frontend/compiled/
+
+#key
+key/*.json
+!key/ganache.json
+
+#contract
+contracts/.etherlime-store/
+contracts/compiled/
+contracts/.outputParameter
+contracts/deployedAddresses/ganache.json
+
+#backend
+backend/verification_key.json
+
 node_modules/
 lerna-debug.log
 
@@ -47,9 +52,4 @@ tags
 # Persistent undo
 [._]*.un~
 
-backend/exported_config.json
-frontend/exported_config.json
-frontend/compiled/
-contracts/test.log
-backend/ganachePrivateKeys.json
-surrogeth/surrogethd/.env
+

@@ -61,11 +61,11 @@ const testToken = (
     let configToken = configNetwork.get('token.' + configTokenName)
 
     describe(configNetworkName + '.' + configTokenName + ' Mixer', () => {
-
-        if (!deployedAddressesNetwork.token[configTokenName]){
-            deployedAddressesNetwork.token[configTokenName] = {}
-        }
-        let deployedAddressesToken = deployedAddressesNetwork.token[configTokenName]
+        let deployedAddressesToken = deployedAddressesNetwork &&
+            deployedAddressesNetwork.token &&
+            deployedAddressesNetwork.token[configTokenName]?
+            deployedAddressesNetwork.token[configTokenName]:
+            {}
 
         let isETH = 0
         if (!configToken.has('decimals')){

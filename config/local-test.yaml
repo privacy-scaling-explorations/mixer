@@ -4,10 +4,9 @@ env: 'local-dev'
 network:
 
     kovan:
-        disable: true
+        disable: false
         url: "https://kovan.infura.io/v3/5d37c494621a43558d77c90e368d4022"
         chainId: 42
-        supportedNetwork: 42
         privateKeysPath: "key/kovanPrivateKeys.json"
         supportedNetworkName: "Kovan"
         blockExplorerTxPrefix: "https://kovan.etherscan.io/tx/"
@@ -36,7 +35,6 @@ network:
         disable: false
         url: "http://localhost:8545"
         chainId: 1337
-        supportedNetwork: 1337
         privateKeysPath: "key/ganachePrivateKeys.json"
         supportedNetworkName: "Ganache"
         token:
@@ -58,7 +56,6 @@ network:
         useRegistry: false
         url: "http://localhost:8545"
         chainId: 1337
-        supportedNetwork: 1337
         privateKeysPath: "key/ganachePrivateKeys.json"
         supportedNetworkName: "Ganache"
         token:
@@ -79,7 +76,6 @@ network:
         disable: true
         url: "https://ropsten.infura.io/v3/5d37c494621a43558d77c90e368d4022"
         chainId: 3
-        supportedNetwork: 3
         privateKeysPath: "key/kovanPrivateKeys.json"
         supportedNetworkName: "Ropsten"
         blockExplorerTxPrefix: "https://ropsten.etherscan.io/tx/"
@@ -101,7 +97,6 @@ network:
         disable: true
         url: "https://kovan3.arbitrum.io/rpc"
         chainId: 79377087078960
-        supportedNetwork: 79377087078960
         privateKeysPath: "key/kovanPrivateKeys.json"
         blockExplorerTxPrefix: https://explorer.arbitrum.io/#/tx/
         supportedNetworkName: "Arbitrum"
@@ -122,7 +117,6 @@ network:
         disable: true
         url: "https://dev-testnet-v1-0.skalelabs.com"
         chainId: 344435
-        supportedNetwork: 344435
         privateKeysPath: "key/kovanPrivateKeys.json"
         supportedNetworkName: "Skale"
         token:
@@ -138,25 +132,48 @@ network:
                 surrogethFeeAmt: 0.001
                 sym: 'ETH'
                 name: 'Ether'
+    oasis:
+        disable: true
+        url: "https://rpc.oasiseth.org:8545"
+        chainId: 69
+        privateKeysPath: "key/oasisPrivateKeys.json"
+        supportedNetworkName: "Oasis Paratime"
+        token:
+            tkn:
+                decimals: 16
+                mixAmt: [20.1, 200.1, 2.1, 10.1]
+                feeAmt: 0.1
+                sym: 'TKN'
+                name: 'Token'
+            eth:
+                mixAmt: [0.0001, 0.0002]
+                feeAmt: 0.00002
+                surrogethFeeAmt: 0.00001
+                sym: 'ETH'
+                name: 'Ether'
+
 
 backend:
-  port: 3000
-  host: "http://localhost"
-  etcd:
-    host: "localhost"
-    port: 2379
-    lockTime: 7000
+    port: 3000
+    host: "http://localhost"
+    etcd:
+        host: "localhost"
+        port: 2379
+        lockTime: 7000
 
 frontend:
-  snarks:
-    paths:
-      verificationKey: 'http://localhost:1234/build/verification_key.json'
-      circuit: 'http://localhost:1234/build/circuit.json'
-      provingKey: 'http://localhost:1234/build/proving_key.bin'
-  countdown:
-    endsAtUtcMidnight: false
-    endsAfterSecs: 5
+    snarks:
+        paths:
+            verificationKey: 'http://localhost:1234/build/verification_key.json'
+            circuit: 'http://localhost:1234/build/circuit.json'
+            provingKey: 'http://localhost:1234/build/proving_key.bin'
+    countdown:
+        endsAtUtcMidnight: true
+        endsAfterSecs: 5
+    contract:
+        ##gas used for withdraw used to calculate fee
+        withdrawGas: 50000
 
 #for surrogeth compatibility
 surrogethPort: 8124
-surrogethIp: "127.0.0.1"
+surrogethIp: "localhost"

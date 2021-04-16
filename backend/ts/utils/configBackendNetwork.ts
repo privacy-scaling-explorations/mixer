@@ -1,6 +1,6 @@
 import * as ethers from 'ethers'
 
-import { deployedAddresses } from 'mixer-contracts'
+import { getDeployedAddresses } from 'mixer-contracts'
 import { configMixer } from 'mixer-config'
 
 
@@ -22,7 +22,7 @@ const getTestParam = (network : string, token : string) => {
         tokenDecimals = 18
     }
 
-    const deployedAddressesNetwork = deployedAddresses[network]
+    const deployedAddressesNetwork = getDeployedAddresses(network)
     const deployedAddressesToken = deployedAddressesNetwork.token[token]
 
     const tokenAddress = deployedAddressesToken.Token
@@ -81,7 +81,7 @@ const getMixerInfo = async (network, tokenAddress) => {
     tokenAddress = tokenAddress?
         ethers.utils.getAddress(tokenAddress) :
         undefined
-    const deployedAddressesNetwork = deployedAddresses[network]
+    const deployedAddressesNetwork = getDeployedAddresses(network)
     for (let configTokenName of Object.keys(configNetwork.token)) {
         const configToken = configNetwork.token[configTokenName]
         let isToken = false

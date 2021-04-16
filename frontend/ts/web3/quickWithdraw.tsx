@@ -116,4 +116,4 @@ const quickWithdrawTokens = async (
 
 }
 
-export { quickWithdrawEth, quickWithdrawTokens }
+export { genDepositProof, quickWithdrawEth, quickWithdrawTokens }

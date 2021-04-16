@@ -20,6 +20,7 @@ interface IdentityStored {
     tokenAddress: string,
     mixerAddress: string,
     mixAmt: string,
+    withdrawProof: any,
 }
 
 import{

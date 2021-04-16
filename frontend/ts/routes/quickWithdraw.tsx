@@ -77,9 +77,9 @@ export default (props) => {
 
     let withdrawBtnDisabled = !consentChecked
 
-    const progress = (line: string) => {
+    const progress = (line: string, completed: number) => {
         console.info(line)
-        setProofGenProgress(line)
+        setProofGenProgress({label: line, completed})
     }
 
     // Just use the last stored item
@@ -127,7 +127,7 @@ export default (props) => {
                 setErrorMsg,
             )
 
-            progress('Performing transaction')
+            progress('Performing transaction, you should validate it now on metamask', 90)
 
             let tx
             const quickWithdrawFunc = isETH ? quickWithdrawEth : quickWithdrawTokens
@@ -143,7 +143,7 @@ export default (props) => {
             )
 
             setPendingTxHash(tx.hash)
-            setProofGenProgress('')
+            progress('', 100)
 
             const receipt = await tx.wait()
 

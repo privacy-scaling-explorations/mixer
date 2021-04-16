@@ -5,11 +5,16 @@ import {
     getMixerContract,
 } from '../utils/contractUtils'
 
-const getMixerList = async (provider, tokenAddress, network) => {
+const getMixerList = async (
+    provider,
+    tokenAddress : string,
+    network : string,
+    mixerRegistryAddress?: string
+) => {
     //defaut address for ethers
     if (!tokenAddress)
         tokenAddress = "0x0000000000000000000000000000000000000000"
-    const mixerRegistryContract = await getMixerRegistryContract(provider, network)
+    const mixerRegistryContract = await getMixerRegistryContract(provider, network, mixerRegistryAddress)
     const ret: Array<{mixAmt, address, semaphore}> = []
     console.log("getTokenMixerList")
     for (let mixAmt of await mixerRegistryContract.getTokenMixerList(tokenAddress)){

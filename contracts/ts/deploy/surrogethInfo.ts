@@ -1,5 +1,5 @@
 import { configMixer } from 'mixer-config'
-const deployedAddresses = require('../../deployedAddresses.json')
+import { getDeployedAddresses } from '../index'
 
 const fs = require('fs');
 const path = require('path');
@@ -49,7 +49,8 @@ const surrogethInfo = (surrogethPath) => {
 
             if (!(configNetwork.has('disable') && configNetwork.disable)){
                 console.log("Network:", configNetworkName)
-                let deployedAddressesNetwork = deployedAddresses[configNetworkName]
+
+                let deployedAddressesNetwork = getDeployedAddresses(configNetworkName)
                 writeHead(fd, indent++, configNetworkName)
                 writeProperty(fd, indent, "url", configNetwork)
                 writeProperty(fd, indent, "chainId", configNetwork)
@@ -65,7 +66,7 @@ const surrogethInfo = (surrogethPath) => {
                 for (let configTokenName of Object.keys(configNetwork.get('token'))) {
                     console.log("\tToken:", configTokenName);
                     let deployedAddressesToken
-                    if (deployedAddressesNetwork){
+                    if (deployedAddressesNetwork && deployedAddressesNetwork.token){
                         deployedAddressesToken = deployedAddressesNetwork.token[configTokenName]
                     }
                     let configToken = configNetwork.get('token.' + configTokenName)

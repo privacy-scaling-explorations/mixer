@@ -1,4 +1,13 @@
 import * as ethers from 'ethers'
+import { SurrogethClient } from "surrogeth-client"
+import {
+    Mixer,
+    ForwarderRegistryERC20,
+} from './contract'
+
+import {
+    genDepositProof
+} from './quickWithdraw'
 
 import {
     genCircuit,
@@ -26,7 +35,6 @@ import {
     snarksPathsCircuit,
     snarksPathsProvingKey,
     snarksPathsVerificationKey,
-
 } from '../utils/configFrontend'
 
 import {
@@ -60,11 +68,12 @@ const generateProof = async (
 ) => {
 
     try {
+
         const mixerContract = await getMixerContract(provider, mixerAddress)
 
         const externalNullifier = mixerContract.address
 
-        progress('Downloading leaves...', 1)
+        await progress('Downloading leaves...', 1)
 
         const leaves = await mixerContract.getLeaves()
 
@@ -79,13 +88,13 @@ const generateProof = async (
 
         const identityCommitment = genIdentityCommitment(identity)
 
-        progress('Downloading circuit...', 10)
+        await progress('Downloading circuit...', 10)
         const cirDef = await (await fetchWithoutCache(snarksPathsCircuit)).json()
 
-        progress('Generating circuit...', 20)
+        await progress('Generating circuit...', 20)
         const circuit = genCircuit(cirDef)
 
-        progress('Generating witness...', 30)
+        await progress('Generating witness...', 30)
         let result
         try {
             result = await genMixerWitness(
@@ -106,7 +115,7 @@ const generateProof = async (
             }
         }
 
-        progress('Verify Signature...', 40)
+        await progress('Verify Signature...', 40)
         const validSig = verifySignature(result.msg, result.signature, pubKey)
         if (!validSig) {
             throw {
@@ -114,31 +123,31 @@ const generateProof = async (
             }
         }
 
-        progress('Verify Witness...', 50)
+        await progress('Verify Witness...', 50)
         if (!circuit.checkWitness(result.witness)) {
             throw {
                 code: ErrorCodes.INVALID_WITNESS,
             }
         }
 
-        progress('Downloading proving key...', 55)
+        await progress('Downloading proving key...', 55)
         const provingKey = Buffer.from(new Uint8Array(
             await (await fetch(snarksPathsProvingKey)).arrayBuffer())
         )
 
-        progress('Downloading verification key...', 60)
+        await progress('Downloading verification key...', 60)
         const verifyingKey = parseVerifyingKeyJson(
             // @ts-ignore
             await (await fetch(snarksPathsVerificationKey)).text()
         )
 
-        progress('Generating proof...', 65)
+        await progress('Generating proof...', 65)
         const proof = await genProof(result.witness, provingKey)
 
-        progress('Generating public signal...', 70)
+        await progress('Generating public signal...', 70)
         const publicSignals = genPublicSignals(result.witness, circuit)
 
-        progress('Verify proof...', 75)
+        await progress('Verify proof...', 75)
         const isVerified = verifyProof(verifyingKey, proof, publicSignals)
 
         if (!isVerified) {
@@ -185,44 +194,57 @@ const backendWithdraw = async (
     setProgress,
     setTxHash,
     setErrorMsg,
+    isETH,
+    tokenDecimals,
+    feeAmtWei,
+    locator,
+    locatorType,
 ) => {
 
-    const progress = (line: string, completed: number) => {
-        console.log(line)
-        setProgress({label:line, completed})
-    }
-
-    console.log("withdraw start")
-
-    if (!provider){
-        setErrorMsg('Provider not set')
-        return
-    }
-
-    const {
-        recipientAddress,
-        tokenAddress,
-        mixerAddress,
-    } = identityStored
-
-    const {
-        isETH,
-        tokenDecimals,
-        feeAmtWei,
-    } = getTokenInfo(tokenAddress)
-
-    let tokenContract
-
-    if (isETH) {
-        const recipientBalanceBefore = await provider.getBalance(recipientAddress)
-    } else {
-        tokenContract = await getTokenContract(provider)
-        const recipientBalanceBefore = (await tokenContract.balanceOf(recipientAddress)) / (10 ** tokenDecimals)
-    }
-
-    const relayerAddress = forwarderRegistryERC20Address
-
     try {
+
+        const progress = async (line: string, completed: number) => {
+            console.log(line)
+            setProgress({label:line, completed})
+            //Let the time to redraw
+            await sleep(10)
+        }
+
+        if (!provider){
+            setErrorMsg('Provider not set')
+            return
+        }
+
+        if (!locator){
+            setErrorMsg('Broadcaster not set')
+            return
+        }
+
+        console.log("withdraw locator", locator, locatorType)
+        if (!locatorType){
+            setErrorMsg('Broadcaster locatorType not set')
+            return
+        }
+
+        const {
+            recipientAddress,
+            tokenAddress,
+            mixerAddress,
+        } = identityStored
+
+        let tokenContract
+
+        if (isETH) {
+            const recipientBalanceBefore = await provider.getBalance(recipientAddress)
+        } else {
+            tokenContract = await getTokenContract(provider)
+            const recipientBalanceBefore = (await tokenContract.balanceOf(recipientAddress)) / (10 ** tokenDecimals)
+        }
+
+        const relayerAddress = forwarderRegistryERC20Address
+
+        let withdrawProof = identityStored.withdrawProof
+        let txHash
 
         const {
             signal,
@@ -241,74 +263,162 @@ const backendWithdraw = async (
             setErrorMsg,
         )
 
-        const params = genMixParams(
-                network,
-                mixerAddress,
-                signal,
-                proof,
-                recipientAddress,
-                feeAmtWei,
-                publicSignals,
+        if (locatorType == 'backend'){
+            await progress('Calling backend server...', 90)
+            const params = genMixParams(
+                    network,
+                    mixerAddress,
+                    signal,
+                    proof,
+                    recipientAddress,
+                    feeAmtWei,
+                    publicSignals,
+                )
+
+            console.log(params)
+
+            const method = isETH ? 'mixer_mix_eth' : 'mixer_mix_tokens'
+
+            const request = {
+                jsonrpc: '2.0',
+                id: (new Date()).getTime(),
+                method,
+                params,
+            }
+
+            await progress('Sending JSON-RPC call to the relayer...', 90)
+            console.log("Backend request:", request.toString(), request)
+
+            const response = await fetch(
+                '/api',
+                {
+                    method: 'POST',
+                    body: JSON.stringify(request),
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                },
             )
 
-        console.log(params)
+            let responseJson
+            try{
+                responseJson = await response.json()
+            }catch(err){
+                console.error(err)
+            }
+            if (responseJson && responseJson.result) {
+                txHash = responseJson.result.txHash
 
-        const method = isETH ? 'mixer_mix_eth' : 'mixer_mix_tokens'
 
-        const request = {
-            jsonrpc: '2.0',
-            id: (new Date()).getTime(),
-            method,
-            params,
-        }
 
-        progress('Sending JSON-RPC call to the relayer...', 90)
-        //console.log("request:", request.toString(), request)
 
-        const response = await fetch(
-            '/api',
-            {
-                method: 'POST',
-                body: JSON.stringify(request),
-                headers: {
-                    'Content-Type': 'application/json',
+
+
+            } else if (responseJson && responseJson.error && responseJson.error.data && responseJson.error.data.name === 'BACKEND_MIX_PROOF_PRE_BROADCAST_INVALID') {
+                throw {
+                    code: ErrorCodes.PRE_BROADCAST_CHECK_FAILED
                 }
-            },
-        )
-
-        let responseJson
-        try{
-            responseJson = await response.json()
-        }catch(err){
-            console.error(err)
-        }
-        if (responseJson && responseJson.result) {
-            progress('Completed', 100)
-            setTxHash(responseJson.result.txHash)
-            console.log("json to serveur", responseJson.result.txHash)
-            updateWithdrawTxHash(identityStored, responseJson.result.txHash)
-
-            //await sleep(4000)
-
-            if (isETH) {
-                const recipientBalanceAfter = await provider.getBalance(recipientAddress)
-                console.log('The recipient now has', ethers.utils.formatEther(recipientBalanceAfter), 'ETH')
+            } else if (responseJson && responseJson.error && responseJson.error.code && responseJson.error.message){
+                console.log(responseJson.error)
+                setErrorMsg('Server error : ' + responseJson.error.code + ' : ' + responseJson.error.message)
             } else {
-                const recipientBalanceAfter = (await tokenContract.balanceOf(recipientAddress)) / (10 ** tokenDecimals)
-                console.log('The recipient now has', recipientBalanceAfter.toString(), 'tokens')
+                console.log(response)
+                setErrorMsg('Server error')
+            }
+        //Surrogeth
+        } else {
+            await progress('Calling Surrogeth agent...', 90)
+            const depositProof = genDepositProof(
+                signal,
+                proof,
+                publicSignals,
+                recipientAddress,
+                feeAmtWei,
+            )
+            const iface = new ethers.utils.Interface(Mixer.abi)
+            const mixCallData = iface.encodeFunctionData(isETH?"mix": "mixERC20", [
+        	    depositProof.signal,
+        	    depositProof.a,
+        	    depositProof.b,
+        	    depositProof.c,
+        	    depositProof.input,
+        	    depositProof.recipientAddress,
+        	    depositProof.fee,
+        	    relayerAddress,
+            ])
+
+            const forwarderIface = new ethers.utils.Interface(ForwarderRegistryERC20.abi)
+            let relayCallData
+            if (tokenAddress){
+                relayCallData = forwarderIface.encodeFunctionData("relayCallERC20",
+                    [
+                        mixerAddress,
+                        mixCallData,
+                        tokenAddress,
+                    ],
+                )
+            }else{
+                relayCallData = forwarderIface.encodeFunctionData("relayCall",
+                    [
+                        mixerAddress,
+                        mixCallData
+                    ],
+                )
             }
 
-        } else if (responseJson && responseJson.error && responseJson.error.data && responseJson.error.data.name === 'BACKEND_MIX_PROOF_PRE_BROADCAST_INVALID') {
-            throw {
-                code: ErrorCodes.PRE_BROADCAST_CHECK_FAILED
+            const protocol = "http"
+
+            const client = new SurrogethClient(
+                provider,
+                network, // "KOVAN" || "MAINNET"
+                relayerAddress, // defaults to current deployment on specified network
+                ForwarderRegistryERC20.abi,
+                protocol, // "https" || "http"
+                tokenAddress
+            )
+
+            const tx = {
+                to : relayerAddress,
+                data : relayCallData,
+                value: "0"
             }
-        } else if (responseJson && responseJson.error && responseJson.error.code && responseJson.error.message){
-            console.log(responseJson.error)
-            setErrorMsg('Server error : ' + responseJson.error.code + ' : ' + responseJson.error.message)
-        } else {
-            console.log(response)
-            setErrorMsg('Server error')
+
+            const relayer = {
+                locator: locator,
+                locatorType: locatorType
+            }
+
+            try {
+                const result = await client.submitTx(tx, relayer)
+                console.log(result)
+            } catch (error) {
+                if (error.response){
+                    console.log(error.response.data)
+                } else {
+                    console.log(error)
+                }
+                throw error
+            }
         }
+
+        if (txHash){
+            await progress('Completed', 100)
+            setTxHash(txHash)
+            console.log("json to serveur", txHash)
+            updateWithdrawTxHash(identityStored, txHash)
+        }
+
+        await progress('Check balance...', 95)
+        await sleep(4000)
+        if (isETH) {
+            const recipientBalanceAfter = await provider.getBalance(recipientAddress)
+            console.log('The recipient now has', ethers.utils.formatEther(recipientBalanceAfter), 'ETH')
+        } else {
+            const recipientBalanceAfter = (await tokenContract.balanceOf(recipientAddress)) / (10 ** tokenDecimals)
+            console.log('The recipient now has', recipientBalanceAfter.toString(), 'tokens')
+        }
+        await progress('', 100)
+
     } catch (err) {
         console.log(err)
 
@@ -319,8 +429,6 @@ const backendWithdraw = async (
         } else {
             setErrorMsg(err.toString())
         }
-
-
     }
 }
 

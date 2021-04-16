@@ -1,0 +1,15 @@
+{
+  "token": {
+    "eth": {},
+    "tkn": {
+      "Token": "0xC4346D024cA7fC75B545DbC463Fe718F76684663"
+    },
+    "dai": {
+      "Token": "0x4F96Fe3b7A6Cf9725f59d353F723c1bDb64CA6Aa"
+    }
+  },
+  "MiMC": "0x0898DA716A9e154641C6BD4B84AcDB124F9b1620",
+  "MixerRegistry": "0x196c09a48A31F5d6DDd8Cfa8FAC9748C42bbD868",
+  "SemaphoreLibrary": "0xe460fACFe62D3a634190c4E58EE280856dC777C2",
+  "ForwarderRegistryERC20": "0xD02b354529F14C6C20DAf4C6E047802FfDa10e0d"
+}

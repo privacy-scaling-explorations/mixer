@@ -210,10 +210,13 @@ const AboutRoute = (props) => {
                         <tr>
                             <td style={
                                 {textAlign: "center", padding: '0 1em 0 1em'}
-                            }>IP</td>
+                            }>Location</td>
                             <td style={
                                 {textAlign: "center", padding: '0 1em 0 1em'}
                             }>Address</td>
+                            <td style={
+                                {textAlign: "center", padding: '0 1em 0 1em'}
+                            }>Fee</td>
                             <td style={
                                 {textAlign: "center", padding: '0 1em 0 1em'}
                             }>Transaction</td>
@@ -238,14 +241,21 @@ const AboutRoute = (props) => {
                                     obj.feeSum.div(obj.feeCount),
                                     tokenDecimals
                                 )
-
+                            let fee
+                            if (obj.fee){
+                                fee = ethers.utils.formatUnits(obj.fee)
+                            } else {
+                                fee = "KO"
+                            }
                             return (
                                 //The address is unique
                                 <tr key={obj.address}>
                                     <td style={{padding: '0 1em 0 1em'}}>
-                                        {obj.locator}
+                                        {obj.locatorType}:&nbsp;{obj.locator}
                                     </td><td style={{padding: '0 1em 0 1em'}}>
                                         {obj.address}
+                                    </td><td style={{padding: '0 1em 0 1em'}}>
+                                        {fee}&nbsp;{tokenSym}
                                     </td><td style={{padding: '0 1em 0 1em'}}>
                                         {obj.feeCount.toString()}
                                     </td><td style={{padding: '0 1em 0 1em'}}>

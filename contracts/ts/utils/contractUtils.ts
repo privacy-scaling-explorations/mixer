@@ -1,11 +1,5 @@
 import { ethers } from 'ethers'
-
-let deployedAddresses
-try{
-    deployedAddresses = require('../../deployedAddresses')
-}catch(err){
-    deployedAddresses = {}
-}
+import { getDeployedAddresses } from '../index'
 
 
 const getContractNetwork = async (
@@ -18,7 +12,7 @@ const getContractNetwork = async (
 
     if (!contractAddresses && network) {
         console.log(network)
-        contractAddresses = deployedAddresses[network][name]
+        contractAddresses = getDeployedAddresses(network)[name]
     }
 
     if (!contractAddresses){
@@ -41,12 +35,14 @@ const getContractNetwork = async (
 
 const getMixerRegistryContract = async (
     signer: ethers.Signer,
-    network : string
+    network : string,
+    contractAddresses?: string,
 ) => {
     return await getContractNetwork(
         "MixerRegistry",
         signer,
         network,
+        contractAddresses,
     )
 }
 

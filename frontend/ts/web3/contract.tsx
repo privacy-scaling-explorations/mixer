@@ -52,6 +52,7 @@ const getTokenContract = async (provider) => {
 
 export {
     Mixer,
+    ForwarderRegistryERC20,
     getForwarderRegistryERC20Contract,
     getMixerRegistryContract,
     getMixerContract,

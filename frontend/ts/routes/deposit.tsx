@@ -159,7 +159,11 @@ export default (props) => {
         setErc20ApproveTxStatus(TxStatuses.Pending)
 
         approveTokens(props.signer, tokenAllowanceNeeded, mixerAddress)
-            .then(async (tx) => {await tx.wait(); setErc20ApproveTxStatus(TxStatuses.Mined)})
+            .then(async (tx) => {
+                await tx.wait();
+                setErc20ApproveTxStatus(TxStatuses.Mined)
+                updateAllBalance()
+            })
             .catch((err) => {console.log(err); setErc20ApproveTxStatus(TxStatuses.Err)})
     }
 
@@ -176,22 +180,11 @@ export default (props) => {
     }
 
     const processDeposit = async() => {
-        console.time("deposit");
-
-        initStorage()
-
-        console.timeLog("deposit");
-
         // generate an Identity and identity commitment
         const identity = genIdentity()
         const identityCommitment = '0x' + genIdentityCommitment(identity).toString(16)
-
-        console.timeLog("deposit");
-
         // Perform the deposit tx
         try {
-
-
             let tx
             if (isETH) {
                 tx = await depositEth(
@@ -207,31 +200,14 @@ export default (props) => {
                     mixerAddress,
                 )
             }
-
-            console.timeLog("deposit");
-
             setTxHash(tx.hash)
-
-            console.timeLog("deposit");
-
             storeDeposit(identity, recipientAddress, tokenAddress, mixerAddress, mixAmt)
-
-            console.timeLog("deposit");
-
             const receipt = await tx.wait()
-
-            console.timeLog("deposit");
-
             updateDepositTxStatus(identity, tx.hash)
-
-            console.timeLog("deposit");
-
             setTxStatus(TxStatuses.Mined)
-
         } catch (err) {
             console.log(err)
             setTxStatus(TxStatuses.Err)
-
             if (
                 err.code === ethers.errors.UNSUPPORTED_OPERATION &&
                 err.reason === 'contract not deployed'

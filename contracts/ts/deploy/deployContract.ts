@@ -5,6 +5,7 @@ import * as path from 'path'
 import { configMixer } from 'mixer-config'
 import { genAccounts } from '../accounts'
 import { deployAllContracts, getWallet } from './deployAllContract'
+import { getDeployedAddresses } from '../index'
 
 const main = async () => {
     const parser = new argparse.ArgumentParser({
@@ -31,23 +32,22 @@ const main = async () => {
         '-o', '--output',
         {
             help: 'The filepath to save the addresses of the deployed contracts',
-            required: true
+            required: false
         }
     )
 
     const args = parser.parse_args()
     const outputAddressFile = args.output
 
-    let deployedAddresses
-    try{
-        deployedAddresses = require('../../deployedAddresses')
-    }catch(err){
-        deployedAddresses = {}
-    }
+
 
     for (let configNetworkName of Object.keys(configMixer.get('network'))) {
+
+
+
         let configNetwork = configMixer.get('network.' + configNetworkName)
         if (!configNetwork.disable){
+
             console.log("Network:", configNetworkName);
 
 
@@ -57,11 +57,8 @@ const main = async () => {
             const admin = accounts[0]
             console.log('Using account', admin.address)
 
-            if (!deployedAddresses[configNetworkName]){
-                deployedAddresses[configNetworkName] = { token : {} }
-            }
-
-            let deployedAddressesNetwork = deployedAddresses[configNetworkName]
+            let deployedAddressesNetwork = getDeployedAddresses(configNetworkName)
+            //console.log(deployedAddressesNetwork)
 
             for (let configTokenName of Object.keys(configNetwork.get('token'))) {
                 console.log("Token:", configTokenName);
@@ -75,9 +72,14 @@ const main = async () => {
                     console.log('Using token', configToken.get('sym'))
                 }
 
-                if (!deployedAddressesNetwork.token[configTokenName]){
-                    deployedAddressesNetwork.token[configTokenName] = {}
+                if (!deployedAddressesNetwork.token){
+                    deployedAddressesNetwork.token = {}
                 }
+
+                if (!deployedAddressesNetwork.token[configTokenName]){
+                        deployedAddressesNetwork.token[configTokenName]={}
+                }
+
                 let deployedAddressesToken = deployedAddressesNetwork.token[configTokenName]
 
                 const wallet = getWallet(configNetwork.get('url'), admin.privateKey)
@@ -111,17 +113,25 @@ const main = async () => {
                 if (configTokenName){
                     if (tokenContract){
                         deployedAddressesToken.Token = tokenContract.address
+                    } else {
+                        deployedAddressesNetwork.token[configTokenName]
                     }
                 }
-                const addressJsonPath = path.join(__dirname, '../..', outputAddressFile)
+                if (!fs.existsSync(path.join(__dirname, '../../deployedAddresses/'))){
+                    fs.mkdirSync(path.join(__dirname, '../../deployedAddresses/'));
+                }
+                const addressJsonPath = path.join(__dirname, '../../deployedAddresses/', configNetworkName + '.json')
                 fs.writeFileSync(
                     addressJsonPath,
-                    JSON.stringify(deployedAddresses, null, 2),
+                    JSON.stringify(deployedAddressesNetwork, null, 2),
                 )
             }
+
+            console.log(deployedAddressesNetwork)
         }
+
     }
-    console.log(deployedAddresses)
+
 }
 
 if (require.main === module) {

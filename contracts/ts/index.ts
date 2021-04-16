@@ -4,14 +4,6 @@ import {
     getMixerList
 } from './contract/mixerRegistry'
 
-let deployedAddresses
-try{
-    deployedAddresses = require('../deployedAddresses')
-}catch (ex){
-    deployedAddresses = {}
-}
-
-
 const getContract = (
     name: string,
     signer: ethers.Signer,
@@ -42,5 +34,25 @@ const getAbi = (
     return abi
 }
 
+let deployedAddresses
+try {
+    deployedAddresses = require('../deployedAddresses/*.json');
+} catch (ex) {
+    //console.log("Cant load deployedAddress cache", ex)
+    deployedAddresses = {}
+}
 
-export { getContract, deployedAddresses, getAbi, getMixerList }
+const getDeployedAddresses = (network:string) => {
+    if (!deployedAddresses[network]){
+        try {
+            deployedAddresses = require('../deployedAddresses/' + network + '.json');
+        } catch (ex) {
+            //console.log("Cant load deployedAddress cache", ex)
+            deployedAddresses = {}
+        }
+        return deployedAddresses
+    }
+    return deployedAddresses[network] ? deployedAddresses[network] : {}
+}
+
+export { getContract, getDeployedAddresses, deployedAddresses, getAbi, getMixerList }

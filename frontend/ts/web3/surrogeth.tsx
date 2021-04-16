@@ -1,4 +1,4 @@
-import { forwarderRegistryERC20Address } from '../utils/configFrontend'
+import { forwarderRegistryERC20Address, withdrawGas } from '../utils/configFrontend'
 import { SurrogethClient } from "surrogeth-client"
 const ForwarderRegistryERC20 = require('../../compiled/ForwarderRegistryERC20.json')
 
@@ -16,16 +16,18 @@ const getBroadcasterList = async (wallet, network, tokenAddress) => {
     )
 
     let relayers = await client.getBroadcasters(
-        1,
         //new Set([]), // don't ignore any addresses
         new Set(["ip"]) // only return relayers with an IP address
     )
     //console.log("relayers", relayers)
     if (relayers.length > 0) {
+        for (let i = 0; i < relayers.length; i++){
+            relayers[i] = await client.getBroadcasterFee(relayers[i], withdrawGas)
+        }
         return relayers
     }
 
-    return null;
+    return undefined;
 }
 
 export { getBroadcasterList }

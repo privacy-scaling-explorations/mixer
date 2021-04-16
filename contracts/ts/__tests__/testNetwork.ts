@@ -13,19 +13,17 @@ import {
     getNetworkFromSigner
 } from '../utils/configUtils'
 
+import { getDeployedAddresses } from '../index'
+
 import { genAccounts } from '../accounts'
 const Mixer = require('@mixer-contracts/compiled/Mixer.json')
 
 import { testToken } from './testToken'
 
-const testNetwork = (configNetworkName, configNetwork, deployedAddresses) => {
+const testNetwork = (configNetworkName, configNetwork) => {
     console.log("Test network:", configNetworkName);
 
-    if (!deployedAddresses[configNetworkName]){
-        deployedAddresses[configNetworkName] = { token : {} }
-    }
-
-    let deployedAddressesNetwork = deployedAddresses[configNetworkName]
+    let deployedAddressesNetwork = getDeployedAddresses(configNetworkName)
 
     const accounts = genAccounts(configNetwork)
 

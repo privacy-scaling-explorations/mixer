@@ -74,7 +74,7 @@ export default (props) => {
         })
     })
     */
-    const completed = eventList.length  * 10
+    let completed = eventList.length  * 10
     if (completed > 100){
         completed = 100
     }
@@ -97,7 +97,7 @@ export default (props) => {
         color = "#FF4136" //Red
         level = "null"
     }
-
+    console.log("mixerDeposit redraw")
     return (
         <div>
             <div >

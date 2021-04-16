@@ -1,7 +1,7 @@
 import * as ethers from 'ethers'
 
 const configMixer = require('../../exported_config')
-import { deployedAddresses } from 'mixer-contracts'
+import { getDeployedAddresses } from 'mixer-contracts'
 
 const localStorage = window.localStorage
 
@@ -64,7 +64,6 @@ if (!tokenSaved){
 //Config linked to the network
 const configNetwork = configMixer.network[network]
 const chainId = configNetwork.chainId
-const supportedNetwork = configNetwork.supportedNetwork
 const supportedNetworkName = configNetwork.supportedNetworkName
 const blockExplorerTxPrefix = configNetwork.blockExplorerTxPrefix
 
@@ -89,16 +88,19 @@ if (tokenDecimals){
 
 
 //Config for frontend
-const endsAtMidnight = configMixer.frontend.countdown.endsAtMidnight
+const endsAtMidnight = configMixer.frontend.countdown.endsAtUtcMidnight
 const endsAfterSecs = configMixer.frontend.countdown.endsAfterSecs
 const snarksPathsCircuit = configMixer.frontend.snarks.paths.circuit
 const snarksPathsProvingKey = configMixer.frontend.snarks.paths.provingKey
 const snarksPathsVerificationKey = configMixer.frontend.snarks.paths.verificationKey
+const withdrawGas = configMixer.frontend.contract.withdrawGas
 const configEnv = configMixer.env
 
 
 //config of deployed address contract network
-const deployedAddressesNetwork = deployedAddresses[network]
+//const deployedAddresses = getDeployedAddresses(network)
+const deployedAddressesNetwork = getDeployedAddresses(network)
+console.log("deployedAddressesNetwork", getDeployedAddresses(network), deployedAddressesNetwork, network)
 let relayerRegistryAddress
 let deployedAddressesToken
 let tokenAddress
@@ -137,8 +139,8 @@ const getTokenInfo = (tokenAddress) => {
     const tokenConfig = getTokenConfig(tokenAddress)
     const tokenSym = tokenConfig.sym
     const feeAmt = tokenConfig.feeAmt
-    const isETH = tokenConfig.tokenDecimals ? false : true
-    const tokenDecimals = tokenConfig.tokenDecimals ? tokenConfig.tokenDecimals : 18
+    const isETH = tokenConfig.decimals ? false : true
+    const tokenDecimals = tokenConfig.decimals ? tokenConfig.tokenDecimals : 18
 
     const feeAmtWei = ethers.utils.parseUnits(feeAmt.toString(), tokenDecimals)
     return {
@@ -156,7 +158,6 @@ export {
     isETH,
     feeAmt,
     chainId,
-    supportedNetwork,
     supportedNetworkName,
     relayerRegistryAddress,
     mixerRegistryAddress,
@@ -171,6 +172,7 @@ export {
     snarksPathsCircuit,
     snarksPathsProvingKey,
     snarksPathsVerificationKey,
+    withdrawGas,
     configEnv,
     setNetwork,
     setToken,
