@@ -25,7 +25,7 @@ const WalletWidget = (props) => {
 
         //console.log("Wallet Render " , address, networkChainId)
 
-
+        console.log("Wallet status", props.address, props.error)
         if (!window.hasOwnProperty('ethereum')) {
             return (
                 <p>
@@ -34,6 +34,16 @@ const WalletWidget = (props) => {
                         href={walletLearnUrl} target='blank'>
                         Ethereum wallet.
                     </a>
+                </p>
+            )
+        } else if (!props.error && props.address == "error") {
+            console.log("here")
+            return (
+                <p className='button is-link is-rounded'
+                    role='button'
+                    //TODO fix connect
+                    onClick={() => {window.ethereum.enable().then()}} >
+                    Connect wallet
                 </p>
             )
         } else if (!props.error) {

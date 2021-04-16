@@ -32,7 +32,7 @@ network:
                 name: 'Dai'
 
     ganache:
-        disable: false
+        disable: true
         url: "http://localhost:8545"
         chainId: 1337
         privateKeysPath: "key/ganachePrivateKeys.json"
@@ -51,29 +51,8 @@ network:
                 sym: 'TKN'
                 name: 'Token'
 
-    ganache2:
-        disable: true
-        useRegistry: false
-        url: "http://localhost:8545"
-        chainId: 1337
-        privateKeysPath: "key/ganachePrivateKeys.json"
-        supportedNetworkName: "Ganache"
-        token:
-            eth:
-                mixAmt: 0.1
-                feeAmt: 0.002
-                surrogethFeeAmt: 0.001
-                sym: 'ETH'
-                name: 'Ether'
-            tkn:
-                decimals: 18
-                mixAmt: 20
-                feeAmt: 0.02
-                sym: 'TKN'
-                name: 'Token'
-
     ropsten:
-        disable: true
+        disable: false
         url: "https://ropsten.infura.io/v3/5d37c494621a43558d77c90e368d4022"
         chainId: 3
         privateKeysPath: "key/kovanPrivateKeys.json"
@@ -133,7 +112,7 @@ network:
                 sym: 'ETH'
                 name: 'Ether'
     oasis:
-        disable: true
+        disable: false
         url: "https://rpc.oasiseth.org:8545"
         chainId: 69
         privateKeysPath: "key/oasisPrivateKeys.json"
