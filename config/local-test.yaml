@@ -10,6 +10,7 @@ network:
         privateKeysPath: "key/kovanPrivateKeys.json"
         supportedNetworkName: "Kovan"
         blockExplorerTxPrefix: "https://kovan.etherscan.io/tx/"
+        faucet: "https://faucet.kovan.network"
         token:
             eth:
                 mixAmt: [ 0.1 , 0.01]
@@ -30,6 +31,7 @@ network:
                 feeAmt: 0.02
                 sym: 'DAI'
                 name: 'Dai'
+                faucet: "https://oasis.app/borrow?network=kovan"
 
     ganache:
         disable: true
@@ -58,6 +60,7 @@ network:
         privateKeysPath: "key/kovanPrivateKeys.json"
         supportedNetworkName: "Ropsten"
         blockExplorerTxPrefix: "https://ropsten.etherscan.io/tx/"
+        faucet: "https://faucet.ropsten.be/"
         token:
             eth:
                 mixAmt: 0.1
@@ -73,12 +76,13 @@ network:
 
 
     arbitrum:
-        disable: true
-        url: "https://kovan3.arbitrum.io/rpc"
-        chainId: 79377087078960
+        disable: false
+        url: "https://kovan4.arbitrum.io/rpc"
+        chainId: 212984383488152
         privateKeysPath: "key/kovanPrivateKeys.json"
         blockExplorerTxPrefix: https://explorer.arbitrum.io/#/tx/
         supportedNetworkName: "Arbitrum"
+        faucet: "https://faucet.arbitrum.io/"
         token:
             tkn:
                 decimals: 18
@@ -117,6 +121,7 @@ network:
         chainId: 69
         privateKeysPath: "key/oasisPrivateKeys.json"
         supportedNetworkName: "Oasis Paratime"
+        faucet: "http://faucet.oasiseth.org/"
         token:
             tkn:
                 decimals: 16
@@ -140,6 +145,10 @@ backend:
         port: 2379
         lockTime: 7000
 
+contract:
+    ##gas used for withdraw used to calculate fee
+    withdrawGas: 500000
+
 frontend:
     snarks:
         paths:
@@ -149,9 +158,6 @@ frontend:
     countdown:
         endsAtUtcMidnight: true
         endsAfterSecs: 5
-    contract:
-        ##gas used for withdraw used to calculate fee
-        withdrawGas: 50000
 
 #for surrogeth compatibility
 surrogethPort: 8124

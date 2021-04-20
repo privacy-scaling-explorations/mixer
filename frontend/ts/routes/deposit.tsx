@@ -33,6 +33,8 @@ import {
     blockExplorerTxPrefix,
     tokenDecimals,
     tokenAddress,
+    tokenFaucet,
+    faucet,
 } from '../utils/configFrontend'
 
 import {
@@ -135,10 +137,12 @@ export default (props) => {
         <div className="column is-8 is-offset-2">
             <p>
                 Please top up your account with at least {mixAmt}
-                {tokenSym} ({mixAmt} to deposit and {feeAmt.toString()} for fee). You can get KETH
-                from a faucet <a target="_blank"
-                href="https://faucet.kovan.network/">here</a> or <a
-                target="_blank" href="https://gitter.im/kovan-testnet/faucet">here</a>.
+                {tokenSym} ({mixAmt} to deposit and {feeAmt.toString()} for fee). <br/>
+                { faucet &&
+                    <span>You can use the network faucet&nbsp;
+                    <a target="_blank" href={faucet}>{faucet}</a>
+                    <br/></span>
+                }
             </p>
         </div>
 
@@ -149,9 +153,17 @@ export default (props) => {
         <div className="column is-8 is-offset-2">
             <p>
                 Please top up your account with at least {mixAmt} {tokenSym}&nbsp;
-                and {feeAmt.toString()} for fee. You can convert KETH to DAI <a
-                href="https://cdp.makerdao.com" target="_blank">here</a>, and you can get KETH
-                from a faucet <a target="_blank" href="https://faucet.kovan.network/">here</a> or <a target="_blank" href="https://gitter.im/kovan-testnet/faucet">here</a>.
+                and {feeAmt.toString()} for fee.<br/>
+                { faucet &&
+                    <span>You can use the network faucet&nbsp;
+                    <a target="_blank" href={faucet}>{faucet}</a>
+                    <br/></span>
+                }
+                { tokenFaucet &&
+                    <span>You can use the token faucet&nbsp;
+                    <a target="_blank" href={tokenFaucet}>{tokenFaucet}</a>
+                    <br/></span>
+                }
             </p>
         </div>
 

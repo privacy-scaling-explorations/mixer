@@ -53,6 +53,7 @@ const surrogetGetBroadcaster = async (
     wallet,
     forwarderRegistryERC20ContractAddress,
     tokenContractAddress,
+    txGas
 ) => {
     const protocol = "http"
 
@@ -66,13 +67,15 @@ const surrogetGetBroadcaster = async (
     )
 
     let relayers = await client.getBroadcasters(
-        1,
         //new Set([]), // don't ignore any addresses
         new Set(["ip"]) // only return relayers with an IP address
     )
 
     if (relayers.length > 0) {
-        return relayers[0]
+        for (let i = 0; i < relayers.length; i++){
+            relayers[i] = await client.getBroadcasterFee(relayers[i], txGas)
+            if (relayers[i].fee) return relayers[i]
+        }
     }
 
     return null;
@@ -134,14 +137,6 @@ const surrogethMix = async (
             ],
         )
     }
-
-
-    await surrogetGetBroadcaster(
-        network,
-        wallet,
-        forwarderRegistryERC20Contract.address,
-        tokenContractAddress,
-    )
 
     return await surrogetSubmitTx(
         network,

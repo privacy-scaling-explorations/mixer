@@ -1,8 +1,4 @@
-//require('module-alias/register')
-//require('events').EventEmitter.defaultMaxListeners = 0
-
 import { configMixer } from 'mixer-config'
-
 
 import { testNetwork } from './testNetwork'
 

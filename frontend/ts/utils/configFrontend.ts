@@ -66,18 +66,20 @@ const configNetwork = configMixer.network[network]
 const chainId = configNetwork.chainId
 const supportedNetworkName = configNetwork.supportedNetworkName
 const blockExplorerTxPrefix = configNetwork.blockExplorerTxPrefix
-
+const faucet = configNetwork.faucet
 //config for token
 const configToken = configNetwork.token[token]
 let tokenDecimals
 let tokenSym
 let tokenName
 let feeAmt
+let tokenFaucet
 if (configToken){
     tokenDecimals = configToken.decimals
     tokenSym = configToken.sym
     tokenName = configToken.name
     feeAmt = configToken.feeAmt
+    tokenFaucet = configToken.faucet
 }
 let isETH = true
 if (tokenDecimals){
@@ -93,7 +95,7 @@ const endsAfterSecs = configMixer.frontend.countdown.endsAfterSecs
 const snarksPathsCircuit = configMixer.frontend.snarks.paths.circuit
 const snarksPathsProvingKey = configMixer.frontend.snarks.paths.provingKey
 const snarksPathsVerificationKey = configMixer.frontend.snarks.paths.verificationKey
-const withdrawGas = configMixer.frontend.contract.withdrawGas
+const withdrawGas = configMixer.contract.withdrawGas
 const configEnv = configMixer.env
 
 
@@ -161,6 +163,8 @@ export {
     relayerRegistryAddress,
     mixerRegistryAddress,
     tokenAddress,
+    tokenFaucet,
+    faucet,
     forwarderRegistryERC20Address,
     blockExplorerTxPrefix,
     endsAtMidnight,

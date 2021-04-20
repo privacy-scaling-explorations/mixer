@@ -50,6 +50,7 @@ export default (props) => {
 
     if (props.provider && !isInit){
         setIsInit(true)
+        props.setSurrogethInfo(defaultOption)
         getBroadcasterList(props.provider, network, props.tokenAddress).then((result) => {
             if (result){
                 let _options : any[] = result
@@ -57,7 +58,6 @@ export default (props) => {
                 if (_options && _options.length > 0){
                     _options.push(defaultOption)
                     setSelectedOption(defaultOption)
-                    props.setSurrogethInfo(defaultOption)
                 } else {
                     _options = [defaultOption]
                 }

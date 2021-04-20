@@ -1,4 +1,4 @@
-import * as ethers from 'ethers'
+import { ethers } from 'ethers'
 import { sleep } from 'mixer-utils'
 
 const Mixer = require('@mixer-contracts/compiled/Mixer.json')
@@ -44,6 +44,7 @@ import {
     getSemaphoreContract,
 } from '../utils/contractUtils'
 
+import { configMixer } from 'mixer-config'
 
 const testToken = (
     configNetwork,
@@ -121,9 +122,7 @@ const testToken = (
                 if (tokenContract){
                     tokenContractAddress = tokenContract.address
                 }
-                console.log("start")
                 mixerList = await getMixerList(wallet, tokenContractAddress, configNetworkName)
-                console.log("stop", mixerList)
                 expect(mixerList.length > 0).toBeTruthy()
                 semaphoreContract = await getSemaphoreContract(wallet, mixerList[0].semaphore, configNetworkName)
                 mixerContract = await getMixerContract(wallet, mixerList[0].address, configNetworkName)
@@ -166,7 +165,6 @@ const testToken = (
                         semaphoreContract.address,
                         ethers.utils.parseEther('0'),
                         '0x0000000000000000000000000000000000000000',
-                        //{ gasLimit: 500000 }
                     )
                     expect(true).toBeFalsy()
                 }catch (error){
@@ -215,7 +213,6 @@ const testToken = (
                     try {
                         const tx = await mixerContract.depositERC20(
                             '0x' + identityCommitment.toString(16),
-                            //{ gasLimit: 1500000 }
                         )
                         const receipt = await tx.wait()
                         expect(true).toBeFalsy()
@@ -230,7 +227,6 @@ const testToken = (
                     try {
                         const tx = await mixerContract.deposit(
                             '0x' + identityCommitment.toString(16),
-                            //{ gasLimit: 1500000 }
                         )
                         const receipt = await tx.wait()
                         expect(true).toBeFalsy()
@@ -341,22 +337,13 @@ const testToken = (
                     externalNullifier,
                 )
 
-                //Return boolen
                 expect(await verifySignature(msg, signature, identity.keypair.pubKey)).toBeTruthy()
                 expect(await circuit.checkWitness(witness)).toBeTruthy()
-
-                //Return SnarkPublicSignals
                 const publicSignals = await genPublicSignals(witness, circuit)
                 expect(publicSignals).toBeTruthy()
-
-                //Return async + Promise
                 const proof = await await genProof(witness, provingKey)
-                //console.log(proof)
                 expect(proof).toBeTruthy()
-
-                //Return boolen
                 expect(await verifyProof(verifyingKey, proof, publicSignals)).toBeTruthy()
-
                 const mixInputs = await genDepositProof(
                     signal,
                     proof,
@@ -365,9 +352,6 @@ const testToken = (
                     feeAmt,
                 )
                 expect(mixInputs).toBeTruthy()
-
-                //console.log(mixInputs)
-                //console.log(signalHash.toString())
                 const preBroadcastChecked = await semaphoreContract.preBroadcastCheck(
                     mixInputs.a,
                     mixInputs.b,
@@ -375,8 +359,6 @@ const testToken = (
                     mixInputs.input,
                     signalHash.toString(),
                 )
-                //console.log(preBroadcastChecked)
-                //todo fix
                 expect(preBroadcastChecked).toBeTruthy()
 
                 let mixTx
@@ -438,6 +420,19 @@ const testToken = (
 
             it('should make a withdrawal with surrogeth', async () => {
 
+                const broadcaster = await surrogetGetBroadcaster(
+                    configNetworkName,
+                    wallet,
+                    forwarderRegistryERC20Contract.address,
+                    tokenContractAddress,
+                    configMixer.contract.withdrawGas
+                )
+                expect(broadcaster).toBeTruthy()
+
+                const broadcasterFee = ethers.BigNumber.from(broadcaster.fee)
+                console.log("broadcasterFee", ethers.utils.formatUnits(broadcasterFee, decimals))
+                const surrogethAddress = broadcaster.address
+
                 const identity = identities[users[0]]
                 const identityCommitment = genIdentityCommitment(identity)
 
@@ -483,7 +478,7 @@ const testToken = (
                     20,
                     recipientAddress,
                     forwarderRegistryERC20Contract.address,
-                    feeAmt,
+                    broadcasterFee,
                     externalNullifier,
                 )
 
@@ -508,12 +503,10 @@ const testToken = (
                     proof,
                     publicSignals,
                     recipientAddress,
-                    feeAmt,
+                    broadcasterFee,
                 )
                 expect(mixInputs).toBeTruthy()
 
-                //console.log(mixInputs)
-                //console.log(signalHash.toString())
                 const preBroadcastChecked = await semaphoreContract.preBroadcastCheck(
                     mixInputs.a,
                     mixInputs.b,
@@ -521,24 +514,14 @@ const testToken = (
                     mixInputs.input,
                     signalHash.toString(),
                 )
-                //console.log(preBroadcastChecked)
-                //todo fix
                 expect(preBroadcastChecked).toBeTruthy()
 
                 let mixTx
 
-                const broadcaster = await surrogetGetBroadcaster(
-                    configNetworkName,
-                    wallet,
-                    forwarderRegistryERC20Contract.address,
-                    tokenContractAddress,
-                )
-                expect(broadcaster).toBeTruthy()
-
                 if (isETH){
 
                     recipientBalanceBefore = ethers.BigNumber.from(await wallet.provider.getBalance(recipientAddress))
-                    relayerBalanceBefore = ethers.BigNumber.from(await wallet.provider.getBalance(relayerAddress))
+                    relayerBalanceBefore = ethers.BigNumber.from(await wallet.provider.getBalance(surrogethAddress))
 
                     mixTx = await surrogethMix(
                         configNetworkName,
@@ -551,13 +534,13 @@ const testToken = (
                         proof,
                         publicSignals,
                         recipientAddress,
-                        feeAmt,
+                        broadcasterFee,
                         "mix",
                     )
                 } else {
 
                     recipientBalanceBefore = ethers.BigNumber.from(await tokenContract.balanceOf(recipientAddress))
-                    relayerBalanceBefore = ethers.BigNumber.from(await tokenContract.balanceOf(relayerAddress))
+                    relayerBalanceBefore = ethers.BigNumber.from(await tokenContract.balanceOf(surrogethAddress))
 
                     mixTx = await surrogethMix(
                         configNetworkName,
@@ -570,7 +553,7 @@ const testToken = (
                         proof,
                         publicSignals,
                         recipientAddress,
-                        feeAmt,
+                        broadcasterFee,
                         "mixERC20",
                     )
                 }
@@ -580,18 +563,18 @@ const testToken = (
 
                 if (isETH){
                     recipientBalanceAfter = ethers.BigNumber.from(await wallet.provider.getBalance(recipientAddress))
-                    relayerBalanceAfter = ethers.BigNumber.from(await wallet.provider.getBalance(relayerAddress))
+                    relayerBalanceAfter = ethers.BigNumber.from(await wallet.provider.getBalance(surrogethAddress))
                 } else {
                     recipientBalanceAfter = ethers.BigNumber.from(await tokenContract.balanceOf(recipientAddress))
-                    relayerBalanceAfter = ethers.BigNumber.from(await tokenContract.balanceOf(relayerAddress))
+                    relayerBalanceAfter = ethers.BigNumber.from(await tokenContract.balanceOf(surrogethAddress))
                 }
                 //const gasUsed = mixReceipt.gasUsed.toString()
                 //console.log('Gas used for this withdrawal:', gasUsed)
 
                 relayerBalanceDiff = relayerBalanceAfter.sub(relayerBalanceBefore)
-                //expect(relayerBalanceDiff.eq(feeAmt)).toBeTruthy()
+                expect(relayerBalanceDiff.gt(0)).toBeTruthy()
                 recipientBalanceDiff = recipientBalanceAfter.sub(recipientBalanceBefore)
-                expect(recipientBalanceDiff.add(feeAmt).eq(mixAmtWei)).toBeTruthy()
+                expect(recipientBalanceDiff.add(broadcasterFee).eq(mixAmtWei)).toBeTruthy()
             })
 
             it('should get surrogeth broadcaster', async () => {
@@ -600,6 +583,7 @@ const testToken = (
                     wallet,
                     forwarderRegistryERC20Contract.address,
                     tokenContractAddress,
+                    configMixer.contract.withdrawGas
                 )
                 expect(broadcaster).toBeTruthy()
 

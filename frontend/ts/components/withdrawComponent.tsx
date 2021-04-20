@@ -90,6 +90,9 @@ export default (props) => {
                         tokenAddress={props.identityStored.tokenAddress}
                         recipientAddress={props.identityStored.recipientAddress}
                         />
+                    <div className="message-body">
+                        <a href='/'>Make another deposit</a>.
+                    </div>
                 </article>
             }
             { errorMsg &&

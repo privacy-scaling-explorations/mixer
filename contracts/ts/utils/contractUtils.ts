@@ -11,7 +11,6 @@ const getContractNetwork = async (
 ) => {
 
     if (!contractAddresses && network) {
-        console.log(network)
         contractAddresses = getDeployedAddresses(network)[name]
     }
 

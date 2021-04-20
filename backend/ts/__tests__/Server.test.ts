@@ -23,8 +23,14 @@ let server
 
 describe('Backend API', () => {
     beforeAll(async () => {
-        const app = createApp()
-        server = app.listen(PORT)
+        try{
+            const app = createApp()
+            server = app.listen(PORT)
+        }catch (error){
+            console.error(error)
+            expect(error).toBeFalsy()
+        }
+
     })
 
     test('rejects requests with an incorrect content-type header', async () => {

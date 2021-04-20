@@ -16,9 +16,7 @@ const getMixerList = async (
         tokenAddress = "0x0000000000000000000000000000000000000000"
     const mixerRegistryContract = await getMixerRegistryContract(provider, network, mixerRegistryAddress)
     const ret: Array<{mixAmt, address, semaphore}> = []
-    console.log("getTokenMixerList")
     for (let mixAmt of await mixerRegistryContract.getTokenMixerList(tokenAddress)){
-        console.log("getTokenMixerList loop")
         let obj : {
             mixAmt : ethers.BigNumber,
             address : string | undefined,

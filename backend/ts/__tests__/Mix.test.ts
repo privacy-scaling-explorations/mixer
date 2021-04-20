@@ -120,7 +120,7 @@ describe('the mixer_mix_eth API call', () => {
             provider,
         )
 
-        const mixerList = await getMixerList(signer, tokenAddress)
+        const mixerList = await getMixerList(signer, tokenAddress, network)
         expect(mixerList).toBeTruthy()
         expect(mixerList.length).toBeGreaterThan(0)
         mixAmtWei = mixerList[0].mixAmt

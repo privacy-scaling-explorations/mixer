@@ -63,6 +63,10 @@ export default (props) => {
                 txHash.balance, props.tokenDecimals)}&nbsp;
                 {props.tokenSym}</span>
             }
+            {
+                txHash && txHash.balance.isZero() &&
+                <span>Checking balance ...</span>
+            }
         </div>
     )
 
