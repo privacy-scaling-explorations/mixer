@@ -7,7 +7,12 @@ import {
 } from '../web3/surrogeth'
 
 import {
-    network
+    getBackendStatus
+} from '../utils/backend'
+
+import {
+    network,
+    enableBackend,
 } from '../utils/configFrontend'
 
 
@@ -18,29 +23,74 @@ const customStyles = {
   }),
 }
 
-export default (props) => {
-    const defaultOption : {
-        feeCount : ethers.BigNumber,
-        feeSum : ethers.BigNumber,
-        fee : ethers.BigNumber,
-        address : string,
-        locator : string,
-        locatorType : string,
-    } = {
-            feeCount : ethers.BigNumber.from(0),
-            feeSum : ethers.BigNumber.from(0),
-            fee : ethers.BigNumber.from(props.feeAmtWei),
-            address : "backend",
-            locator : "/api",
-            locatorType : "backend",
-        }
+interface Relayer {
+    feeCount : ethers.BigNumber,
+    feeSum : ethers.BigNumber,
+    fee : ethers.BigNumber,
+    address : string,
+    locator : string,
+    locatorType : string,
+}
 
-    const [options, setOptions] = useState([defaultOption])
-    let [selectedOption, setSelectedOption] = useState(defaultOption)
-    const [isInit, setIsInit] = useState(false)
+const SurrogethSelect = (props) => {
+
+    const [options, setOptions] = useState<Relayer[]>([])
+    const [optionsBackend, setOptionsBackend] = useState<Relayer[]>([])
+    let [selectedOption, setSelectedOption] = useState<Relayer | undefined>()
+    const [isInit, setIsInit] = useState<number>(0)
+
+
+
+    if (props.provider && !isInit){
+        setIsInit(1)
+        if (enableBackend){
+            getBackendStatus(network).then((result) => {
+                if (result){
+                    let option = {
+                            feeCount : ethers.BigNumber.from(0),
+                            feeSum : ethers.BigNumber.from(0),
+                            fee : ethers.BigNumber.from(props.feeAmtWei),
+                            address : result.address,
+                            locator : "/api",
+                            locatorType : "backend",
+                        }
+                    setOptionsBackend([option])
+                } else {
+                    console.error("backend not found or not responding")
+                }
+
+            }).catch((err)=>{
+                console.error("backend not found or not responding", err)
+            })
+        }
+        getBroadcasterList(props.provider, network, props.tokenAddress).then((result) => {
+            setIsInit(2)
+            if (result && result.length > 0){
+                let _options : Relayer[] = result
+                setOptions(_options)
+            } else {
+                console.error("surrogeth not found or not responding")
+            }
+        }).catch(
+            (error) => {
+                console.error("surrogeth not found or not responding", error)
+            })
+    }
+
+    let selectOptions : Relayer[] = []
+    if (optionsBackend){
+        selectOptions.push(...optionsBackend)
+    }
+    if (options){
+        selectOptions.push(...options)
+    }
+    if (!selectedOption && selectOptions.length){
+        props.setSurrogethInfo(selectOptions[0])
+        setSelectedOption(selectOptions[0])
+    }
 
     const handleChange = _selectedOption => {
-        options.forEach(element => {
+        selectOptions.forEach(element => {
             if (element.address == _selectedOption.target.value){
                 setSelectedOption(_selectedOption)
                 props.setSurrogethInfo(element)
@@ -48,38 +98,22 @@ export default (props) => {
         })
     }
 
-    if (props.provider && !isInit){
-        setIsInit(true)
-        props.setSurrogethInfo(defaultOption)
-        getBroadcasterList(props.provider, network, props.tokenAddress).then((result) => {
-            if (result){
-                let _options : any[] = result
-
-                if (_options && _options.length > 0){
-                    _options.push(defaultOption)
-                    setSelectedOption(defaultOption)
-                } else {
-                    _options = [defaultOption]
-                }
-                setOptions(_options)
-            }
-
-
-        }).catch(
-            (error) => {
-                console.log(error)
-            })
-    }
-
     return (
+        <div>
+        { isInit < 2 &&
+            <div>
+                Loading Surrogeth list...
+            </div>
+        }
         <div className="control token-select">
+
             <div className="select is-primary">
                 <select
                     id="surrogeth"
-                    defaultValue={selectedOption.address}
+                    defaultValue={selectedOption? selectedOption.address : undefined}
                     onChange={handleChange}
                     >
-                    {options.filter((option) => {
+                    {selectOptions.filter((option) => {
                         return 1 && option.fee
                     }).map((option) => {
                         let label = option.locatorType + ": " + option.locator
@@ -102,6 +136,9 @@ export default (props) => {
                     </select>
             </div>
         </div>
+        </div>
 
     )
 }
+
+export default SurrogethSelect

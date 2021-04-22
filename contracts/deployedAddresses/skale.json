@@ -1,0 +1,12 @@
+{
+  "token": {
+    "tkn": {
+      "Token": "0xF9d9ca154e54477A0E5B0559895A3FE939d561D5"
+    },
+    "eth": {}
+  },
+  "MiMC": "0xAACC46006F58fb18Bdd6216C1d900061CDc8D64d",
+  "MixerRegistry": "0x0f74d179CcBeB71154D0fdA4014464291244e1BE",
+  "SemaphoreLibrary": "0x220f47ffB54A314488e461391e3616F464bA4c1d",
+  "ForwarderRegistryERC20": "0x347c0E910b020eAc3579E376294C0e45eDa53750"
+}

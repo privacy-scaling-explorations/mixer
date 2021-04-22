@@ -304,6 +304,7 @@ const backendWithdraw = async (
             try{
                 responseJson = await response.json()
             }catch(err){
+                console.error(response)
                 console.error(err)
             }
             if (responseJson && responseJson.result) {

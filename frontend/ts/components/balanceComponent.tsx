@@ -5,7 +5,7 @@ import {
     getTokenContract
 } from '../web3/contract'
 
-export default (props) => {
+const BalanceComponent = (props) => {
 
     const [txHash, setTxHash] = useState<{
         txHash:String,
@@ -69,7 +69,6 @@ export default (props) => {
             }
         </div>
     )
-
-
-
 }
+
+export default BalanceComponent

@@ -26,7 +26,7 @@ import {
     getBroadcasterList
 } from '../web3/surrogeth'
 
-const AboutRoute = (props) => {
+const ContractInfo = (props) => {
 
     const [relayerAddress, setRelayerAddress] = useState('Request...')
     const [broadcasterList, setBroadcasterList] = useState(["Request..."])
@@ -270,4 +270,4 @@ const AboutRoute = (props) => {
     )
 }
 
-export default AboutRoute
+export default ContractInfo

@@ -49,7 +49,7 @@ import MixerSelect from '../components/mixerSelect'
 
 const name = 'MicroMix'
 
-export default (props) => {
+const Deposit = (props) => {
 
     const [txStatus, setTxStatus] = useState(TxStatuses.None)
     const [erc20ApproveTxStatus, setErc20ApproveTxStatus] = useState(TxStatuses.None)
@@ -380,3 +380,5 @@ export default (props) => {
         </div>
     )
 }
+
+export default Deposit

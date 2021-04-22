@@ -20,7 +20,7 @@ const customStyles = {
   }),
 }
 
-export default (props) => {
+const MixerSelect = (props) => {
     const defaultOption : {mixAmt : ethers.BigNumber, address : string} = {mixAmt : ethers.BigNumber.from(0), address : ""}
     const [options, setOptions] = useState([defaultOption])
     let [selectedOption, setSelectedOption] = useState(defaultOption)
@@ -32,7 +32,6 @@ export default (props) => {
                 props.setMixInfo(element)
             }
         });
-
     }
 
     if (props.signer && !isInit){
@@ -76,6 +75,7 @@ export default (props) => {
                     </select>
             </div>
         </div>
-
     )
 }
+
+export default MixerSelect

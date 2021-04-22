@@ -7,7 +7,7 @@ import {
 
 import ProgressBar from '../components/progressBar'
 
-export default (props) => {
+const MixerDeposit = (props) => {
 
     const provider = props.provider
     const mixerAddress = props.mixerAddress
@@ -88,7 +88,7 @@ export default (props) => {
         color = "#FF4136" //Red
         level = "null"
     }
-    
+
     return (
         <div>
             <div >
@@ -106,3 +106,5 @@ export default (props) => {
         </div>
     )
 }
+
+export default MixerDeposit

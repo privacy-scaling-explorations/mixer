@@ -418,7 +418,7 @@ const testToken = (
                 expect(recipientBalanceDiff.add(feeAmt).eq(mixAmtWei)).toBeTruthy()
             })
 
-            it('should make a withdrawal with surrogeth', async () => {
+            it('should process a withdrawal with surrogeth', async () => {
 
                 const broadcaster = await surrogetGetBroadcaster(
                     configNetworkName,

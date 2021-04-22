@@ -9,24 +9,25 @@ const months = [
     'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
 ]
 
-export default (props) => {
+const TimerComponent = (props) => {
 
     let timeStr
 
     const calculateTimeLeft = () => {
         let expiryDate = new Date(props.timestamp)
         //console.log("expiryDate", expiryDate)
-        expiryDate.setUTCHours(23, 59, 59, 999)
+
         //console.log("expiryDate", expiryDate, endsAtMidnight)
         // Whether the current time is greater than the expiry timestamp (i.e.
         // UTC midnight
 
         // Dev only
         if (!endsAtMidnight) {
-            expiryDate = new Date()
             expiryDate.setSeconds(
                 expiryDate.getSeconds() + endsAfterSecs
             )
+        }else{
+            expiryDate.setUTCHours(23, 59, 59, 999)
         }
 
         let expiryTimestamp =  expiryDate.getTime()
@@ -65,6 +66,7 @@ export default (props) => {
                 </div>
             </div>)
     }else{
+        props.setWithdrawEnable(true)
         return (
             <div className="columns has-text-centered">
                 <div className='column is-12'>
@@ -74,7 +76,6 @@ export default (props) => {
                 </div>
             </div>)
     }
-
-
-
 }
+
+export default TimerComponent

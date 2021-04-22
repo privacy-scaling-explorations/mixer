@@ -9,7 +9,7 @@
     "test": "NODE_ENV=local-test npx jest --testPathPattern=__tests__/",
     "test-withdraw": "NODE_ENV=local-test npx jest -t \"should make a withdrawal\"",
     "test-deposit": "NODE_ENV=local-test npx jest -t \"should perform a deposit\"",
-    "test-surrogeth-withdraw": "NODE_ENV=local-test npx jest -t \"should make a withdrawal with surrogeth\"",
+    "test-surrogeth-withdraw": "NODE_ENV=local-test npx jest -t \"should process a withdrawal with surrogeth\"",
     "test-surrogeth": "NODE_ENV=local-test npx jest -t \"should get surrogeth broadcaster\"",
     "test-balance": "NODE_ENV=local-test npx jest -t \"address balance\"",
     "test-error": "NODE_ENV=local-test npx jest -t \"should not deploy Mixer if the Semaphore contract address is invalid\"",

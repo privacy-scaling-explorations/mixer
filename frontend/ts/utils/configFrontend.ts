@@ -95,6 +95,7 @@ const endsAfterSecs = configMixer.frontend.countdown.endsAfterSecs
 const snarksPathsCircuit = configMixer.frontend.snarks.paths.circuit
 const snarksPathsProvingKey = configMixer.frontend.snarks.paths.provingKey
 const snarksPathsVerificationKey = configMixer.frontend.snarks.paths.verificationKey
+const enableBackend = configMixer.frontend.enableBackend
 const withdrawGas = configMixer.contract.withdrawGas
 const configEnv = configMixer.env
 
@@ -176,6 +177,7 @@ export {
     snarksPathsProvingKey,
     snarksPathsVerificationKey,
     withdrawGas,
+    enableBackend,
     configEnv,
     setNetwork,
     setToken,

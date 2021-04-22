@@ -10,7 +10,7 @@ import {
 } from '../storage'
 import BalanceComponent from '../components/balanceComponent'
 
-export default (props) => {
+const WithdrawComponent = (props) => {
     const [txHash, setTxHash] = useState<{
         txHash:String,
         balance:ethers.BigNumber,
@@ -113,3 +113,5 @@ export default (props) => {
         </div>
     )
 }
+
+export default WithdrawComponent

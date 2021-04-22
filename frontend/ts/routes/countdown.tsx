@@ -21,7 +21,7 @@ import TimerComponent from '../components/timerComponent'
 
 import WithdrawComponent from '../components/withdrawComponent'
 
-export default (props) => {
+const Countdown = (props) => {
     if (getNumUnwithdrawn() === 0) {
         return <Redirect to='/' />
     }
@@ -58,10 +58,6 @@ export default (props) => {
         surrogethInfo.fee :
         ethers.BigNumber.from(0)
 
-    if (!withdrawEnable){
-        //setWithdrawEnable(true)
-    }
-
     const withdrawChild = () => {
         if (identityStored && props.provider){
             return (
@@ -80,7 +76,7 @@ export default (props) => {
                     }
                     {withdrawStarted && surrogethInfo &&
                         <div>
-                        Broadcaster : {surrogethInfo.locatorType}&nbsp;
+                        Broadcaster : {surrogethInfo.locatorType}:&nbsp;
                         {surrogethInfo.locator}&nbsp;
                         ---&nbsp;
                         {ethers.utils.formatUnits(
@@ -141,7 +137,9 @@ export default (props) => {
                                     </p>
                                 </div>
                             </div>
-                            <TimerComponent timestamp={identityStored.timestamp} />
+                            <TimerComponent
+                                timestamp={identityStored.timestamp}
+                                setWithdrawEnable={setWithdrawEnable} />
                         </div>
                     }
 
@@ -207,3 +205,5 @@ export default (props) => {
         </div>
     )
 }
+
+export default Countdown

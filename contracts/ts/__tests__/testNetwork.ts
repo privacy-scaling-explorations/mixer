@@ -20,7 +20,7 @@ const Mixer = require('@mixer-contracts/compiled/Mixer.json')
 
 import { testToken } from './testToken'
 
-const testNetwork = (configNetworkName, configNetwork) => {
+const testNetwork = (configNetworkName, configNetwork, arg) => {
     console.log("Test network:", configNetworkName);
 
     let deployedAddressesNetwork = getDeployedAddresses(configNetworkName)
@@ -71,6 +71,7 @@ const testNetwork = (configNetworkName, configNetwork) => {
     })
 
     for (let configTokenName of Object.keys(configNetwork.get('token'))) {
+        if ((arg.token && arg.token == configTokenName) || !arg.token)
         testToken(
             configNetwork,
             configNetworkName,

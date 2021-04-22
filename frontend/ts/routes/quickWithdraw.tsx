@@ -62,7 +62,7 @@ const noItems = (
     </div>
 )
 
-export default (props) => {
+const QuickWithdraw = (props) => {
     if (getNumUnwithdrawn() === 0) {
         return noItems
     }
@@ -265,3 +265,5 @@ export default (props) => {
         </div>
     )
 }
+
+export default QuickWithdraw

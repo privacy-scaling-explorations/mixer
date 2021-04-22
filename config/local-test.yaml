@@ -98,7 +98,7 @@ network:
                 name: 'Ether'
     skale:
         disable: true
-        url: "https://dev-testnet-v1-0.skalelabs.com"
+        url: "https://dev-testnet-v1-1.skalelabs.com"
         chainId: 344435
         privateKeysPath: "key/kovanPrivateKeys.json"
         supportedNetworkName: "Skale"
@@ -156,8 +156,9 @@ frontend:
             circuit: 'http://localhost:1234/build/circuit.json'
             provingKey: 'http://localhost:1234/build/proving_key.bin'
     countdown:
-        endsAtUtcMidnight: true
+        endsAtUtcMidnight: false
         endsAfterSecs: 5
+    enableBackend: false
 
 #for surrogeth compatibility
 surrogethPort: 8124
