@@ -401,27 +401,14 @@ const backendWithdraw = async (
         let recipientBalanceAfter
         if (isETH) {
             recipientBalanceAfter = await provider.getBalance(recipientAddress)
-            console.log('The recipient balance increased by ',
-                ethers.utils.formatEther(
-                    recipientBalanceAfter.sub(
-                        recipientBalanceBefore)),
-                'ETH',
-                ethers.utils.formatEther(recipientBalanceAfter),
-                ethers.utils.formatEther(recipientBalanceBefore),
-            )
         } else {
             recipientBalanceAfter = await tokenContract.balanceOf(recipientAddress)
-            console.log('The recipient balance increased by ',
-                ethers.utils.formatUnits(
-                    recipientBalanceAfter.sub(
-                        recipientBalanceBefore
-                    ), tokenDecimals), 'tokens')
         }
 
         if (txHash){
             updateWithdrawTxHash(identityStored, txHash)
             await progress('Completed', 100)
-            console.log("json to serveur", txHash)
+            console.log("TxHash", txHash)
             setTxHash({txHash,
                 balanceBefore: recipientBalanceBefore,
                 balance: recipientBalanceAfter.sub(

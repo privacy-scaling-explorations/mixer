@@ -35,6 +35,8 @@ import {
     tokenAddress,
     tokenFaucet,
     faucet,
+    endsAtMidnight,
+    endsAfterSecs,
 } from '../utils/configFrontend'
 
 import {
@@ -320,7 +322,13 @@ const Deposit = (props) => {
                                     {`The fee is ${feeAmt} ${tokenSym}.`}
                                 </p>
                                 <p>
-                                    {`The recipient will receive ${mixAmtWei ? ethers.utils.formatUnits(mixAmtWei.sub(feeAmtWei), tokenDecimals) : 0} ${tokenSym} after midnight, UTC.`}
+                                    {`The recipient will receive
+                                        ${mixAmtWei ?
+                                            ethers.utils.formatUnits(
+                                                mixAmtWei.sub(feeAmtWei),
+                                                tokenDecimals) : 0}&nbsp;
+                                        ${tokenSym} after ${endsAtMidnight?
+                                            "midnight, UTC" : endsAfterSecs + "s"}.`}
                                 </p>
                             </div>
 

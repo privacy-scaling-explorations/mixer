@@ -25,7 +25,6 @@ const WalletWidget = (props) => {
 
         //console.log("Wallet Render " , address, networkChainId)
 
-        console.log("Wallet status", props.address, props.error)
         if (!window.hasOwnProperty('ethereum')) {
             return (
                 <p>

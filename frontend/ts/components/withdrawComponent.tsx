@@ -98,7 +98,18 @@ const WithdrawComponent = (props) => {
             { errorMsg &&
                 <article className="message is-danger">
                     <div className="message-body">
-                        {'Error: ' + errorMsg}
+                    <div>
+                        {'Error: ' + errorMsg}<br/><br/>
+                    </div>
+                    <div>
+                    <div>
+                    <span
+                        onClick={() => {
+                            window.location.reload()
+                        }}
+                        className='button is-warning'>
+                        Retry<br/><br/>
+                    </span>
                     </div>
                     <span
                         onClick={() => {
@@ -108,6 +119,8 @@ const WithdrawComponent = (props) => {
                         className='button is-warning'>
                         Forget about this proof
                     </span>
+                    </div>
+                    </div>
                 </article>
             }
         </div>

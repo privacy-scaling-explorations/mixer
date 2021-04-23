@@ -86,8 +86,13 @@ const SurrogethSelect = (props) => {
         selectOptions.push(...options)
     }
     if (!selectedOption && selectOptions.length){
-        setSelectedOption(selectOptions[0])
-        setTimeout(() => {props.setSurrogethInfo(selectOptions[0])}, 10)
+        for (let i = 0; i < selectOptions.length; i++){
+            if (selectOptions[i].fee && selectOptions[i].fee.gt(0)){
+                setSelectedOption(selectOptions[i])
+                setTimeout(() => {props.setSurrogethInfo(selectOptions[i])}, 10)
+                break;
+            }
+        }
     }
 
     const handleChange = _selectedOption => {
@@ -111,7 +116,7 @@ const SurrogethSelect = (props) => {
                     No Surrogeth found
                 </div>
         }
-        { selectOptions &&
+        { selectOptions.length > 0 &&
         <div className="control token-select">
 
             <div className="select is-primary">
