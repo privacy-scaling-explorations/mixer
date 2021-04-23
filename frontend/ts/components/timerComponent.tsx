@@ -66,7 +66,7 @@ const TimerComponent = (props) => {
                 </div>
             </div>)
     }else{
-        props.setWithdrawEnable(true)
+        setTimeout(() => {props.setWithdrawEnable(true)}, 100)
         return (
             <div className="columns has-text-centered">
                 <div className='column is-12'>

@@ -124,12 +124,15 @@ const getTokenConfig = (tokenAddress) => {
     if (deployedAddressesNetwork && deployedAddressesNetwork.token && configNetwork && configNetwork.token){
         for (let configTokenName of Object.keys(deployedAddressesNetwork.token)) {
             if (configNetwork.token[configTokenName]){
-                if ((deployedAddressesNetwork.token[configTokenName] &&
-                    deployedAddressesNetwork.token[configTokenName].Token == tokenAddress) ||
-                    configNetwork.token[configTokenName].address == tokenAddress){
-                    return configNetwork.token[configTokenName]
-                } else if(tokenAddress == "0x0000000000000000000000000000000000000000" &&
-                    !configNetwork.token[configTokenName].decimals){
+                //Token
+                if (tokenAddress && tokenAddress != "0x0000000000000000000000000000000000000000"){
+                    if ((deployedAddressesNetwork.token[configTokenName] &&
+                   deployedAddressesNetwork.token[configTokenName].Token == tokenAddress) ||
+                   configNetwork.token[configTokenName].address == tokenAddress) {
+                       return configNetwork.token[configTokenName]
+                   }
+                //ETH
+                } else if(!configNetwork.token[configTokenName].decimals){
                     return configNetwork.token[configTokenName]
                 }
             }

@@ -73,6 +73,7 @@ const SurrogethSelect = (props) => {
             }
         }).catch(
             (error) => {
+                setIsInit(2)
                 console.error("surrogeth not found or not responding", error)
             })
     }
@@ -85,8 +86,8 @@ const SurrogethSelect = (props) => {
         selectOptions.push(...options)
     }
     if (!selectedOption && selectOptions.length){
-        props.setSurrogethInfo(selectOptions[0])
         setSelectedOption(selectOptions[0])
+        setTimeout(() => {props.setSurrogethInfo(selectOptions[0])}, 10)
     }
 
     const handleChange = _selectedOption => {
@@ -105,6 +106,12 @@ const SurrogethSelect = (props) => {
                 Loading Surrogeth list...
             </div>
         }
+        { isInit == 2 && !options &&
+                <div>
+                    No Surrogeth found
+                </div>
+        }
+        { selectOptions &&
         <div className="control token-select">
 
             <div className="select is-primary">
@@ -136,6 +143,7 @@ const SurrogethSelect = (props) => {
                     </select>
             </div>
         </div>
+        }
         </div>
 
     )
