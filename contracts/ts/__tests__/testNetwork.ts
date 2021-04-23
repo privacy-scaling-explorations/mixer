@@ -71,7 +71,7 @@ const testNetwork = (configNetworkName, configNetwork, arg) => {
     })
 
     for (let configTokenName of Object.keys(configNetwork.get('token'))) {
-        if ((arg.token && arg.token == configTokenName) || !arg.token)
+        if ((arg && arg.token && arg.token == configTokenName) || !arg.token)
         testToken(
             configNetwork,
             configNetworkName,

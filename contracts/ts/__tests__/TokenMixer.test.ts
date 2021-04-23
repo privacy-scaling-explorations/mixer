@@ -8,15 +8,16 @@ const parser = new ArgumentParser({
 });
 
 parser.add_argument('-t');
+parser.add_argument('--testPathPattern');
 parser.add_argument('--network', { help: 'Set the network' });
 parser.add_argument('--token', { help: 'Set the token' });
-const arg = parser.parse_args()
+const arg = parser? parser.parse_args() : undefined
 
 for (let configNetworkName of Object.keys(configMixer.get('network'))) {
 
   let configNetwork = configMixer.get('network.' + configNetworkName)
 
-  if (((arg.network && arg.network == configNetworkName) || !arg.network) && !(configNetwork.has('disable') && configNetwork.disable)){
+  if (((arg && arg.network && arg.network == configNetworkName) || !arg.network) && !(configNetwork.has('disable') && configNetwork.disable)){
       testNetwork(configNetworkName, configNetwork, arg)
   }
 }

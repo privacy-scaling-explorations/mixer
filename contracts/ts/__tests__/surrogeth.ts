@@ -74,7 +74,7 @@ const surrogetGetBroadcaster = async (
     if (relayers.length > 0) {
         for (let i = 0; i < relayers.length; i++){
             relayers[i] = await client.getBroadcasterFee(relayers[i], txGas)
-            if (relayers[i].fee) return relayers[i]
+            if (relayers[i].fee && relayers[i].locator && relayers[i].locator.includes("localhost")) return relayers[i]
         }
     }
 
