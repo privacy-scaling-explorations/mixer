@@ -195,7 +195,6 @@ const backendWithdraw = async (
     setTxHash,
     setErrorMsg,
     isETH,
-    tokenDecimals,
     feeAmtWei,
     locator,
     locatorType,

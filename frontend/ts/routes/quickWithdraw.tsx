@@ -94,11 +94,10 @@ const QuickWithdraw = (props) => {
 
     const {
         tokenSym,
-        feeAmt,
         isETH,
         tokenDecimals,
-        feeAmtWei,
     } = getTokenInfo(tokenAddress)
+    const feeAmtWei = ethers.BigNumber.from(0)
     const mixAmtWei = ethers.utils.parseUnits(mixAmt.toString(), tokenDecimals)
     const withdrawAmt = ethers.utils.formatUnits(mixAmtWei.sub(feeAmtWei), tokenDecimals)
 

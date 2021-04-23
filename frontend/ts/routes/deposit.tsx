@@ -326,7 +326,7 @@ const Deposit = (props) => {
                                         ${mixAmtWei ?
                                             ethers.utils.formatUnits(
                                                 mixAmtWei.sub(feeAmtWei),
-                                                tokenDecimals) : 0}&nbsp;
+                                                tokenDecimals) : 0} 
                                         ${tokenSym} after ${endsAtMidnight?
                                             "midnight, UTC" : endsAfterSecs + "s"}.`}
                                 </p>

@@ -58,7 +58,6 @@ const WithdrawComponent = (props) => {
                             setTxHash,
                             setErrorMsg,
                             props.isETH,
-                            props.tokenDecimals,
                             props.surrogethInfo.fee,
                             props.surrogethInfo.locator,
                             props.surrogethInfo.locatorType,

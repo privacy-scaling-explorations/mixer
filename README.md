@@ -73,7 +73,16 @@ It has the following features:
 
         - Allows the operator to withdraw all accurred fees.
 
-    - Gas costs after the Istanbul network upgrade is currently 1.2 million per deposit and 378k per withdrawal. The gas cost for each withdrawal (before Istanbul) is 886k.
+    - A MixerRegistry contract that can deploy Mixer and Semaphore contract
+
+    - A ForwarderRegistryERC20 contract that is used by surrogeth deamon to
+      register globaly and to get statistic on usage
+
+    - Gas costs after the Istanbul network upgrade is currently 1.2 million per
+      deposit and 378k to 420k per withdrawal. The gas cost for each withdrawal
+      (before Istanbul) is 886k.
+
+
 
 ## Local development and testing
 
@@ -81,22 +90,13 @@ These instructions have been tested with Debian 4.19 and Node v15.10.0
 
 ### Requirements
 
-<!--
-- Node v11.14.0.
-      - We recommend [`nvm`](https://github.com/nvm-sh/nvm) to manage your Node
-        installation.
-
--->
-
+### (Optional for backend server)
 - [`etcd`](https://github.com/etcd-io/etcd) v3.3.13
-    - The relayer server requires an `etcd` server to lock the account nonce of
+    - The backend server requires an `etcd` server to lock the account nonce of
       its hot wallet.
 
 
-
-<!--
-
-### (Optional) Install Node x.x.x for local user
+### (Optional for building proof with semaphore) Install Node 11.14.0 for local user
 
 Add at the end of ~/.profile or run it in your terminal to setup the path
 
@@ -137,22 +137,24 @@ npm -v
 #x.x.x
 ```
 
-
 ```bash
 node -v
-#vx.x.x
+#v11.14.0
 ```
--->
 
 ### Local development
 
-Clone this repository and its `semaphore` and `surrogeth` submodule:
+#### download sources
+
+Clone this repository and its `semaphore`, `libsemaphore` and `surrogeth` submodule:
 
 ```bash
 git clone https://github.com/jrastit/mixer.git
 cd mixer
 git submodule update --init
 ```
+
+#### get the circuit from semaphore
 
 Download the circuit, keys, and verifier contract. Doing this instead of
 generating your own keys will save you about 20 minutes. Note that these are
@@ -162,6 +164,40 @@ discarded.
 ```bash
 ./scripts/downloadSnarks.sh
 ```
+
+or, to generate the circuit
+in a teminal with node 11.14.0
+```bash
+cd semaphore/semaphorejs && \
+npm i && \
+cd scripts && ./build_snarks.sh
+# if you are still in semaphore scripts
+cd ../../../
+```
+
+#### install dependencies
+
+Install dependencies for the libsemaphore submodule:
+```bash
+cd libsemaphore && \
+npm i
+# if you are still in libsemaphore
+cd ../
+```
+
+Install dependencies for the Surrogeth submodule:
+```bash
+cd surrogeth/client && \
+npm i
+# if you are still in surrogeth
+cd ../../
+
+cd surrogeth/surrogethd && \
+npm i
+# if you are still in surrogeth
+cd ../../
+```
+
 If you want to use other network than ganache
 Create a file named `kovanPrivateKeys.json` (or a name of your choice if you
 modify the config) in the mixer/key directory or for more security
@@ -189,48 +225,16 @@ it as such:
 - If you want to test only on ganache, put disalbe : true on all other network (kovan, ... )
 Or if you want to run the test, in config : ln -s local-test.yaml local-dev.yaml
 
-Install dependencies for the libsemaphore submodule:
-```bash
-cd libsemaphore && \
-npm i
-# if you are still in libsemaphore
-cd ../
-```
 
-Install dependencies for the Surrogeth submodule:
-```bash
-cd surrogeth/client && \
-npm i
-# if you are still in surrogeth
-cd ../../
+#### Build the source code:
 
-cd surrogeth/surrogethd && \
-npm i
-# if you are still in surrogeth
-cd ../../
-```
-
-<!--
-Install dependencies for the Semaphore submodule and compile its contracts:
-
-```bash
-cd semaphore/semaphorejs && \
-npm i && \
-npx truffle compile
-```
--->
-Install dependencies and build the source code:
-<!--
-```bash
-cd ../../
-# if you are still in semaphore/semaphorejs/
-```
--->
 ```bash
 npm i && \
 npm run bootstrap && \
 npm run build
 ```
+
+#### Run ganache for local test
 Run ganache with screen
 ```bash
 # Assuming you are in mixer/
@@ -244,11 +248,13 @@ Or run it in a new terminal to see the output
 npm run ganache
 ```
 
-Clean contract deployed cache (if already deployed before):
+Clean contract deployed cache (if already deployed before with ganache):
 ```bash
 # Assuming you are in mixer/
 npm run clean-cache
 ```
+
+#### Deploy the contracts if needed
 
 Deploy the contracts:
 
@@ -257,11 +263,30 @@ Deploy the contracts:
 npm run deploy
 ```
 
+#### Surrogeth
+
+Config surrogeth from deployed contracts
+
 Autoconfig surrogeth
 ```bash
 # Assuming you are in mixer/
 npm run surrogeth-info
 ```
+
+Run the `surrogeth` with screen
+```bash
+# Assuming you are in mixer/
+npm run screen-surrogeth
+```
+
+Or in another terminal, run surrogeth:
+
+```bash
+# Assuming you are in mixer/
+npm run surrogeth
+```
+
+#### Run backend if needed and enabled in config
 
 Run `etcd` with screen
 
@@ -288,6 +313,8 @@ Or in another terminal, run the backend:
 npm run backend
 ```
 
+#### run semaphore for enabling circuit download
+
 Run `semaphore` server with screen
 ```bash
 # Assuming you are in mixer/
@@ -299,6 +326,8 @@ Or in annother terminal launch a HTTP server to serve the zk-SNARK content:
 # Assuming you are in mixer/
 npm run semahpore
 ```
+
+#### run the frontend
 
 You can now run the frontend at http://localhost:1234.
 Using screen
@@ -330,7 +359,7 @@ Clockwise from top right:
 1. Ganache (`npm run ganache`)
 2. Deployed contracts (`npm run deploy`)
 3. Frontend (`npm run frontend`)
-4. HTTP server (`npm run semaphore`)
+4. Semaphore (`npm run semaphore`)
 5. Backend (`npm run backend`)
 6. Surrogeth (`npm run surrogeth`)
 
@@ -344,19 +373,14 @@ In the `mixer/contracts/` directory (after starting ganache and deployed the con
 
 1. Run `npm run test`
 
+It will run for all enabled network in config to run only specific network and token
+add `-- --network=ganache --token=eth`
+
 #### Backend
 
 In the `mixer/backend/` directory (after starting ganache and deployed the contracts):
 
 2. Run `npm run test`
-
-<!--### Integration tests-->
-
-<!--TODO-->
-
-<!--### CircleCI-->
-
-<!--TODO-->
 
 ## Deployment
 
