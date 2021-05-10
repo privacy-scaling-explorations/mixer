@@ -17,7 +17,7 @@
     "screen-semaphore": "screen -S MixerSemaphore -d -m bash -c \"npm run semaphore\"",
     "screen-frontend": "screen -S MixerFrontend -d -m bash -c \"npm run frontend\"",
     "screen-surrogeth": "screen -S Surrogeth -d -m bash -c \"npm run surrogeth\"",
-    "docker-build": "./scripts/buildImages.sh",
+    "docker-build": "NODE_ENV=docker ./scripts/buildImages.sh",
     "docker-start": "./scripts/runImages.sh",
     "docker-stop": "./scripts/stopImages.sh"
   },
