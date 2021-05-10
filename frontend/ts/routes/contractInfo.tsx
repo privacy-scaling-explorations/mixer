@@ -11,6 +11,7 @@ import{
     tokenSym,
     mixerRegistryAddress,
     forwarderRegistryERC20Address,
+    enableBackend,
 } from '../utils/configFrontend'
 
 import {
@@ -28,7 +29,7 @@ import {
 
 const ContractInfo = (props) => {
 
-    const [relayerAddress, setRelayerAddress] = useState('Request...')
+    const [relayerAddress, setRelayerAddress] = useState(enableBackend? 'Request...': 'Disable by configuration')
     const [broadcasterList, setBroadcasterList] = useState(["Request..."])
     const [tokenList, setTokenList] = useState([{
         address : "Request...",
@@ -44,10 +45,12 @@ const ContractInfo = (props) => {
     useEffect(() => {
         if (!isInit && props.provider){
             setIsInit(true)
-            getBackendStatus(network).then((result) => {
-                //console.log(result)
-                setRelayerAddress(result.address)
-            })
+            if (enableBackend){
+              getBackendStatus(network).then((result) => {
+                  //console.log(result)
+                  setRelayerAddress(result.address)
+              })
+            }
             getTokenList(props.provider).then((result) => {
                 //console.log(JSON.stringify(result), JSON.stringify(tokenList))
                 if (result && JSON.stringify(result) !== JSON.stringify(tokenList)){

@@ -1,6 +1,6 @@
-ARG NODE_VERSION=11.14.0
+ARG NODE_VERSION=16-buster
 
-FROM node:${NODE_VERSION}-stretch AS mixer-testnet
+FROM node:${NODE_VERSION} AS mixer-testnet
 
 COPY --from=mixer-base /mixer /mixer
 

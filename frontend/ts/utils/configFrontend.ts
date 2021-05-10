@@ -1,6 +1,6 @@
 import * as ethers from 'ethers'
 
-const configMixer = require('../../exported_config')
+const configMixer = require('../../config/exported_config')
 import { getDeployedAddresses } from 'mixer-contracts'
 
 const localStorage = window.localStorage

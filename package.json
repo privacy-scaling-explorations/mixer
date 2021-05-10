@@ -4,8 +4,6 @@
   "scripts": {
     "bootstrap": "lerna bootstrap",
     "build": "lerna run build",
-    "buildBaseImage": "./scripts/buildBaseImage.sh",
-    "buildImages": "./scripts/buildImages.sh",
     "clean-cache": "cd contracts && npm run clean-cache",
     "deploy": "cd contracts && npm run deploy",
     "surrogeth-info": "cd contracts && npm run surrogeth-info",
@@ -18,7 +16,10 @@
     "screen-backend": "screen -S MixerBackend -d -m bash -c \"npm run backend\"",
     "screen-semaphore": "screen -S MixerSemaphore -d -m bash -c \"npm run semaphore\"",
     "screen-frontend": "screen -S MixerFrontend -d -m bash -c \"npm run frontend\"",
-    "screen-surrogeth": "screen -S Surrogeth -d -m bash -c \"npm run surrogeth\""
+    "screen-surrogeth": "screen -S Surrogeth -d -m bash -c \"npm run surrogeth\"",
+    "docker-build": "./scripts/buildImages.sh",
+    "docker-start": "./scripts/runImages.sh",
+    "docker-stop": "./scripts/stopImages.sh"
   },
   "devDependencies": {
     "lerna": "3.22.1",

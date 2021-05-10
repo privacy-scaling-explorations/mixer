@@ -1,7 +1,7 @@
 import React from 'react'
 import Select from 'react-select'
 
-const configMixer = require('../../exported_config')
+const configMixer = require('../../config/exported_config')
 import {
     setToken,
     token,

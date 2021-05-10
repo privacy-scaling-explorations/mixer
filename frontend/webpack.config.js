@@ -1,8 +1,10 @@
 const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
+const webpack = require('webpack')
+const process = require('process')
 const TerserPlugin = require('terser-webpack-plugin');
 
-const isProduction = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'kovan'
+const isProduction = process.env.NODE_ENV === 'production'
 
 module.exports = {
   mode: isProduction ? 'production' : 'development',
@@ -10,8 +12,14 @@ module.exports = {
     index: './build/index.js',
   },
   devtool: "source-map",
+  devServer: {
+    historyApiFallback: true,
+    contentBase: path.join(__dirname, "dist"),
+    port: 1232,
+  },
   output: {
     filename: '[name].[contenthash].js',
+    publicPath: '/'
   },
 	optimization: {
 		minimize: isProduction,
@@ -25,10 +33,15 @@ module.exports = {
     ],
 	},
   plugins: [
+    new webpack.ProvidePlugin({
+      Buffer: ['buffer', 'Buffer'],
+      process: 'process/browser'
+    }),
     new HtmlWebpackPlugin({
       title: 'MicroMix',
-      template: 'index.html'
+      template: 'template/index.html',
     })
+
   ],
   externals: /^(worker_threads)$/,
   module: {
@@ -49,5 +62,12 @@ module.exports = {
         ]
       }
     ],
-  }
+  },
+  resolve: {
+    fallback: {
+      "crypto": require.resolve("crypto-browserify"),
+      "assert": require.resolve("assert/"),
+      "stream": require.resolve("stream-browserify"),
+    },
+  },
 };

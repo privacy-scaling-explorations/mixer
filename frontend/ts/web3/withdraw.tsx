@@ -89,7 +89,14 @@ const generateProof = async (
         const identityCommitment = genIdentityCommitment(identity)
 
         await progress('Downloading circuit...', 10)
-        const cirDef = await (await fetchWithoutCache(snarksPathsCircuit)).json()
+        const cirFile = await fetchWithoutCache(snarksPathsCircuit)
+        console.log(cirFile)
+        let cirDef
+        try{
+          cirDef = await (cirFile).json()
+        }catch (err){
+          throw "Network error : Circuit error at "+ snarksPathsCircuit;
+        }
 
         await progress('Generating circuit...', 20)
         const circuit = genCircuit(cirDef)
@@ -261,6 +268,11 @@ const backendWithdraw = async (
             progress,
             setErrorMsg,
         )
+
+        if (proof == undefined){
+          console.error("proof is undefined")
+          return
+        }
 
         if (locatorType == 'backend'){
             await progress('Calling backend server...', 90)

@@ -14,7 +14,7 @@ frontend/ts/exported_config.json
 frontend/dist/
 frontend/.cache/
 frontend/ts/abis
-frontend/exported_config.json
+frontend/config/exported_config.json
 frontend/compiled/
 
 #key
@@ -51,5 +51,3 @@ Sessionx.vim
 tags
 # Persistent undo
 [._]*.un~
-
-

@@ -2,7 +2,6 @@ import React, { useState, useEffect, useContext } from 'react'
 import ReactDOM from 'react-dom'
 import { ethers } from 'ethers'
 
-
 import{
     chainId,
     blockExplorerTxPrefix,

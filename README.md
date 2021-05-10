@@ -168,6 +168,9 @@ discarded.
 or, to generate the circuit
 in a teminal with node 11.14.0
 ```bash
+#Check the version of node
+node -v
+#v11.14.0
 cd semaphore/semaphorejs && \
 npm i && \
 cd scripts && ./build_snarks.sh
@@ -333,7 +336,7 @@ You can now run the frontend at http://localhost:1234.
 Using screen
 ```bash
 # Assuming you are in mixer/
-npm run frontend
+npm run screen-frontend
 ```
 in the terminal
 ```bash

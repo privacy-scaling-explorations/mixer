@@ -1,46 +1,164 @@
 ---
 env: 'docker'
-mixAmtEth: 0.1
-mixAmtTokens: 20
-feeAmtEth: 0.001
-feeAmtTokens: 2
-tokenSym: 'DAI'
-tokenDecimals: 18
+network:
 
-chain:
-  url: "https://kovan.infura.io/v3/5d37c494621a43558d77c90e368d4022"
-  chainId: 42
-  mix:
-    gasLimit: 500000
-  privateKeysPath: "../kovanPrivateKeys.json"
-  deployedAddresses:
-    MiMC: '0x4e8E48FE6D2A6eec138269a92085b1110C8A763D'
-    Semaphore: '0x341B0D9B7ac18067fF1a99D9265c33Ae29ECdbf7'
-    Mixer: '0xecaFa9BE8fc203a064aFb04dbe53f98E55ddFBD1'
-    TokenMixer: '0x12E12EFD0046613F35Ac82406a0b429E16F258dd'
-    TokenSemaphore: '0x2d789d11E697bF39Ca3d9C07F565C9065DD02542'
-    RelayerRegistry: '0xb080FCf2c1ABDa24e161AD68D338b4DEF3073d02'
-    Token: '0xc4375b7de8af5a38a93548eb8453a498222c4ff2'
+    kovan:
+        disable: false
+        url: "https://kovan.infura.io/v3/5d37c494621a43558d77c90e368d4022"
+        chainId: 42
+        privateKeysPath: "key/kovanPrivateKeys.json"
+        supportedNetworkName: "Kovan"
+        blockExplorerTxPrefix: "https://kovan.etherscan.io/tx/"
+        faucet: "https://faucet.kovan.network"
+        token:
+            eth:
+                mixAmt: [ 0.1 , 0.01]
+                feeAmt: 0.002
+                surrogethFeeAmt: 0.001
+                sym: 'KETH'
+                name: 'Kovan Ether'
+            tkn:
+                decimals: 18
+                mixAmt: [ 100 , 12, 10 ]
+                feeAmt: 2
+                sym: 'TKN'
+                name: 'Token'
+            dai:
+                address: '0x4F96Fe3b7A6Cf9725f59d353F723c1bDb64CA6Aa'
+                decimals: 18
+                mixAmt: [ 20, 10, 2, 1 ]
+                feeAmt: 0.02
+                sym: 'DAI'
+                name: 'Dai'
+                faucet: "https://oasis.app/borrow?network=kovan"
+
+    ganache:
+        disable: true
+        url: "http://localhost:8545"
+        chainId: 1337
+        privateKeysPath: "key/ganachePrivateKeys.json"
+        supportedNetworkName: "Ganache"
+        token:
+            eth:
+                mixAmt: [0.102, 1.002]
+                feeAmt: 0.002
+                surrogethFeeAmt: 0.001
+                sym: 'ETH'
+                name: 'Ether'
+            tkn:
+                decimals: 18
+                mixAmt: [102, 12, 1002]
+                feeAmt: 2
+                sym: 'TKN'
+                name: 'Token'
+
+    ropsten:
+        disable: false
+        url: "https://ropsten.infura.io/v3/5d37c494621a43558d77c90e368d4022"
+        chainId: 3
+        privateKeysPath: "key/kovanPrivateKeys.json"
+        supportedNetworkName: "Ropsten"
+        blockExplorerTxPrefix: "https://ropsten.etherscan.io/tx/"
+        faucet: "https://faucet.ropsten.be/"
+        token:
+            eth:
+                mixAmt: 0.1
+                feeAmt: 0.002
+                surrogethFeeAmt: 0.001
+                sym: 'ETH'
+            tkn:
+                decimals: 18
+                mixAmt: 20
+                feeAmt: 0.02
+                sym: 'TKN'
+                name: 'Token'
+
+
+    arbitrum:
+        disable: false
+        url: "https://kovan4.arbitrum.io/rpc"
+        chainId: 212984383488152
+        privateKeysPath: "key/kovanPrivateKeys.json"
+        blockExplorerTxPrefix: https://explorer.arbitrum.io/#/tx/
+        supportedNetworkName: "Arbitrum"
+        faucet: "https://faucet.arbitrum.io/"
+        token:
+            tkn:
+                decimals: 18
+                mixAmt: 20
+                feeAmt: 0.02
+                sym: 'TKN'
+                name: 'Token'
+            eth:
+                mixAmt: 0.1
+                feeAmt: 0.002
+                surrogethFeeAmt: 0.001
+                sym: 'ETH'
+                name: 'Ether'
+    skale:
+        disable: true
+        url: "https://dev-testnet-v1-1.skalelabs.com"
+        chainId: 344435
+        privateKeysPath: "key/kovanPrivateKeys.json"
+        supportedNetworkName: "Skale"
+        token:
+            tkn:
+                decimals: 18
+                mixAmt: 20
+                feeAmt: 0.02
+                sym: 'TKN'
+                name: 'Token'
+            eth:
+                mixAmt: 0.1
+                feeAmt: 0.002
+                surrogethFeeAmt: 0.001
+                sym: 'ETH'
+                name: 'Ether'
+    oasis:
+        disable: true
+        url: "https://rpc.oasiseth.org:8545"
+        chainId: 69
+        privateKeysPath: "key/oasisPrivateKeys.json"
+        supportedNetworkName: "Oasis Paratime"
+        faucet: "http://faucet.oasiseth.org/"
+        token:
+            tkn:
+                decimals: 16
+                mixAmt: [20.1, 200.1, 2.1, 10.1]
+                feeAmt: 0.1
+                sym: 'TKN'
+                name: 'Token'
+            eth:
+                mixAmt: [0.0001, 0.0002]
+                feeAmt: 0.00002
+                surrogethFeeAmt: 0.00001
+                sym: 'ETH'
+                name: 'Ether'
+
 
 backend:
-  port: 3000
-  host: "http://localhost"
-  hotWalletPrivKeyPath: "/run/secrets/hotWalletPrivKeyPath"
-  relayerAddress: "0x53BE836678eA3Dbf7257ef32954184Ac06C2D4b1"
-  etcd:
-    host: "mixer-etcd"
-    port: 2379
-    lockTime: 7000
+    port: 3000
+    host: "http://localhost"
+    etcd:
+        host: "localhost"
+        port: 2379
+        lockTime: 7000
+
+contract:
+    ##gas used for withdraw used to calculate fee
+    withdrawGas: 500000
 
 frontend:
-  snarks:
-    paths:
-      verificationKey: 'https://micromixtest.blob.core.windows.net/snarks/verification_key.json'
-      provingKey: 'https://micromixtest.blob.core.windows.net/snarks/proving_key.bin'
-      circuit: 'https://micromixtest.blob.core.windows.net/snarks/circuit.json'
-  countdown:
-    endsAtUtcMidnight: true
-    endsAfterSecs: 5
-  supportedNetworkName: "Kovan"
-  supportedNetwork: 42
-  blockExplorerTxPrefix: "https://kovan.etherscan.io/tx/"
+    snarks:
+        paths:
+            verificationKey: 'https://micromixtest.blob.core.windows.net/snarks/verification_key.json'
+            circuit: 'https://micromixtest.blob.core.windows.net/snarks/circuit.json'
+            provingKey: 'https://micromixtest.blob.core.windows.net/snarks/proving_key.bin'
+    countdown:
+        endsAtUtcMidnight: false
+        endsAfterSecs: 5
+    enableBackend: false
+
+#for surrogeth compatibility
+surrogethPort: 8124
+surrogethIp: "localhost"
