@@ -22,10 +22,13 @@ centralised, the mixer is noncustodial and no third party can exit with users'
 funds.
 
 A technical specification of the mixer is
-[here](https://hackmd.io/qlKORn5MSOes1WtsEznu_g).
+[here](https://hackmd.io/qlKORn5MSOes1WtsEznu_g)
+Implementation feature are listed
+[here](https://hackmd.io/-n4owIZBR2iwx_kem7Pwkg)
+.
 
 This mixer is highly experimental and not yet audited. Do not use it to mix
-real funds yet. It have been tested on Ganache, Kovan ETH, Ropsten ETH. Get Kovan ETH from a faucet
+real funds yet. It have been tested successfully on Ganache, Kovan ETH, Ropsten ETH, Arbitrum ETH. Get Kovan ETH from a faucet
 [here](https://faucet.kovan.network/) or
 [here](https://gitter.im/kovan-testnet/faucet).
 
@@ -51,7 +54,8 @@ It has the following features:
     - Immediate withdraw requests if the user wishes the operator to mix the
       funds immediately, which also comes at the cost of some privacy.
 
-2. A backend server with one JSON-RPC 2.0 endpoint, `mixer_mix()`, which:
+2. A backend server with one JSON-RPC 2.0 endpoint (deprecated and
+  replaced with the generic Surrogeth agent), `mixer_mix()`, which:
 
     - Accepts, verifies, and submits a zk-SNARK proof (generated in the user's
       browser) to the mixer contract.
@@ -75,8 +79,7 @@ It has the following features:
 
     - A MixerRegistry contract that can deploy Mixer and Semaphore contract
 
-    - A ForwarderRegistryERC20 contract that is used by surrogeth deamon to
-      register globaly and to get statistic on usage
+    - A ForwarderRegistryERC20 contract that is used by the Surrogeth deamon to register globaly and to get statistic on usage
 
     - Gas costs after the Istanbul network upgrade is currently 1.2 million per
       deposit and 378k to 420k per withdrawal. The gas cost for each withdrawal
@@ -86,61 +89,8 @@ It has the following features:
 
 ## Local development and testing
 
-These instructions have been tested with Debian 4.19 and Node v15.10.0
+These instructions have been tested with Debian 4.19 and Node v15 and v16
 
-### Requirements
-
-### (Optional for backend server)
-- [`etcd`](https://github.com/etcd-io/etcd) v3.3.13
-    - The backend server requires an `etcd` server to lock the account nonce of
-      its hot wallet.
-
-
-### (Optional for building proof with semaphore) Install Node 11.14.0 for local user
-
-Add at the end of ~/.profile or run it in your terminal to setup the path
-
-```bash
-export PATH=~/.npm-global/bin:$PATH
-export N_PREFIX=$HOME/.npm-global
-```
-
-Activate change in profile:
-```bash
-. ~/.profile
-```
-
-Install npm (need any node version) you may use the one already present on the system.
-```bash
-wget https://nodejs.org/dist/v14.15.4/node-v14.15.4-linux-x64.tar.xz
-tar -xf node-v14.15.4-linux-x64.tar.xz
-export PATH=$PATH:.
-cd node-v14.15.4-linux-x64/bin
-npm config set prefix '~/.npm-global'
-```
-
-Install n (Package manager for node) and node x.x.x
-```bash
-npm i -g n
-n x.x.x
-```
-
-Clean not needed version
-```bash
-cd ~/
-rm -rf node-v14.15.4-linux-x64.tar.xz  node-v14.15.4-linux-x64
-```
-
-Verify
-```bash
-npm -v
-#x.x.x
-```
-
-```bash
-node -v
-#v11.14.0
-```
 
 ### Local development
 
@@ -154,7 +104,7 @@ cd mixer
 git submodule update --init
 ```
 
-#### get the circuit from semaphore
+#### get the already build circuit from semaphore
 
 Download the circuit, keys, and verifier contract. Doing this instead of
 generating your own keys will save you about 20 minutes. Note that these are
@@ -165,18 +115,8 @@ discarded.
 ./scripts/downloadSnarks.sh
 ```
 
-or, to generate the circuit
-in a teminal with node 11.14.0
-```bash
-#Check the version of node
-node -v
-#v11.14.0
-cd semaphore/semaphorejs && \
-npm i && \
-cd scripts && ./build_snarks.sh
-# if you are still in semaphore scripts
-cd ../../../
-```
+#### generate your circuit for semaphore (optional) (not needed if you have done the previous step)
+
 
 #### install dependencies
 
@@ -289,34 +229,7 @@ Or in another terminal, run surrogeth:
 npm run surrogeth
 ```
 
-#### Run backend if needed and enabled in config
-
-Run `etcd` with screen
-
-```bash
-screen -S etcd -d -m etcd
-```
-
-Or in another terminal, run `etcd`:
-
-```bash
-etcd
-```
-
-Run the `backend` with screen
-```bash
-# Assuming you are in mixer/
-npm run screen-backend
-```
-
-Or in another terminal, run the backend:
-
-```bash
-# Assuming you are in mixer/
-npm run backend
-```
-
-#### run semaphore for enabling circuit download
+#### Run semaphore for enabling circuit download
 
 Run `semaphore` server with screen
 ```bash
@@ -330,7 +243,7 @@ Or in annother terminal launch a HTTP server to serve the zk-SNARK content:
 npm run semahpore
 ```
 
-#### run the frontend
+#### Run the frontend
 
 You can now run the frontend at http://localhost:1234.
 Using screen
@@ -363,8 +276,47 @@ Clockwise from top right:
 2. Deployed contracts (`npm run deploy`)
 3. Frontend (`npm run frontend`)
 4. Semaphore (`npm run semaphore`)
-5. Backend (`npm run backend`)
-6. Surrogeth (`npm run surrogeth`)
+5. Surrogeth (`npm run surrogeth`)
+
+### Backend (Deprecated)
+
+#### requirement
+- [`etcd`](https://github.com/etcd-io/etcd) v3.3.13
+    - The backend server requires an `etcd` server to lock the account nonce of
+      its hot wallet.
+
+#### Enable it in the configuration `config/*.yaml`
+```
+frontend:
+  enableBackend: true
+````
+
+#### Run backend
+
+Run `etcd` with screen
+
+```bash
+screen -S etcd -d -m etcd
+```
+
+Or in another terminal, run `etcd`:
+
+```bash
+etcd
+```
+
+Run the `backend` with screen
+```bash
+# Assuming you are in mixer/
+npm run screen-backend
+```
+
+Or in another terminal, run the backend:
+
+```bash
+# Assuming you are in mixer/
+npm run backend
+```
 
 ## Testing
 
@@ -374,7 +326,13 @@ Clockwise from top right:
 
 In the `mixer/contracts/` directory (after starting ganache and deployed the contracts):
 
-1. Run `npm run test`
+1. Modify the config file if needed in `config/local-test.yaml` you can set `disable:true` to disable some networks in the test
+2. Run `npm run screen-ganache` if you are testing the ganache network
+3. Run `npm run clean-cache` to reset contract ganache cache
+4. Run `npm run deploy` to deploy contract
+5. Run `npm run surrogeth-info` to configure surrogeth for testing
+6. Run `npm run screen-surrogeth` to run surrogeth agent for testing
+7. Run `npm run test` to run the test suite
 
 It will run for all enabled network in config to run only specific network and token
 add `-- --network=ganache --token=eth`
@@ -397,67 +355,35 @@ In the `mixer/backend/` directory (after starting ganache and deployed the contr
 
 ### Docker containers
 
-This project uses Docker to containerise its various components, and Docker
-Compose to orchestrate them.
+Check docker configuration file in `config/docker.yaml` and `docker/docker-compose.yml`
 
-To run build and run the Docker containers, first create a `MIXER_SECRETS`
-directory as a sibling of the `mixer` directory:
+To build the image Run:
 
-```bash
-# Assuming you are in mixer/
+`npm run docker-build`
 
-cd .. && \
-mkdir -p MIXER_SECRETS
-```
+To run the image that will deploy the frontent on port 1235 by default `http://localhost:1235/`:
+`npm run docker-start`
 
-Create a file named `hotWalletPrivKey.json` in `MIXER_SECRETS/` with the private key
-which will serve as the operator's hot wallet:
-
-```json
-{
-    "privateKey": "0x................................................................"
-}
-```
-
-Change its file permissions:
-
-```bash
-chmod 400 MIXER_SECRETS/hotWalletPrivKey.json
-```
-
-Next, run:
-
-```bash
-NODE_ENV=docker ./scripts/buildImages.sh && \
-./scripts/runImages.sh
-```
+To unload the image:
+`npm run docker-stop`
 
 This will produce the following images and containers (edited for brevity):
 
 ```
 REPOSITORY              TAG                 SIZE
-docker_mixer-frontend   latest              23.2MB
-docker_mixer-backend    latest              2.09GB
-mixer-base              latest              2.09GB
-mixer-build             latest              3.24GB
+docker_mixer-frontend   latest              37.1MB
+mixer-base              latest              1.44GB
+mixer-build             latest              2.32GB
 nginx                   1.17.1-alpine       20.6MB
-jumanjiman/etcd         latest              35MB
-node                    11.14.0-stretch     904MB
+node                    16-buster           20.6MB
 
 CONTAINER ID        IMAGE                   COMMAND                  PORTS                          NAMES
-............        docker_mixer-backend    "node build/index.js"    0.0.0.0:3000->3000/tcp         mixer-backend
-............        docker_mixer-frontend   "/bin/sh -c 'nginx -…"   80/tcp, 0.0.0.0:80->8001/tcp   mixer-frontend
-............        jumanjiman/etcd         "etcd --listen-clien…"   0.0.0.0:2379->2379/tcp         mixer-etcd
+............        docker_mixer-frontend   "/bin/sh -c 'nginx -…"   80/tcp, 0.0.0.0:1235->8001/tcp   mixer-frontend
 ```
-
-Note that setting `NODE_ENV` to `docker-dev` in the above command will make the
-frontend and backend use the [`config/docker-dev.yaml`](config/docker-dev.yaml)
-config file, which in turn points to the Kovan testnet.
 
 In contrast, the local instances run via `npm run watch` in
 `frontend/` and `npm run server` in `backend` respectively use
-[`config/local-dev.yaml`](config/local-dev.yaml), which uses any network at
-`http://localhost:8545` with a chain ID of `1234`.
+[`config/local-dev.yaml`](config/local-dev.yaml).
 
 <!--## Full documentation-->
 
@@ -466,8 +392,11 @@ In contrast, the local instances run via `npm run watch` in
 ### Directory structure
 
 - `frontend/`: source code for the UI
+- `backend/`: source code for the backend deprecated and replaced with surrogeth
 - `contracts/`: source code for mixer contracts and tests
 - `semaphore/`: a submodule for the [Semaphore code](https://github.com/weijiekoh/semaphore)
+- `libsemaphore/` : a submodule for the libsemaphore
+- `surrogeth/` : a submodule for the Surrogeth agent
 
 ### Frontend
 
@@ -488,3 +417,66 @@ Each PR should also add to the unit and/or integration tests as appropriate.
 <!--## Code of conduct and reporting-->
 
 <!--**TODO**-->
+
+## Generate your circuit for semaphore (optional)
+
+##### Install Node 11.14.0 for local user to be able to run semaphore
+
+Add at the end of ~/.profile or run it in your terminal to setup the path
+
+```bash
+export PATH=~/.npm-global/bin:$PATH
+export N_PREFIX=$HOME/.npm-global
+```
+
+Activate change in profile:
+```bash
+. ~/.profile
+```
+
+Install npm (need any node version) you may use the one already present on the system.
+```bash
+wget https://nodejs.org/dist/v14.15.4/node-v14.15.4-linux-x64.tar.xz
+tar -xf node-v14.15.4-linux-x64.tar.xz
+export PATH=$PATH:.
+cd node-v14.15.4-linux-x64/bin
+npm config set prefix '~/.npm-global'
+```
+
+Install n (Package manager for node) and node x.x.x
+```bash
+npm i -g n
+n x.x.x
+```
+
+Clean not needed version
+```bash
+cd ~/
+rm -rf node-v14.15.4-linux-x64.tar.xz  node-v14.15.4-linux-x64
+```
+
+Verify
+```bash
+npm -v
+#x.x.x
+```
+
+```bash
+node -v
+#v11.14.0
+```
+
+##### Generate the circuit
+
+to generate the circuit
+in a teminal with node 11.14.0
+```bash
+#Check the version of node
+node -v
+#v11.14.0
+cd semaphore/semaphorejs && \
+npm i && \
+cd scripts && ./build_snarks.sh
+# if you are still in semaphore scripts
+cd ../../../
+```

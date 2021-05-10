@@ -156,7 +156,7 @@ frontend:
             circuit: 'http://localhost:8000/build/circuit.json'
             provingKey: 'http://localhost:8000/build/proving_key.bin'
     countdown:
-        endsAtUtcMidnight: false
+        endsAtUtcMidnight: true
         endsAfterSecs: 5
     enableBackend: false
 

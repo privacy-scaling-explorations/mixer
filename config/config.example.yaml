@@ -7,63 +7,65 @@ network:
         disable: false
         url: "https://kovan.infura.io/v3/5d37c494621a43558d77c90e368d4022"
         chainId: 42
-        supportedNetwork: 42
         privateKeysPath: "key/kovanPrivateKeys.json"
         supportedNetworkName: "Kovan"
         blockExplorerTxPrefix: "https://kovan.etherscan.io/tx/"
+        faucet: "https://faucet.kovan.network"
         token:
             eth:
-                mixAmt: 0.1
-                feeAmt: 0.001
+                mixAmt: [ 0.1 , 0.01]
+                feeAmt: 0.002
+                surrogethFeeAmt: 0.001
                 sym: 'KETH'
                 name: 'Kovan Ether'
             tkn:
                 decimals: 18
-                mixAmt: 100
+                mixAmt: [ 100 , 12, 10 ]
                 feeAmt: 2
                 sym: 'TKN'
                 name: 'Token'
             dai:
                 address: '0x4F96Fe3b7A6Cf9725f59d353F723c1bDb64CA6Aa'
                 decimals: 18
-                mixAmt: 20
+                mixAmt: [ 20, 10, 2, 1 ]
                 feeAmt: 0.02
                 sym: 'DAI'
                 name: 'Dai'
+                faucet: "https://oasis.app/borrow?network=kovan"
 
     ganache:
-        disable: false
+        disable: true
         url: "http://localhost:8545"
         chainId: 1337
-        supportedNetwork: 1337
         privateKeysPath: "key/ganachePrivateKeys.json"
         supportedNetworkName: "Ganache"
         token:
             eth:
-                mixAmt: 0.102
+                mixAmt: [0.102, 1.002]
                 feeAmt: 0.002
+                surrogethFeeAmt: 0.001
                 sym: 'ETH'
                 name: 'Ether'
             tkn:
                 decimals: 18
-                mixAmt: 102
+                mixAmt: [102, 12, 1002]
                 feeAmt: 2
                 sym: 'TKN'
                 name: 'Token'
-
 
     ropsten:
         disable: false
         url: "https://ropsten.infura.io/v3/5d37c494621a43558d77c90e368d4022"
         chainId: 3
-        supportedNetwork: 3
         privateKeysPath: "key/kovanPrivateKeys.json"
         supportedNetworkName: "Ropsten"
         blockExplorerTxPrefix: "https://ropsten.etherscan.io/tx/"
+        faucet: "https://faucet.ropsten.be/"
         token:
             eth:
                 mixAmt: 0.1
-                feeAmt: 0.001
+                feeAmt: 0.002
+                surrogethFeeAmt: 0.001
                 sym: 'ETH'
             tkn:
                 decimals: 18
@@ -74,13 +76,13 @@ network:
 
 
     arbitrum:
-        disable: true
-        url: "https://kovan3.arbitrum.io/rpc"
-        chainId: 79377087078960
-        supportedNetwork: 79377087078960
+        disable: false
+        url: "https://kovan4.arbitrum.io/rpc"
+        chainId: 212984383488152
         privateKeysPath: "key/kovanPrivateKeys.json"
         blockExplorerTxPrefix: https://explorer.arbitrum.io/#/tx/
         supportedNetworkName: "Arbitrum"
+        faucet: "https://faucet.arbitrum.io/"
         token:
             tkn:
                 decimals: 18
@@ -90,47 +92,74 @@ network:
                 name: 'Token'
             eth:
                 mixAmt: 0.1
-                feeAmt: 0.001
+                feeAmt: 0.002
+                surrogethFeeAmt: 0.001
                 sym: 'ETH'
                 name: 'Ether'
     skale:
-        disable: false
-        url: "https://dev-testnet-v1-0.skalelabs.com"
+        disable: true
+        url: "https://dev-testnet-v1-1.skalelabs.com"
         chainId: 344435
-        supportedNetwork: 344435
         privateKeysPath: "key/kovanPrivateKeys.json"
         supportedNetworkName: "Skale"
         token:
             tkn:
                 decimals: 18
-                mixAmt: 102
-                feeAmt: 2
+                mixAmt: 20
+                feeAmt: 0.02
                 sym: 'TKN'
                 name: 'Token'
             eth:
-                mixAmt: 0.102
+                mixAmt: 0.1
                 feeAmt: 0.002
+                surrogethFeeAmt: 0.001
+                sym: 'ETH'
+                name: 'Ether'
+    oasis:
+        disable: true
+        url: "https://rpc.oasiseth.org:8545"
+        chainId: 69
+        privateKeysPath: "key/oasisPrivateKeys.json"
+        supportedNetworkName: "Oasis Paratime"
+        faucet: "http://faucet.oasiseth.org/"
+        token:
+            tkn:
+                decimals: 16
+                mixAmt: [20.1, 200.1, 2.1, 10.1]
+                feeAmt: 0.1
+                sym: 'TKN'
+                name: 'Token'
+            eth:
+                mixAmt: [0.0001, 0.0002]
+                feeAmt: 0.00002
+                surrogethFeeAmt: 0.00001
                 sym: 'ETH'
                 name: 'Ether'
 
+
 backend:
-  port: 3000
-  host: "http://localhost"
-  etcd:
-    host: "localhost"
-    port: 2379
-    lockTime: 7000
+    port: 3000
+    host: "http://localhost"
+    etcd:
+        host: "localhost"
+        port: 2379
+        lockTime: 7000
+
+contract:
+    ##gas used for withdraw used to calculate fee
+    withdrawGas: 500000
 
 frontend:
-  snarks:
-    paths:
-      verificationKey: 'http://localhost:1234/build/verification_key.json'
-      circuit: 'http://localhost:1234/build/circuit.json'
-      provingKey: 'http://localhost:1234/build/proving_key.bin'
-  countdown:
-    endsAtUtcMidnight: false
-    endsAfterSecs: 5
+    snarks:
+        paths:
+            verificationKey: 'http://localhost:8000/build/verification_key.json'
+            circuit: 'http://localhost:8000/build/circuit.json'
+            provingKey: 'http://localhost:8000/build/proving_key.bin'
+    countdown:
+        endsAtUtcMidnight: true
+        endsAfterSecs: 5
+    enableBackend: false
 
 #for surrogeth compatibility
-surrogethPort: 8123
-surrogethIp: "127.0.0.1"
+surrogethPort: 8124
+surrogethIp: "localhost"

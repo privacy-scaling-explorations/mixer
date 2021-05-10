@@ -155,7 +155,7 @@ frontend:
             circuit: 'https://micromixtest.blob.core.windows.net/snarks/circuit.json'
             provingKey: 'https://micromixtest.blob.core.windows.net/snarks/proving_key.bin'
     countdown:
-        endsAtUtcMidnight: false
+        endsAtUtcMidnight: true
         endsAfterSecs: 5
     enableBackend: false
 

@@ -9,6 +9,8 @@ First, get at least 0.102 Kovan ETH (0.1 plus gas fees) from a
 [faucet](https://faucet.kovan.network/). Next, navigate to the UI in your web
 browser.
 
+Chose the network you want to use `kovan` as exaple and the token `ETH` and switch metamask to use kovan.
+
 Enter the recipient's ETH address and click "Mix 0.1 ETH". This will trigger a
 MetaMask popup. Click submit. Do not close your browser window until you see
 the Countdown page.
@@ -18,11 +20,10 @@ mix the funds. To speed up this process for testing purposes, you can set the
 timestamp of the last entry in the localStorage `MIXER` JSON array to `0`, and
 a yellow button will appear which you can click to trigger the mix.
 
-This mix process downloads about 40MB worth of gzipped zk-SNARK keys and
+This mix process downloads about 170MB worth of gzipped zk-SNARK keys and
 circuit data, generates a proof, and submits it to a centralised but
 noncustodial relayer. The relayer verifies the proof and submits a `mix()`
-transaction to the mixer contract located
-[here](https://kovan.etherscan.io/address/0xfb2bf70382a98c72d38bed63735ff5115ff243c6).
+transaction to the mixer contract.
 
 ## Development
 
@@ -30,8 +31,14 @@ For a hot-reloading development setup, run the following command in this
 directory:
 
 ```bash
-npm run watch
+npm run start
 ```
+
+or with HtmlWebpack
+```bash
+npm run webpack-start
+```
+
 
 And launch [http://localhost:1234](http://localhost:1234) in your browser.
 
@@ -40,8 +47,14 @@ And launch [http://localhost:1234](http://localhost:1234) in your browser.
 To create a production build, run:
 
 ```bash
-npm run build
+npm run webpack-build
 ```
+To run it, run;
+
+```bash
+npm run webpack-server
+```
+
 
 ## Stylesheets
 
